@@ -1,0 +1,20 @@
+# Visual Studio:
+
+[Dd]ebug/
+*.atsuo
+
+
+# vi Editor:
+
+*.swp
+
+
+# Mac OS X:
+
+.DS_Store
+
+
+# Python:
+
+__pycache__/
+*.pyc
