@@ -27,11 +27,11 @@ typedef enum {
 	num_query_codes
 } query;
 
-/* Declares an array of functions, each of which will handles a query request. */
+/* Declares an array of functions, each of which will handle a query request. */
 extern uint8_t (*query_handlers[num_query_codes])(char *);
 
 
-bool is_valid_query(query type);
+bool is_valid_query_code(query type);
 
 
 

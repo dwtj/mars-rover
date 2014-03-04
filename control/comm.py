@@ -30,9 +30,14 @@ def send(t):
     Sends the signal of the given type `t` to the rover.
     """
     assert type(t) == Query
+    ser.write(bytes(t))
 
 
 def heartbeat():
     while True:
         send(Query.ping)
         sleep(1)
+
+
+if __name__ == __main__:
+    heartbeat()

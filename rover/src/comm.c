@@ -15,6 +15,14 @@
 #include "comm.h"
 #include "lcd.h"
 
+
+
+
+static bool is_connected = false;
+
+
+
+
 static uint8_t query_null_handler() {
 	// do nothing
 	return 0;
@@ -34,12 +42,17 @@ uint8_t (*query_handlers[])(char *) = {
 };
 
 
+
+
+
+
 bool is_valid_query_code(query type) {
 	return (bool) type >= 0 && type < num_query_codes;
 }
 
 
-static bool is_connected = false;
+
+
 
 
 bool connect()
@@ -65,6 +78,19 @@ bool connect()
 	is_connected = true;
 	return true;
 }
+
+
+
+
+void command_mode() {
+	connect();
+	while (true) {
+		;  // do nothing
+	}
+}
+
+
+
 
 ISR(USART0_RX_vect) {
 	if (is_connected) {
