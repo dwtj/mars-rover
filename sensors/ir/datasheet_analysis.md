@@ -65,3 +65,9 @@ Now we can compose these three functions to convert from the binary numbers comi
 
 $$ c(d) = m(V_{\text{in}}(d)) $$
 $$ c(d) = {1 \over 0.042911 \cdot {2.56 \over 1024} \cdot d - 0.009167 } - 0.42 $$
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+v_in <- function(d) { (2.56 / 1024) * d }
+c <- function(d) { m(v_in(d)) }
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
