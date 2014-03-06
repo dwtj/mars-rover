@@ -61,7 +61,7 @@ bool is_valid_signal_code(signal type) {
  */
 void comm_mode() {
 	USART_Init(1);
-        enable_RX_ISR();
+    enable_RX_ISR();
 	while (true) {
                 ; // do nothing.
 	}

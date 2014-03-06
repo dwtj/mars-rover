@@ -43,7 +43,7 @@ unsigned char USART_Receive( void )
 	return UDR0;
 }
 
-void USART_Transmit(char data )
+void USART_Transmit(uint8_t data)
 {
 	/* Wait for empty transmit buffer */
 	while ( !( UCSR0A & (1<<UDRE)) )

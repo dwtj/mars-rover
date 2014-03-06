@@ -15,13 +15,48 @@
 
 
 
-void IR_lab() {
+void IR_test_analytical_conv()
+{
+	while(1) {
+		uint16_t d = IR_run();
+		lprintf("%" PRIu16 ", %f", d, IR_analytical_conv(d));
+		wait_ms(1000); // wait 1s before next call
+	}
+}
+
+
+void IR_test_calib_conv()
+{
+	IR_calibrate(true);  // calibrate while sending calibration data over BAM.
+	while(1) {
+		uint16_t d = IR_run();
+		lprintf("%" PRIu16 ", %f", d, IR_conv(d));
+		wait_ms(1000); // wait 1s before next call
+	}
+}
+
+
+
+void IR_lab()
+{
+	char prog;
+	
 	lcd_init();
+	lcd_clear();
 	IR_init();
 	
-	while(1){
-		uint16_t v = IR_run();
-		lprintf("%" PRIu16 ", %f", v, IR_analytical_conv(v));
-		wait_ms(1000); // wait 1s before next call
+	prog = wait_button("Choose program:");
+	switch (prog) {
+		case 1:
+			IR_test_analytical_conv();
+			break;
+		case 2:
+			IR_test_calib_conv();
+			break;
+		case 3:
+			//part3();
+			break;
+		default:
+			;  // do nothing
 	}
 }

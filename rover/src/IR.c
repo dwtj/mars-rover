@@ -6,6 +6,19 @@
  */ 
 
 #include <avr/io.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include <stdbool.h>
+#include "util.h"
+#include "lcd.h"
+#include "usart.h"
+
+#define MAX_DIST 50
+#define MIN_DIST 9
+#define NUM_CALIB_SAMPLES 50
+
+uint16_t calib_data[MAX_DIST + 1] = {0};
 
 void IR_init()
 {
@@ -49,12 +62,94 @@ uint16_t IR_run() {
 }
 
 
-// Converts the given voltage measurement `v` to the analytical approximation of the distance,
+// Converts the given quantized voltage measurement `d` to the analytical approximation of the distance,
 // as derived from datasheet information. This does not use any form of calibration.
-float IR_analytical_conv(uint16_t v) {
-	static const float b = -0.168;
-	static const float m = 0.45;
-	static const float l = 0.42;
+float IR_analytical_conv(uint16_t d) {
+	static const float vRef = 2.56;
+	static const float slope = 0.042977;
+	static const float intercept = -0.009167;
 	
-	return m / (v - b*m) - l;
+	float v = (vRef/1024) * d;
+	
+	return 1 / (slope * v + intercept) - 0.42;
+}
+
+
+
+/* Sends a pair of datapoints from a distance calibration sample reading. */
+void send_dist_reading(uint8_t dist, uint16_t reading)
+{
+	// static const size_t bufsize = 100;
+	static char buf[100];
+	snprintf(buf, 100, "%d, %d\n", dist, reading);
+	
+	USART_transmit_buffer(buf);
+}
+
+
+void IR_calibrate(bool bam_send)
+{
+	lcd_init();
+	init_push_buttons();
+	if (bam_send) {
+		USART_Init(1);
+		USART_transmit_buffer("Distances, Readings\n");
+	}
+	
+	float avg;
+	uint16_t sample = 0;
+	
+	wait_ms(500);
+	// TODO: ensure strict monotonicity of `calib_data`
+	
+	for (int dist = MIN_DIST; dist <= MAX_DIST; dist++)
+	{
+		lcd_clear();
+		lprintf("Ready to Start %d cm", dist);
+		wait_button(NULL);
+		lcd_clear();
+		lcd_puts("Sampling...");
+		wait_ms(500);
+		avg = 0.0;
+		for (int i = 0; i < NUM_CALIB_SAMPLES; i++) {
+			// running average:
+			sample = IR_run();
+			if (bam_send) {
+				send_dist_reading(dist, sample);
+			}
+			avg += ((float) sample) / ((float) NUM_CALIB_SAMPLES);
+			wait_ms(20);
+		}
+		calib_data[dist] = (uint16_t) round(avg);
+	}
+}
+
+
+
+/* returns 0 if conversion failed */
+uint8_t IR_conv(uint16_t d)
+{
+	// assumes that the elements of `calib_data` are monotonically non-increasing (i.e. strictly decreasing)
+	
+	float mid;
+	
+	if (calib_data[MIN_DIST] < d) {
+		return 0;
+	}
+	
+	for (int i = MIN_DIST; i <= MAX_DIST; i++)
+	{
+		if (calib_data[i] < d && d < calib_data[i - 1]) {
+			mid = ((float) calib_data[i] + calib_data[i - 1]) / 2.0;
+			return d < mid ? i : i - 1;
+		}
+		
+		if (d == calib_data[i]) {
+			return d;
+		}
+	}
+	
+	// Else, `d` must be less than than calib_data[MAX_DIST], or any other element of `calib_data`, i.e.
+	// the object is far away.
+	return 0;
 }
