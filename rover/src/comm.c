@@ -59,23 +59,6 @@ bool is_valid_query_code(query type) {
 
 bool connect()
 {
-	// Some preconditions for opening a connection.
-	
-	// Check for protocol definition errors:
-	/*
-	if (query.num_query_codes != NUM_QUERY_CODES) {
-		return false;
-	}
-	*/
-	
-	//Check for handler definition errors:
-	/*
-	if ((sizeof(query_handlers) / sizeof(query_handlers[0]) == NUM_QUERY_CODES) {
-		return false;
-	}
-	*/
-	
-	/* Connect */
 	USART_Init(1);
 	is_connected = true;
 	return true;

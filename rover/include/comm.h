@@ -11,9 +11,6 @@
 
 #include <avr/io.h>
 
-
-#define NUM_QUERY_CODES 2
-
 /* The following enumerated types are classes of header codes that head
    packets being sent between the the control program and the rover. */
 
@@ -26,13 +23,19 @@ typedef enum {
 	query_ping = 1,
 	num_query_codes
 } query;
+#define NUM_QUERY_CODES 2
+
+
+// Check for some compile-time protocol definition errors:
+#if num_query_codes != NUM_QUERY_CODES
+#error "Protocol Definition Error: The Number of query codes is not consistent."
+#endif
+
 
 /* Declares an array of functions, each of which will handle a query request. */
-extern uint8_t (*query_handlers[num_query_codes])(char *);
+extern uint8_t (*query_handlers[NUM_QUERY_CODES])(char *);
 
 
 bool is_valid_query_code(query type);
-
-
 
 #endif /* COMM_H */
