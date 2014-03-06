@@ -10,6 +10,7 @@
 #define IR_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 void IR_init(); 
 
@@ -20,5 +21,9 @@ uint16_t IR_run();  // starts conversion and polls until conversion is complete,
 uint16_t IR_read();  // polls until conversion is complete
 
 float IR_analytical_conv(uint16_t v);  // no calibration approximation
+
+uint8_t IR_conv(uint16_t d);
+
+void IR_calibrate(bool bam_send);
 
 #endif /* IR_H_ */

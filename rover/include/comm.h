@@ -23,18 +23,23 @@ typedef enum {
 	signal_ping = 1,
 	num_signal_codes
 } signal;
-#define NUM_QUERY_CODES 2
+#define NUM_SIGNAL_CODES 2
 
 
 // Check for some compile-time protocol definition errors:
-#if num_signal_codes != NUM_QUERY_CODES
+/*
+#if num_signal_codes != NUM_SIGNAL_CODES
 #error "Protocol Definition Error: The Number of signal codes is not consistent."
 #endif
-
+*/
 
 /* Declares an array of functions, each of which will handle a signal request. */
-extern uint8_t (*signal_handlers[NUM_QUERY_CODES])(char *);
+extern uint8_t (*signal_handlers[NUM_SIGNAL_CODES])(char *);
 
+
+void enable_RX_ISR();
+
+void disable_RX_ISR();
 
 bool is_valid_signal_code(signal type);
 

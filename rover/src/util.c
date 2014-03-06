@@ -279,17 +279,23 @@ void  move_stepper_motor_by_step(int num_steps, int direction) {
 	}
 }
 
+/* does not affect the screen if the `mesg` is either the empty string or NULL. */
 unsigned char wait_button(char *mesg)
 {
+	bool print_mesg = (mesg != 0 && *mesg != '\0');
 	unsigned char b;
-	init_push_buttons();
+	if (print_mesg) {
+		init_push_buttons();
+		lcd_puts(mesg);
+	}
 	
 	// while the button is not being pushed, wait.
-	lcd_puts(mesg);
 	while ((b = read_push_buttons()) == 0) {
 		;
 	}
-	lcd_clear();
+	if (print_mesg) {
+		lcd_clear();
+	}
 	
 	return b;
 }
