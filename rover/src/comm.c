@@ -23,19 +23,21 @@ static bool is_connected = false;
 
 
 
-static uint8_t query_null_handler() {
+static uint8_t signal_null_handler() {
 	// do nothing
 	return 0;
 }
 
-static uint8_t query_ping_handler() {
+static uint8_t signal_ping_handler() {
 	lcd_putc('.');
 	return 0;
 }
 
 
-/* Assign query handler functions to an array.
-   The query code itself is used to index into the array to reach the handler. */
+/**
+ * Assign signal handler functions to an array. The signal code itself is used
+ * to index into the array to reach the handler.
+ */
 uint8_t (*query_handlers[])(char *) = {
 	query_null_handler,
 	query_ping_handler
