@@ -38,9 +38,9 @@ static uint8_t signal_ping_handler() {
  * Assign signal handler functions to an array. The signal code itself is used
  * to index into the array to reach the handler.
  */
-uint8_t (*query_handlers[])(char *) = {
-	query_null_handler,
-	query_ping_handler
+uint8_t (*signal_handlers[])(char *) = {
+	signal_null_handler,
+	signal_ping_handler
 };
 
 
@@ -48,8 +48,8 @@ uint8_t (*query_handlers[])(char *) = {
 
 
 
-bool is_valid_query_code(query type) {
-	return (bool) type >= 0 && type < num_query_codes;
+bool is_valid_signal_code(signal type) {
+	return (bool) type >= 0 && type < num_signal_codes;
 }
 
 
@@ -81,9 +81,9 @@ ISR(USART0_RX_vect) {
 	if (is_connected) {
 		// TODO: disable the handler until a correct connection has been verified.
 		// TODO: only read if data is available
-		query q = (query) USART_Receive();
-		is_valid_query_code(q);
+		signal s = (signal) USART_Receive();
+		is_valid_signal_code(s);
 		
-		query_handlers[q]((void *) 0);
+		signal_handlers[s]((void *) 0);
 	}
 }
