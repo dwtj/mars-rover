@@ -67,23 +67,9 @@ bool connect()
 
 
 
-void command_mode() {
+void comm_mode() {
 	connect();
 	while (true) {
-		;  // do nothing
-	}
-}
-
-
-
-
-ISR(USART0_RX_vect) {
-	if (is_connected) {
-		// TODO: disable the handler until a correct connection has been verified.
-		// TODO: only read if data is available
-		signal s = (signal) USART_Receive();
-		is_valid_signal_code(s);
-		
-		signal_handlers[s]((void *) 0);
+            // TODO
 	}
 }
