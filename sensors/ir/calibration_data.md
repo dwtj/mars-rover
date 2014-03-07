@@ -6,10 +6,11 @@ A dataset of 2100 data points was collected from robot #4 on 2014-03-06.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 calib <- read.csv("calibration_data.csv", header = TRUE)
 m <- lm(Distances ~ poly(Readings, 3, raw = TRUE), data = calib)
-summary(m)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> summary(m)
+
 Call:
 lm(formula = Distances ~ poly(Readings, 3, raw = TRUE), data = calib)
 
@@ -32,6 +33,13 @@ F-statistic: 1.886e+04 on 3 and 2096 DF,  p-value: < 2.2e-16
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> summary(calib$Readings)
+
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  241.0   311.0   402.0   468.4   571.5  1023.0 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 xs <- seq(min(calib$Readings), max(calib$Readings))
 ys <- predict(m, newdata = data.frame(Readings = xs))
 
@@ -40,3 +48,7 @@ points(calib$Readings, calib$Distances, lw = 0.3)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ![](img/calibration.svg)
+
+Thus, for readings generated on Robot #4 in this range of values, i.e. the interval $[241, 1023]$, we can use the following third-order polynomial as an approximation for a mapping between readings and distances:
+
+$$ c(d) = (-1.254 \cdot 10^{-7}) d^3 + (3.148 \cdot 10^{-4}) d^2 - (0.2811) d + 100.5 $$
