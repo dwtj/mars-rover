@@ -142,9 +142,9 @@ void IR_calibrate(bool bam_send, bool save_means)
  * Implments the third-order polynomial conversion from IR ADC readings, `d`,
  * to distances (in cm) as described in `sensors/ir/calibration_data.md`.
  */
-uint8_t IR_conv(uint16_t d)
+float IR_conv(uint16_t d)
 {
     // The intercept and the first, second, and third-order coefficients:
-    const static coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
+    const static float coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
     return coef[0] + d * (coef[1] + d * (coef[2] + d * coef[3]));
 }

@@ -22,7 +22,7 @@ uint16_t IR_read();  // polls until conversion is complete
 
 float IR_analytical_conv(uint16_t v);  // no calibration approximation
 
-uint8_t IR_conv(uint16_t d);
+float IR_conv(uint16_t d);
 
 void IR_calibrate(bool bam_send, bool save_means);
 

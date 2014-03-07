@@ -27,9 +27,6 @@ void IR_test_analytical_conv()
 
 void IR_test_calib_conv()
 {
-        // Send calibration data over BAM, and do not save means:
-	IR_calibrate(true, false);
-
 	while(true) {
 		uint16_t d = IR_run();
 		lprintf("%" PRIu16 ", %f", d, IR_conv(d));
@@ -56,7 +53,8 @@ void IR_lab()
 			IR_test_calib_conv();
 			break;
 		case 3:
-			//part3();
+			// Send calibration data over BAM, and do not save means:
+			 IR_calibrate(true, false);
 			break;
 		default:
 			;  // do nothing
