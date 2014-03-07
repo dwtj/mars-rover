@@ -8,5 +8,5 @@
 #include "labs.h"
 
 int main() {
-	IR_lab();
+	sonar_lab();
 }

@@ -6,27 +6,59 @@
  * also says that the echo pulse has a minimum length of 115μs and a maximum
  * length of 18.6ms.
  *
- * We desire 0.5cm precision in our mesurements.
- *
  * The prescaler was chosen such that (a) we have at least 0.5cm precision in
  * our measurements, and (b) two or more counter overflows will not occur for a
- * measurement of any valid range, i.e., 2cm - 3m.
+ * measurement of any valid range, i.e., 2cm - 3m. Choosing the one-eighth
+ * prescaler satisfies these requirements.
  */
 
+
+/**
+ * If edge is logical true, then subsequent rising edges from the sonar sensor will
+ * generate events. Otherwise, subsequent falling edges will generate events.
+ */
+static void select_event_edge(uint8_t edge)
+{
+	if (edge) {
+		TCCR1B |= 0x01000000;
+	} else {
+		TCCR1B &= 0b10111111;
+	}
+}
 
 
 
 /**
- * Initializes counter 1 so that we can measure for how how long the sonar
+ * Initializes Timer/Counter 1 so that we can measure for how how long the sonar
  * sensor will assert.
  */
 void sonar_init(void)
 {
     #warning "Function not yet implemented."
-
-
-    // set counter prescaler
+	
+	uint8_t bits = 0x00;
+	
+	TCCR1A = 0x00;  // Set compare output mode to normal on each of the three
+					// channels. Also sets waveform generation mode bits are
+					// cleared.
+	
+	TCCR1B = 0x00;
+	
+	// The two additional waveform generation mode bits register B are also
+	// cleared, so the timer will be in normal mode.
+	
+	TCCR1B |= 0x02;  // Set the prescaler (i.e. three LSBs) s.t. freq. will be
+					 // one eighth of the system clock.
+	
+	select_event_edge(1);  // Set the rising edge to generate events.
+	
+	TCCR1B |= 0x80;  // Enable input noise canceler.
+	
+	// Do not use TCCR1C.
+	
+	// TODO: disable sonar event handlers.
 }
+
 
 
 
@@ -44,7 +76,7 @@ void sonar_init(void)
  * sonar sensor if a reading is not already under way and a sufficient delay
  * (200 microseconds) has passed since the last reading was completed.
  *
- * This function temporarily disables some relevant interupts, so that their
+ * This function temporarily disables some relevant interrupts, so that their
  * handers will not be called because of the pulse being generated.
  */
 void sonar_pulse()
