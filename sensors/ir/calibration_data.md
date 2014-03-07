@@ -2,6 +2,8 @@
 
 A dataset of 2100 data points was collected from robot #4 on 2014-03-06.
 
+In the following `R` code, we find a third-order polynomial linear least squares regression. The use of the third-order polynomial is in no way a principled choice, but rather a practical assumption/simplification.
+
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 calib <- read.csv("calibration_data.csv", header = TRUE)
@@ -52,3 +54,16 @@ points(calib$Readings, calib$Distances, lw = 0.3)
 Thus, for readings generated on Robot #4 in this range of values, i.e. the interval $[241, 1023]$, we can use the following third-order polynomial as an approximation for a mapping between readings and distances:
 
 $$ c(d) = (-1.254 \cdot 10^{-7}) d^3 + (3.148 \cdot 10^{-4}) d^2 - (0.2811) d + 100.5 $$
+
+
+In R, this can be implemented in either of the following ways, though the latter will introduce less error from floating-point operations.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+conv <- function(d) {
+    return (100.5 + (-0.2811) * d  + 3.148e-4 * d^2 + (-1.254e-7) * d^3)
+}
+
+conv <- function(d) {
+    return (100.5 + d * (-0.2811 + d * (3.148e-4 + d * (-1.254e-7))))
+}
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

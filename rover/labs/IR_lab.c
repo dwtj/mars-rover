@@ -27,8 +27,10 @@ void IR_test_analytical_conv()
 
 void IR_test_calib_conv()
 {
-	IR_calibrate(true);  // calibrate while sending calibration data over BAM.
-	while(1) {
+        // Send calibration data over BAM, and do not save means:
+	IR_calibrate(true, false);
+
+	while(true) {
 		uint16_t d = IR_run();
 		lprintf("%" PRIu16 ", %f", d, IR_conv(d));
 		wait_ms(1000); // wait 1s before next call
