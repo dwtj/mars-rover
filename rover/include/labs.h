@@ -11,6 +11,7 @@
 
 void IR_lab();
 
+void sonar_lab();
 
 
 #endif /* LABS_H_ */

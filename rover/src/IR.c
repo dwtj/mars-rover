@@ -87,7 +87,15 @@ void send_dist_reading(uint8_t dist, uint16_t reading)
 }
 
 
-void IR_calibrate(bool bam_send)
+/*
+ * Runs the human-directed IR calibration routine. If `bam_send` is `true`,
+ * then a serial connection over bluetooth (BAM) will be opened and all
+ * recorded sample data will be sent across as ascii text (see the
+ * `send_dist_reading()` function). If `save_means` is `true`, then for every
+ * measured distance, 9cm - 50cm, the mean of the samples taken at this
+ * distance will be saved to `calib_data[]`.
+ */
+void IR_calibrate(bool bam_send, bool save_means)
 {
 	lcd_init();
 	init_push_buttons();
@@ -117,39 +125,26 @@ void IR_calibrate(bool bam_send)
 			if (bam_send) {
 				send_dist_reading(dist, sample);
 			}
-			avg += ((float) sample) / ((float) NUM_CALIB_SAMPLES);
+                        if (save_means) {
+			    avg += ((float) sample) / NUM_CALIB_SAMPLES;
+                        }
 			wait_ms(20);
 		}
-		calib_data[dist] = (uint16_t) round(avg);
+                if (save_means) {
+		    calib_data[dist] = (uint16_t) round(avg);
+                }
 	}
 }
 
 
 
-/* returns 0 if conversion failed */
-uint8_t IR_conv(uint16_t d)
+/*
+ * Implments the third-order polynomial conversion from IR ADC readings, `d`,
+ * to distances (in cm) as described in `sensors/ir/calibration_data.md`.
+ */
+float IR_conv(uint16_t d)
 {
-	// assumes that the elements of `calib_data` are monotonically non-increasing (i.e. strictly decreasing)
-	
-	float mid;
-	
-	if (calib_data[MIN_DIST] < d) {
-		return 0;
-	}
-	
-	for (int i = MIN_DIST; i <= MAX_DIST; i++)
-	{
-		if (calib_data[i] < d && d < calib_data[i - 1]) {
-			mid = ((float) calib_data[i] + calib_data[i - 1]) / 2.0;
-			return d < mid ? i : i - 1;
-		}
-		
-		if (d == calib_data[i]) {
-			return d;
-		}
-	}
-	
-	// Else, `d` must be less than than calib_data[MAX_DIST], or any other element of `calib_data`, i.e.
-	// the object is far away.
-	return 0;
+    // The intercept and the first, second, and third-order coefficients:
+    const static float coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
+    return coef[0] + d * (coef[1] + d * (coef[2] + d * coef[3]));
 }
