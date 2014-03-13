@@ -9,6 +9,6 @@ void sonar_init(void);
 
 void sonar_pulse(void);
 
-void sonar_reading(void);
+uint16_t sonar_reading(void);
 
-#ifndef // SONAR_H
+#endif // SONAR_H

@@ -8,6 +8,7 @@
 #include "sonar.h"
 #include "util.h"
 
+#include "lcd.h"
 
 /**
  * Demonstrates activation of the `PING)))` sensor. Check the green light.
@@ -28,10 +29,10 @@ static void part1()
 static void part2()
 {
     while (true) {
-        while (wait_buttons("Press a button...") == 0) {
-            sonar_pulse();
-            lprintf("%d", sonar_signal_width());
+        while (wait_button("") == 0) {
+            ;  // wait until user presses a button.
         }
+		lprintf("%d", sonar_reading());
     }
 }
 
@@ -42,7 +43,7 @@ static void part3()
 
 void sonar_lab(void)
 {
-    buttons_init();
+    init_push_buttons();
     lcd_init();
     sonar_init();
 
