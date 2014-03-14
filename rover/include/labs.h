@@ -13,5 +13,6 @@ void IR_lab();
 
 void sonar_lab();
 
+void servo_lab();
 
 #endif /* LABS_H_ */

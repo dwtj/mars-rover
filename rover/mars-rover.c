@@ -8,5 +8,5 @@
 #include "labs.h"
 
 int main() {
-	sonar_lab();
+	servo_lab();
 }
