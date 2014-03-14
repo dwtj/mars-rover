@@ -295,6 +295,9 @@ uint8_t wait_button(char *mesg)
 	uint8_t b;
 	bool print_mesg = ((mesg != 0) && (*mesg != '\0'));
 	
+	// Wait to make sure that function does not immediately return because of a previous input.
+	wait_ms(200);
+	
 	if (print_mesg) {
 		lcd_clear();
 		lcd_puts(mesg);
@@ -303,11 +306,14 @@ uint8_t wait_button(char *mesg)
 	// Wait while the button is not being pushed.
 	do {
 		b = read_push_buttons();
-	} while (b != 0);
+	} while (b == 0);
 	
 	if (print_mesg) {
 		lcd_clear();
 	}
+	
+	// Wait to make sure that the current press does not affect subsequent input.
+	wait_ms(200);
 	
 	return b;
 }

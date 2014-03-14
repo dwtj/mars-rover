@@ -11,7 +11,7 @@ void sonar_pulse(void);
 
 char *sonar_get_state(void);
 
-uint16_t sonar_reading(void);
+float sonar_reading(void);
 
 uint16_t sonar_reading_polling(void);
 

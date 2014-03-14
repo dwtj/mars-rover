@@ -30,9 +30,7 @@ static void part2()
 {
     while (1) {
 		lcd_clear();
-		lprintf("%u", sonar_reading());
-		lcd_putc(' ');
-		lcd_puts(sonar_get_state());
+		lprintf("%f", sonar_reading());
 		wait_ms(1000);
     }
 }
@@ -41,7 +39,7 @@ static void part3()
 {
     while (1) {
 	    wait_button(""); // wait until user presses a button.
-	    lprintf("%d", sonar_reading_polling());
+	    lprintf("%f", sonar_reading_polling());
     }
 }
 
@@ -67,7 +65,6 @@ void sonar_lab(void)
             part3();
             break;
         default:
-				lcd_putc('.');
-            ; // do nothing
+            lcd_puts("Invalid Program.");
     }
 }
