@@ -16,8 +16,11 @@
 
 #include <stdbool.h>
 #include <avr/io.h>
+#include <avr/interrupt.h>
+#include <avr/sleep.h>
 
 #include "util.h"
+#include "lcd.h"
 
 
 /**
@@ -25,8 +28,8 @@
  * as measured by the most recent sonar reading.
  */
 
-volatile static uint16_t sonar_signal_width;
-volatile static bool sonar_signal_width_ready;
+volatile static uint16_t sonar_signal_width = 0;
+volatile static bool sonar_signal_width_ready = false;
 
 
 
@@ -37,12 +40,15 @@ volatile static bool sonar_signal_width_ready;
  */
 static void select_event_edge(bool edge)
 {
+	// A zero bit on ICNCn (i.e. TCCR1B bit 6) will cause falling edges to raise
+	// events, while a one bit will cause rising edges to raise events.
 	if (edge) {
 		TCCR1B |= 0x01000000;
 	} else {
 		TCCR1B &= 0b10111111;
 	}
 }
+
 
 
 /**
@@ -71,27 +77,25 @@ static bool is_IC_event_enabled() {
  * sensor will assert.
  */
 void sonar_init(void)
-{
-    #warning "Function not yet implemented."
-	
+{	
 	TCCR1A = 0x00;  // Set compare output mode to normal on each of the three
 					// channels. Also sets waveform generation mode bits are
 					// cleared.
 	
 	TCCR1B = 0x00; 
 	
-	// The two additional waveform generation mode bits register B are also
+	// The two additional waveform generation mode bits in register B are also
 	// cleared, so the timer will be in normal mode.
 	
-	TCCR1B |= 0x02;  // Set the prescaler (i.e. three LSBs) s.t. freq. will be
-					 // one eighth of the system clock.
+	TCCR1B |= 0x02;  // Set the prescaler (i.e. three LSBs of TCCR1B) s.t. the
+					 // freq. will be one eighth of the system clock.
 	
 	select_event_edge(true);  // Set the rising edge to generate events.
-	IC_event_enable(false);
+	IC_event_enable(false);   // Initially, events do not cause interrupts.
 	
 	TCCR1B |= 0x80;  // Enable input noise canceler.
 	
-	// Do not use TCCR1C.
+	TCCR1C = 0x00;   // Not using output compare, so we do not use TCCR1C.
 }
 
 
@@ -111,25 +115,51 @@ void sonar_init(void)
  * sonar sensor if a reading is not already under way and a sufficient delay
  * (200 microseconds) has passed since the last reading was completed.
  *
- * Ensure that relevant IC interrupt have been disabled, so that their
- * handers will not be called because of the pulse being generated.
+ * Before use, ensure that relevant IC interrupt have been disabled, so that
+ * their handers will not be called because of the pulse being generated.
  */
 void sonar_pulse()
 {
 	uint8_t mask = 0b00010000;
-	DDRA |= mask;  // make pin 4 output; 0 means input, 1 means output
-    PORTA |= mask; // set pin 4
+	DDRD |= mask;  // make pin 4 output; 0 means input, 1 means output
+    PORTD |= mask; // set pin 4
 	
 	wait_ms(1);  // TODO: make this smaller.
 	
 	mask = ~mask;
-    PORTA &= mask; // clear pin 4
-    DDRA &= mask;  // make pin 4 an input again.
+    PORTD &= mask; // clear pin 4
+    DDRD &= mask;  // make pin 4 an input again.
 }
 
 
 
 
+ /**
+  * Assuming that a pulse was just sent to the sonar sensor, this function polls the
+  * the input pin, waiting for the value on the pin to rise then fall. It returns
+  * the number of counter ticks that transpired while the pin was high.
+  */
+static uint16_t get_sonar_signal_width()
+{
+	uint16_t start = 0;
+	uint8_t mask = 0b00010000;  // Used to select data from pin 4.
+	
+	lcd_clear();
+	lcd_puts("Waiting for Rising Edge.");
+	while((PORTD & mask) == 0) {
+		;  // do nothing
+	}
+	start = TCNT1;
+	
+	lcd_clear();
+	lcd_puts("Waiting for Falling Edge.");
+	while ((PORTD & mask) != 0) {
+		;  // do nothing
+	}
+	lcd_clear();
+	
+	return TCNT1 - start;
+}
 
 
 /**
@@ -139,8 +169,6 @@ void sonar_pulse()
 static uint16_t ticks_to_time(uint16_t n) {
     return n / 2;
 }
-
-
 
 
 
@@ -155,8 +183,11 @@ static uint16_t time_to_dist(uint16_t t) {
 
 
 
-
-
+uint16_t sonar_reading_polling() {
+	IC_event_enable(false);  // disable IC events
+	sonar_pulse();
+	return time_to_dist(ticks_to_time(get_sonar_signal_width()));
+}
 
 
 
@@ -168,16 +199,16 @@ static uint16_t time_to_dist(uint16_t t) {
  */
 uint16_t sonar_reading(bool wait_after)
 {
-	IC_event_enable(false);
-	sonar_pulse();
-	IC_event_enable(true);
+	uint16_t d;
 	
 	select_event_edge(true);  // Listen for the next rising edge.
 	
-    uint16_t d;
+	IC_event_enable(false);
+	sonar_pulse();
+	IC_event_enable(true);
 
 	while (!sonar_signal_width_ready){
-		;  // wait
+		;  // wait for rising and falling handlers to complete
 	}
 
     d = time_to_dist(ticks_to_time(sonar_signal_width));
@@ -196,14 +227,14 @@ uint16_t sonar_reading(bool wait_after)
 
 
 
-
-ISR(TIMER1_CAPT_vect) {
+ISR (TIMER1_CAPT_vect) {
 	static uint16_t counter = 0;
-	if (PORTA & 0b00010000) {
+	
+	if (PORTD & 0b00010000) {
 		// Handle rising edge event:
 		counter = ICR1;
 		select_event_edge(false);  // Listen for the next falling edge.
-	} else {
+		} else {
 		// Handle falling edge event:
 		sonar_signal_width = counter - ICR1; //get difference of clock counter
 		sonar_signal_width_ready = true;
