@@ -1,6 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <stdint.h>
+
 // Blocks for a specified number of milliseconds
 void wait_ms(unsigned int time_val);
 
@@ -26,6 +28,6 @@ void init_push_buttons(void);
  */
 unsigned char read_push_buttons(void);
 
-unsigned char wait_button(char *mesg);
+uint8_t wait_button(char *mesg);
 
 #endif /* UTIL_H */

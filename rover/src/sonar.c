@@ -28,8 +28,9 @@
  * as measured by the most recent sonar reading.
  */
 
-volatile static uint16_t sonar_signal_width = 0;
-volatile static bool sonar_signal_width_ready = false;
+volatile static uint16_t sonar_echo_width = 0;
+volatile static enum {NOT_READY, READY, LOW, HIGH, DONE, FAILED} sonar_state = NOT_READY;
+static char *sonar_state_labels[] = {"Not Ready", "Ready", "Low", "High", "Done", "Failed"};
 
 
 
@@ -96,6 +97,8 @@ void sonar_init(void)
 	TCCR1B |= 0x80;  // Enable input noise canceler.
 	
 	TCCR1C = 0x00;   // Not using output compare, so we do not use TCCR1C.
+	
+	sonar_state = READY;
 }
 
 
@@ -190,34 +193,55 @@ uint16_t sonar_reading_polling() {
 }
 
 
+char *sonar_get_state() {
+	return sonar_state_labels[sonar_state];
+}
+
+
 
 /**
  * Performs a single sonar reading, returning a measure of the distance to the
- * nearest object. If `wait_after` is `true`, then the function will wait after
- * the reading has been performed for long enough that it is safe to
- * immediately start another reading.
+ * nearest object. The function will wait after the reading has been performed
+ * for long enough that it is safe to immediately start another reading.
+ *
+ * A zero will be returned if the sonar reading process failed.
  */
-uint16_t sonar_reading(bool wait_after)
+uint16_t sonar_reading()
 {
 	uint16_t d;
 	
-	select_event_edge(true);  // Listen for the next rising edge.
+	if (sonar_state != READY) {
+		return 0;
+	}
 	
+	select_event_edge(true);  // Listen for the next rising edge.
 	IC_event_enable(false);
 	sonar_pulse();
 	IC_event_enable(true);
 
-	while (!sonar_signal_width_ready){
-		;  // wait for rising and falling handlers to complete
+	if ((PORTD & 0b00010000) != 0x00) {
+		return 0;
+	}
+	
+	// Sonar pin is currently low. Waiting for echo pulse.
+	sonar_state = LOW;  
+
+	while (sonar_state != DONE) {
+		// Wait for rising and falling handlers to complete
+		// TODO: fail if two overflow events occur.
+		if (sonar_state == FAILED) {
+			return 0;
+		}
 	}
 
-    d = time_to_dist(ticks_to_time(sonar_signal_width));
+	d = sonar_echo_width;
+	sonar_state = NOT_READY;
 	
-	sonar_signal_width_ready = false;
+    d = time_to_dist(ticks_to_time(sonar_echo_width));
+	
+	wait_ms(1);  // TODO: Make this smaller.
 
-    if (wait_after == true) {
-        wait_ms(1);
-    }
+	sonar_state = READY;
 	
 	IC_event_enable(false);
 
@@ -227,16 +251,25 @@ uint16_t sonar_reading(bool wait_after)
 
 
 
-ISR (TIMER1_CAPT_vect) {
-	static uint16_t counter = 0;
-	
-	if (PORTD & 0b00010000) {
-		// Handle rising edge event:
-		counter = ICR1;
+ISR (TIMER1_CAPT_vect)
+{
+	if ((sonar_state == LOW) && (PORTD & 0b00010000))
+	{
+		// The sonar sensor's state has risen from low to high:
+		sonar_state = HIGH;
+		sonar_echo_width = ICR1;
 		select_event_edge(false);  // Listen for the next falling edge.
-		} else {
-		// Handle falling edge event:
-		sonar_signal_width = counter - ICR1; //get difference of clock counter
-		sonar_signal_width_ready = true;
+	}
+	else if ((sonar_state == HIGH) && ((PORTD & 0b00010000) == 0x00))
+	{
+		// The sonar sensor's state has fallen from high to low, so the reading is done:
+		sonar_echo_width -= ICR1; // get difference of clock counter
+		sonar_state = DONE;
+	}
+	else
+	{
+		wait_button("here");
+		sonar_echo_width = 0;
+		sonar_state = FAILED;
 	}
 }

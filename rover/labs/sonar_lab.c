@@ -29,7 +29,10 @@ static void part1()
 static void part2()
 {
     while (1) {
+		lcd_clear();
 		lprintf("%u", sonar_reading());
+		lcd_putc(' ');
+		lcd_puts(sonar_get_state());
 		wait_ms(1000);
     }
 }
@@ -37,9 +40,7 @@ static void part2()
 static void part3()
 {
     while (1) {
-	    while (wait_button("") == 0) {
-		    ;  // wait until user presses a button.
-	    }
+	    wait_button(""); // wait until user presses a button.
 	    lprintf("%d", sonar_reading_polling());
     }
 }
@@ -66,6 +67,7 @@ void sonar_lab(void)
             part3();
             break;
         default:
+				lcd_putc('.');
             ; // do nothing
     }
 }
