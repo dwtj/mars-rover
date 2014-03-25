@@ -26,7 +26,7 @@ void wait_ms(unsigned int time_val) {
 	OCR2=250; 				//Clock is 16 MHz. At a prescaler of 64, 250 timer ticks = 1ms.
 	timer2_tick=0;
 	timer2_start(0);
-
+ 
 	//Waiting for time
 	while(timer2_tick < time_val);
 
