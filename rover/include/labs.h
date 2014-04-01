@@ -15,4 +15,6 @@ void sonar_lab();
 
 void servo_lab();
 
+void objects_lab();
+
 #endif /* LABS_H_ */

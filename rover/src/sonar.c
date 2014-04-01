@@ -207,6 +207,7 @@ char *sonar_get_state() {
  * for long enough that it is safe to immediately start another reading.
  *
  * A value of `0.0` will be returned if the sonar reading process failed.
+ * A value of `inf`
  */
 float sonar_reading()
 {

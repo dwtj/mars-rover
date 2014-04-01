@@ -79,23 +79,23 @@ void send_messages()
 
 void part1(void)
 {
-	USART_Init(1);  // init serial
+	USART_Init(1);  // init bluetooth
 	print_serial_to_lcd(0);
 }
 
 void part2 (void){
-	USART_Init(1);  // init serial
+	USART_Init(1);  // init bluetooth
 	print_serial_to_lcd(1);
 }
 
 void part3 (void)
 {
-	USART_Init(1);  // init serial
+	USART_Init(1);  // init bluetooth
 	send_messages();
 }
 
 void part4() {
-	USART_Init(1);
+	USART_Init(1);  // init bluetooth
 	send_messages();
 }
 

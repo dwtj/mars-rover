@@ -117,22 +117,26 @@ void IR_calibrate(bool bam_send, bool save_means)
 		wait_button(NULL);
 		lcd_clear();
 		lcd_puts("Sampling...");
+		
 		wait_ms(500);
+		
 		avg = 0.0;
+		
 		for (int i = 0; i < NUM_CALIB_SAMPLES; i++) {
 			// running average:
 			sample = IR_run();
 			if (bam_send) {
 				send_dist_reading(dist, sample);
 			}
-                        if (save_means) {
+            if (save_means) {
 			    avg += ((float) sample) / NUM_CALIB_SAMPLES;
-                        }
+            }
 			wait_ms(20);
 		}
-                if (save_means) {
+		
+        if (save_means) {
 		    calib_data[dist] = (uint16_t) round(avg);
-                }
+        }
 	}
 }
 

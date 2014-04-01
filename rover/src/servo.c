@@ -100,7 +100,7 @@ void servo_angle(uint8_t deg, bool wait)
 	OCR3B = round(18.6*deg + 1056.8);
 
 	if (wait) {
-		wait_ms(2000);
+		wait_ms(500);  // TODO: make the wait time vary w.r.t. the change in angle.
 	}
 }
 
