@@ -7,6 +7,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "lcd.h"
 #include "servo.h"
 #include <avr/io.h>
@@ -19,7 +20,8 @@ void servo_manual_calib()
 {
 	int8_t move = 0;
 		
-	// All degrees in this function are only rough (i.e. uncalibrated) approximations.
+	// All degrees in this function are only rough (i.e. uncalibrated) approximations,
+	// generated from the lab manual and the datasheet.
 	OCR3B = 2500; // about 90 degrees
 	
 	while(1) {
@@ -66,13 +68,31 @@ void servo_init()
 	TCCR3A = 0b00100011; // waveform generation mode 15, output compare from channel B
 	TCCR3B = 0b00011010; // 1/8 prescaler
 	TCCR3C = 0;  // Not using force output compares
-	ETIMSK = 0;  // Not using interupts
+	ETIMSK = 0;  // Not using interrupts
 	OCR3A = TOP;	//set top
 	
 	DDRE = 0b00010000;  // Set data direction on Pin 4 of Port E to input.
 	
 	servo_angle(90, true);
 }
+
+
+
+
+
+/**
+ * Returns an approximate number of milliseconds that the system should wait before being certain
+ * that the servo has reached its intended angle.
+ */
+static uint16_t servo_move_wait_time(uint8_t old_angle, uint8_t new_angle)
+{
+	int16_t rv;
+	rv = abs(new_angle - old_angle);
+	rv = 7 * rv + 10;
+	return rv;
+}
+
+
 
 /**
  * Moves servo to the desired angle `deg`, measured in degrees. Uses the simple analytical
@@ -83,6 +103,8 @@ void servo_init()
  */
 void servo_angle(uint8_t deg, bool wait)
 {
+	static uint8_t old_deg = 0;
+	
 	if (deg < 0 || deg > 180) {
 		return;
 	}
@@ -100,9 +122,16 @@ void servo_angle(uint8_t deg, bool wait)
 	OCR3B = round(18.6*deg + 1056.8);
 
 	if (wait) {
-		wait_ms(500);  // TODO: make the wait time vary w.r.t. the change in angle.
+		wait_ms(servo_move_wait_time(old_deg, deg));
 	}
+	
+	old_deg = deg;
 }
+
+
+
+
+
 
 
 void servo_enable() {

@@ -28,27 +28,39 @@ static void part2() {
 
 static void part3()
 {
+	uint8_t angles[] = {0, 45, 90, 135, 180};
 	while(1)
 	{
 		// SW1 -> 0 degrees, SW2 -> 45 degrees, SW3 -> 90 degrees, 
 		// SW4 -> 135 degrees, SW5 -> 180 degrees 
+		
 		uint8_t prog = wait_button("Select Angle...");
+
+		/*
+		if (1 <= prog && prog <= 5) {
+			servo_angle(angles[prog], true);
+		} else {
+			lcd_puts("Invalid Angle.");
+			wait_ms(1500);
+		}
+		*/
+		
 
 		switch (prog) {
 		case 1:
-			servo_angle(0, false);
+			servo_angle(0, true);
 			break;
 		case 2:
-			servo_angle(45, false);
+			servo_angle(45, true);
 			break;
 		case 3:
-			servo_angle(90, false);
+			servo_angle(90, true);
 			break;
 		case 4:
-			servo_angle(135, false);
+			servo_angle(135, true);
 			break;
 		case 5:
-			servo_angle(180, false);
+			servo_angle(180, true);
 			break;
 		default:
 			lcd_puts("Invalid Angle.");
