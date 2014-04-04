@@ -47,6 +47,10 @@ void IR_start() {
 	ADCSRA |= 0x40;
 }
 
+
+/**
+ * Assumes that IR reading has been initiated via `IR_start()`.
+ */
 uint16_t IR_read()
 {
 	while (ADCSRA & 0x40) {

@@ -32,20 +32,22 @@ static void part1()
 	uint8_t len;
 	
 	
-	for (deg = 0; deg <= 180; deg += 2)
+	for (deg = 0; deg <= 180; deg += 1)
 	{
 		servo_angle(deg, true);
 		snprintf(buf, RX_BUFSIZE, "%3d, ", deg);
-		USART_transmit_buffer(buf);
-		USART_transmit_buffer("\n");
+		//USART_transmit_buffer(buf);
+		//USART_transmit_buffer("\n");
 	}
 }
 
 
+
+
+
 static void part2()
 {
-	
-	
+	objects_scan();
 }
 
 void objects_lab()

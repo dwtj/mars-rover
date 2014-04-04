@@ -8,5 +8,5 @@
 #include "labs.h"
 
 int main() {
-	servo_lab();
+	objects_lab();
 }

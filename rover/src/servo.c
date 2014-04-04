@@ -88,7 +88,7 @@ static uint16_t servo_move_wait_time(uint8_t old_angle, uint8_t new_angle)
 {
 	int16_t rv;
 	rv = abs(new_angle - old_angle);
-	rv = 7 * rv + 10;
+	rv = 7 * rv + 20;
 	return rv;
 }
 

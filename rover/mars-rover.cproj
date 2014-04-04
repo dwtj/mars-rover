@@ -172,6 +172,9 @@
     <Compile Include="include\labs.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\objects.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\servo.h">
       <SubType>compile</SubType>
     </Compile>
@@ -203,6 +206,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\movement.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\objects.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\open_interface.c">
