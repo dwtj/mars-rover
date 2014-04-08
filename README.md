@@ -1,7 +1,11 @@
 # mars-rover #
 
-By Flavia Cavalcanti and David Johnston
+Final Project for CprE 288: Embedded Systems (Spring 2014)
 
-Final Project for CprE 288: Embedded Systems
+By Diamondstone and the Diamondstuds:
 
-Spring 2014
+- Flavia Cavalcanti (flaviarc@iastate.edu)
+- David Johnston (dwtj@iastate.edu)
+- Anne Ore (orea@iastate.edu)
+- Alex Rienhart (asr@iastate.edu)
+

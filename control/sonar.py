@@ -1,0 +1,46 @@
+def init():
+    """
+    Initializes the sonar subsystem for use. Also activates the sonar, i.e.,
+    the sonar state is made to be "on".
+    """
+
+    raise NotImplementedError
+
+
+
+
+
+def calibrate():
+    """
+    Initiates the `control`-operated calibration routine of the sonar subsystem.
+    """
+
+
+
+
+
+
+def readings(n, raw = True, rand = False, timestamps = False):
+    """
+    Gets an `ndarray` of sonar readings from the `rover`.
+
+    Expects `n` to be an unsiged integer. Expects both `rand` and `timestamps`
+    to be booleans.
+
+    If `n` is a positive integer, then `rover` should stream `n` independent
+    sonar readings back to `control`. If `n` is zero, then independent IR
+    readings should be streamed back to `control` until `control` sends a
+    command to stop.
+
+    If `raw` is `True`, then the raw ADC output is streamed back to `control`
+    rather than the approximated distance as calculated by `rover`.
+
+    If `rand` is `True`, then readings will not be taken as often as possible.
+    Rather, one each reading should delayed by a random amount of time before
+    being taken.
+
+    If `timestamps` is `True`, then timestamps indicating when a reading was
+    taken are streamed back to `control` along with the readings themselves.
+    """
+
+    raise NotImplementedError
