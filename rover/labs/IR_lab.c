@@ -45,18 +45,20 @@ void IR_lab()
 	IR_init();
 	
 	prog = wait_button("Choose program:");
-	switch (prog) {
-		case 1:
-			IR_test_analytical_conv();
-			break;
-		case 2:
-			IR_test_calib_conv();
-			break;
-		case 3:
-			// Send calibration data over BAM, and do not save means:
-			 IR_calibrate(true, false);
-			break;
-		default:
-			;  // do nothing
+	while(1) {
+		switch (prog) {
+			case 1:
+				IR_test_analytical_conv();
+				break;
+			case 2:
+				IR_test_calib_conv();
+				break;
+			case 3:
+				// Send calibration data over BAM, and do not save means:
+				 IR_calibrate(true, false);
+				break;
+			default:
+				;  // do nothing
+		}
 	}
 }

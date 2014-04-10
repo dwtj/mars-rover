@@ -183,7 +183,7 @@ static uint16_t ticks_to_time(uint16_t n) {
  * before the echo returned to the SONAR sensor.
  */
 static float time_to_dist(float t) {
-    return 0.017 * t; //divide distance conversion by two to account for the journey to and from the object
+    return 0.034 * t; //divide distance conversion by two to account for the journey to and from the object
 }
 
 

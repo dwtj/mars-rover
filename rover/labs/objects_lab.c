@@ -37,12 +37,11 @@ static void part1()
 	{
 		lcd_puts(".");
 		servo_angle(deg, true);
-		// TODO: reading sonar a second time causes system to halt.
-		//snprintf(buf, RX_BUFSIZE, "%3d, %d, %.1f, ", deg, IR_run(), (double) sonar_reading());
-		//snprintf(buf, RX_BUFSIZE, "%3d, %.1f, ", deg, (double) sonar_reading());  // DEBUG
-		snprintf(buf, RX_BUFSIZE, "%3d, %d, ", deg, IR_run());  // DEBUG
+		snprintf(buf, RX_BUFSIZE, "%3d, %3.1f, %3.1f, ", deg, (double) IR_conv(IR_run()), (double) sonar_reading());
 		USART_transmit_buffer(buf);
 		USART_transmit_buffer("\r\n");
+		
+		wait_ms(100);  // Needed to prevent the sonar from being called too frequently.
 	}
 }
 
@@ -52,20 +51,22 @@ static void part1()
 
 static void part2()
 {
-		#define MY_RX_BUFSIZE 20
-		static char buf[MY_RX_BUFSIZE];
+	/*
+	#define MY_RX_BUFSIZE 20
+	static char buf[MY_RX_BUFSIZE];
 		
-		uint8_t deg;
-		uint8_t len;
+	uint8_t deg;
+	uint8_t len;
 		
 		
-		for (deg = 0; deg <= 180; deg += 1)
-		{
-			objects_scan();
-			// TODO
-			USART_transmit_buffer(buf);
-			USART_transmit_buffer("\n");
-		}
+	for (deg = 0; deg <= 180; deg += 1)
+	{
+		objects_scan();
+		// TODO
+		USART_transmit_buffer(buf);
+		USART_transmit_buffer("\n");
+	}
+	*/
 }
 
 void objects_lab()
@@ -80,16 +81,17 @@ void objects_lab()
 	lcd_puts("Objects Lab Startup...");
 	wait_ms(1000);
 	lcd_clear();
-
-	uint8_t prog = wait_button("Select Program...");
-	switch (prog) {
-	case 1:
-		part1();
-		break;
-	case 2:
-		part2();
-		break;
-	default:
-		lcd_puts("Invalid Program.");
+	while(1) {
+		uint8_t prog = wait_button("Select Program...");
+		switch (prog) {
+		case 1:
+			part1();
+			break;
+		case 2:
+			part2();
+			break;
+		default:
+			lcd_puts("Invalid Program.");
+		}
 	}
 }
