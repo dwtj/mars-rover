@@ -65,13 +65,13 @@ static void set_pulse_proportion(float p){
 
 void servo_init()
 {
-	TCCR3A = 0b00100011; // waveform generation mode 15, output compare from channel B
+	TCCR3A = 0b00100011; // WGM 15, output compare from channel B
 	TCCR3B = 0b00011010; // 1/8 prescaler
-	TCCR3C = 0;  // Not using force output compares
-	ETIMSK = 0;  // Not using interrupts
-	OCR3A = TOP;	//set top
+	TCCR3C = 0;          // Not using force output compares
+	ETIMSK = 0;          // Not using interrupts
+	OCR3A = TOP;	     // set top
 	
-	DDRE = 0b00010000;  // Set data direction on Pin 4 of Port E to input.
+	DDRE = 0b00010000;   // Set data direction on Pin 4 of Port E to output.
 	
 	servo_angle(90, true);
 }
