@@ -60,11 +60,6 @@ uint16_t IR_read()
 	return ADC; //Includes the high and low bytes
 }
 
-uint16_t IR_run() {
-	IR_start();
-	return(IR_read());
-}
-
 
 // Converts the given quantized voltage measurement `d` to the analytical approximation of the distance,
 // as derived from datasheet information. This does not use any form of calibration.
@@ -89,6 +84,37 @@ void send_dist_reading(uint8_t dist, uint16_t reading)
 	
 	USART_transmit_buffer(buf);
 }
+
+
+
+
+
+/*
+ * Implments the third-order polynomial conversion from IR ADC readings, `d`,
+ * to distances (in cm) as described in `sensors/ir/calibration_data.md`.
+ */
+float IR_conv(uint16_t d)
+{
+    // The intercept and the first, second, and third-order coefficients:
+    const static float coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
+    return coef[0] + d * (coef[1] + d * (coef[2] + d * coef[3]));
+}
+
+
+
+
+uint16_t IR_run() {
+	#warning "`IR_run()` is deprecated. Use `IR_reading()` instead."
+	IR_start();
+	return(IR_read());
+}
+
+
+float IR_reading() {
+	IR_start();
+	return(IR_conv(IR_read()));
+}
+
 
 
 /*
@@ -142,17 +168,4 @@ void IR_calibrate(bool bam_send, bool save_means)
 		    calib_data[dist] = (uint16_t) round(avg);
         }
 	}
-}
-
-
-
-/*
- * Implments the third-order polynomial conversion from IR ADC readings, `d`,
- * to distances (in cm) as described in `sensors/ir/calibration_data.md`.
- */
-float IR_conv(uint16_t d)
-{
-    // The intercept and the first, second, and third-order coefficients:
-    const static float coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
-    return coef[0] + d * (coef[1] + d * (coef[2] + d * coef[3]));
 }

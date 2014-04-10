@@ -30,14 +30,12 @@ static void part1()
 	static char buf[RX_BUFSIZE];
 	
 	uint8_t deg;
-	uint8_t len;
-	
 	
 	for (deg = 0; deg <= 180; deg += 1)
 	{
 		lcd_puts(".");
 		servo_angle(deg, true);
-		snprintf(buf, RX_BUFSIZE, "%3d, %3.1f, %3.1f, ", deg, (double) IR_conv(IR_run()), (double) sonar_reading());
+		snprintf(buf, RX_BUFSIZE, "%3d, %3.1f, %3.1f, ", deg, (double) IR_reading(), (double) sonar_reading());
 		USART_transmit_buffer(buf);
 		USART_transmit_buffer("\r\n");
 		
@@ -51,22 +49,17 @@ static void part1()
 
 static void part2()
 {
-	/*
-	#define MY_RX_BUFSIZE 20
+	#define MY_RX_BUFSIZE 200
 	static char buf[MY_RX_BUFSIZE];
 		
-	uint8_t deg;
-	uint8_t len;
-		
-		
-	for (deg = 0; deg <= 180; deg += 1)
-	{
-		objects_scan();
-		// TODO
+	scan_results results = objects_scan();
+	for (int i = 0; i < results.n; i++) {
+		snprint_object(buf, MY_RX_BUFSIZE, results.objects + i);
 		USART_transmit_buffer(buf);
-		USART_transmit_buffer("\n");
+		USART_transmit_buffer("\n\n");
 	}
-	*/
+	
+
 }
 
 void objects_lab()

@@ -16,7 +16,10 @@ void IR_init();
 
 void IR_start();  // returns immediately
  
+// Warning: This is deprecated. Use IR_reading() instead.
 uint16_t IR_run();  // starts conversion and polls until conversion is complete, returning the converted value
+
+float IR_reading();
 
 uint16_t IR_read();  // polls until conversion is complete
 

@@ -24,4 +24,6 @@ typedef struct {
 
 scan_results objects_scan();
 
+uint16_t snprint_object(char *buf, uint16_t bufsize, object *obj);
+
 #endif /* OBJECTS_H_ */

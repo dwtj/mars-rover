@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <math.h>
 
 
 #include "servo.h"
@@ -85,15 +86,24 @@ float object_dist(uint8_t n, readings rs[n]) {
 	return sum / (2 * n);
 }
 
+
+
+/**
+ * This computes the linear width of a circular object using given parameters.
+ */
 float object_width(uint8_t theta1, uint8_t theta2, float dist) {
-	#warning "`object_width()` is implementing angular rather than linear width."
-	return abs(theta2 - theta1);  // TODO: make this linear width instead of angular width.
+	double x = tan(((float) abs(theta2 - theta1)) / 2);
+	return 2 * dist * x / (1 - x);
 }
 
 
-void object_found_cleanup(scan_FSM *fsm) {
+void object_found_cleanup(scan_FSM *fsm)
+{
 	// Another object has been found.
-	fsm->objects[fsm->objects_found].dist = object_dist(fsm->cur_object_width, fsm->cur_object_readings);
+	object *cur_obj = fsm->objects + fsm->objects_found;  // This is the object being finalized.
+	
+	cur_obj->dist = object_dist(fsm->cur_object_width, fsm->cur_object_readings);
+	cur_obj->width = object_width(cur_obj->theta1, cur_obj->theta2, cur_obj->dist);
 	fsm->objects_found++;
 	
 	// The readings in `fsm->cur_object_readings[]` buffer is now garbage.
@@ -116,7 +126,7 @@ static bool is_object_there(readings *rs)
 
 static void transA(scan_FSM *fsm)
 {
-	readings rs = {.ir = IR_run(), .sonar = sonar_reading()};
+	readings rs = {.ir = IR_reading(), .sonar = sonar_reading()};
 	if (is_object_there(&rs)) {
 		// A *potential* new object was found.
 		// TODO: bail-out because of too-many objects found!
@@ -131,7 +141,7 @@ static void transA(scan_FSM *fsm)
 
 static void transB(scan_FSM *fsm)
 {
-	readings rs = {.ir = IR_run(), .sonar = sonar_reading()};
+	readings rs = {.ir = IR_reading(), .sonar = sonar_reading()};
 	if (is_object_there(&rs)) {
 		// Now convinced that the potential object is an actual object.
 		// Add another reading to the data structure.
@@ -151,7 +161,7 @@ static void transC(scan_FSM *fsm)
 	// if (fsm->cur_object_width == MAX_OBJECT_WIDTH - 1)
 	//     do something
 	
-	readings rs = {.ir = IR_run(), .sonar = sonar_reading()};
+	readings rs = {.ir = IR_reading(), .sonar = sonar_reading()};
 	if (is_object_there(&rs))
 	{
 		// Still looking at an actual object and waiting for the end of it.
@@ -177,7 +187,7 @@ static void transC(scan_FSM *fsm)
 
 static void transD(scan_FSM *fsm)
 {
-	readings rs = {.ir = IR_run(), .sonar = sonar_reading()};
+	readings rs = {.ir = IR_reading(), .sonar = sonar_reading()};
 	if (is_object_there(&rs))
 	{
 		// TODO: bail out if the width is too wide for the available buffer:
@@ -198,6 +208,41 @@ static void transD(scan_FSM *fsm)
 		
 		fsm->state = A;
 	}
+}
+
+
+
+
+/**
+ * Prints the contents of the given object into the given string buffer.
+ * Returns the total number of characters printed.
+ */
+uint16_t snprint_object(char *buf, uint16_t bufsize, object *obj)
+{
+	char *ep = buf + bufsize;  // Points one char past the last element of the buffer.
+	uint16_t n;
+	
+	n = snprintf(buf, ep - buf, "theta1: %3d\n", obj->theta1);
+	buf += n;
+	if (buf <= ep)
+		return 0;
+
+	n = snprintf(buf, ep - buf, "theta2: %3d\n", obj->theta2);
+	buf += n;
+	if (buf <= ep)
+		return 0;
+	
+	n = snprintf(buf, ep - buf, "dist:   %3f\n", obj->dist);
+	buf += n;
+	if (buf <= ep)
+		return 0;
+	
+	snprintf(buf, ep - buf, "width:  %3f\n", obj->width);
+	buf += n;
+	if (buf <= ep)
+		return 0;
+		
+	return buf - (ep - bufsize);
 }
 
 
