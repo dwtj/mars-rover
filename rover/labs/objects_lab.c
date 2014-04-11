@@ -54,9 +54,20 @@ static void part2()
 		
 	scan_results results;
 	objects_scan(&results);
+	
+	//wait_button("here0");
+	
 	snprintf(buf, MY_RX_BUFSIZE, "Objects Found: %d\n\n", results.n);
+	
+	//wait_button("here1");
+	
 	USART_transmit_buffer(buf);
+	
+	//wait_button("here2");
+	
 	lprintf("%s", buf);
+	
+	//wait_button("here3");
 	
 	for (int i = 0; i < results.n; i++) {
 		snprint_object(buf, MY_RX_BUFSIZE, results.objects + i);
