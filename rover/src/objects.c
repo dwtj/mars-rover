@@ -218,31 +218,13 @@ static void transD(scan_FSM *fsm)
  * Returns the total number of characters printed.
  */
 uint16_t snprint_object(char *buf, uint16_t bufsize, object *obj)
-{
-	char *ep = buf + bufsize;  // Points one char past the last element of the buffer.
-	uint16_t n;
+{	
+	static const char *format = "theta1: %3d\n"
+					            "theta2: %3d\n"
+					            "dist:   %2.1f\n"
+					            "width:  %2.1f\n";
 	
-	n = snprintf(buf, ep - buf, "theta1: %3d\n", obj->theta1);
-	buf += n;
-	if (buf <= ep)
-		return 0;
-
-	n = snprintf(buf, ep - buf, "theta2: %3d\n", obj->theta2);
-	buf += n;
-	if (buf <= ep)
-		return 0;
-	
-	n = snprintf(buf, ep - buf, "dist:   %3f\n", obj->dist);
-	buf += n;
-	if (buf <= ep)
-		return 0;
-	
-	snprintf(buf, ep - buf, "width:  %3f\n", obj->width);
-	buf += n;
-	if (buf <= ep)
-		return 0;
-		
-	return buf - (ep - bufsize);
+	return snprintf(buf, bufsize, format, obj->theta1, obj->theta2, obj->dist, obj->width);
 }
 
 

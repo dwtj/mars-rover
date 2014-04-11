@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include <stdio.h>
+#include <stdlib.h>
 
 #include "labs.h"
 #include "servo.h"
@@ -59,7 +59,7 @@ static void part2()
 		USART_transmit_buffer("\n\n");
 	}
 	
-
+	free(results.objects);
 }
 
 void objects_lab()
