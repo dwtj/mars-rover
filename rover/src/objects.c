@@ -16,39 +16,13 @@
 #include "sonar.h"
 #include "IR.h"
 #include "objects.h"
+#include "util.h"
 
 
 /************************************************************************/
 /* Definitions for the object scan finite state machine.                */
 /************************************************************************/
 
-
-typedef struct {
-	float sonar;
-	uint16_t ir;
-} readings;
-
-
-// The maximum number of degrees which can be recorded for a single object.
-#define CUR_OBJECT_WIDTH_MAX 30
-
-// The maximum supported number of objects that the FSM can find in a scan.
-#define MAX_OBJECTS 10
-
-
-#define NUM_STATES 4
-typedef enum {A = 0, B = 1, C = 2, D = 3} scan_FSM_states;
-
-
-
-typedef struct {
-	scan_FSM_states state;    // The current state that this scan_FSM is in.
-	object objects[MAX_OBJECTS];  // The object that have so far been found by this current scan.
-	uint8_t objects_found;    // The number of object found in the current scan, and their scanning process is **complete**.
-	uint8_t cur_angle;        // The current angle at which the tower is directed. Range is 0 to 180 degrees (inclusive).
-	readings cur_object_readings[CUR_OBJECT_WIDTH_MAX];  // Readings from each degree since the beginning of the object currently being observed.
-	uint8_t cur_object_width;  // The number of degrees since the beginning of the object currently being observed.
-} scan_FSM;
 
 
 
@@ -236,9 +210,8 @@ uint16_t snprint_object(char *buf, uint16_t bufsize, object *obj)
 /* Initiates the object scan finite state machine.                      */
 /************************************************************************/
 
-scan_results objects_scan()
+void objects_scan(scan_results *results)
 {
-	scan_results rv;
 	scan_FSM fsm;
 	FSM_init(&fsm, 0);  // Starting at degree zero.
 		
@@ -247,14 +220,12 @@ scan_results objects_scan()
 		servo_angle(deg, true);
 		fsm.cur_angle = deg;
 		scan_FSM_trans[fsm.state](&fsm);
+		wait_ms(100);  // DEBUG
 	}
 	
-	// Copy results into `rv`:
-	rv.n = fsm.objects_found;
-	rv.objects = malloc(rv.n * sizeof(object));
-	for (uint8_t i = 0; i < rv.n; i++) {
-		rv.objects[i] = fsm.objects[i];
+	// Copy results generated in `fsm` into `*results`:
+	results->n = fsm.objects_found;
+	for (uint8_t i = 0; i < fsm.objects_found; i++) {
+		results->objects[i] = fsm.objects[i];
 	}
-	
-	return rv;
 }

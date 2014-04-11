@@ -52,14 +52,19 @@ static void part2()
 	#define MY_RX_BUFSIZE 200
 	static char buf[MY_RX_BUFSIZE];
 		
-	scan_results results = objects_scan();
+	scan_results results;
+	objects_scan(&results);
+	snprintf(buf, MY_RX_BUFSIZE, "Objects Found: %d\n\n", results.n);
+	USART_transmit_buffer(buf);
+	lprintf("%s", buf);
+	
 	for (int i = 0; i < results.n; i++) {
 		snprint_object(buf, MY_RX_BUFSIZE, results.objects + i);
 		USART_transmit_buffer(buf);
 		USART_transmit_buffer("\n\n");
 	}
 	
-	free(results.objects);
+	wait_button("");
 }
 
 void objects_lab()
