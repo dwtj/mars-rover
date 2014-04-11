@@ -217,12 +217,26 @@ void objects_scan(scan_results *results)
 		
 	for (uint8_t deg = 0; deg <= 180; deg += 1)
 	{
-		/*
 		servo_angle(deg, true);
 		fsm.cur_angle = deg;
-		scan_FSM_trans[fsm.state](&fsm);
-		wait_ms(10);  // DEBUG
-		*/
+		//scan_FSM_trans[fsm.state](&fsm);
+		switch(fsm.state) {
+		case A:
+			transA(&fsm);
+			break;
+		case B:
+			transB(&fsm);
+			break;
+		case C:
+			transC(&fsm);
+			break;
+		case D:
+			transD(&fsm);
+			break;
+		default:
+			wait_button("ERROR");
+		}
+		wait_ms(10);  // DEBUG	
 	}
 	
 	// Copy results generated in `fsm` into `*results`:
@@ -232,7 +246,7 @@ void objects_scan(scan_results *results)
 		results->objects[i] = fsm.objects[i];
 	}
 	
-	results->n = 0;
+	//results->n = 0;
 	wait_button("Leaving program");
 	return;
 //	wait_button("here");
