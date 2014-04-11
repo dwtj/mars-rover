@@ -69,11 +69,25 @@ static void part2()
 	
 	//wait_button("here3");
 	
+	uint8_t minwidth = 180;
+	//uint8_t min_id = 0;
+	uint16_t min_midpoint = 0;
+	uint8_t delta;
+	
 	for (int i = 0; i < results.n; i++) {
+		delta = results.objects[i].theta2 - results.objects[i].theta1;
+		if (delta < minwidth){
+			minwidth = delta;
+			min_midpoint = (results.objects[i].theta2 + results.objects[i].theta1) / 2;
+			//min_id = i;
+		}
 		snprint_object(buf, MY_RX_BUFSIZE, results.objects + i);
 		USART_transmit_buffer(buf);
 		USART_transmit_buffer("\n\n");
 	}
+	
+	// go to midpoint of min_id;
+	servo_angle(min_midpoint, true);
 	
 	wait_button("");
 }

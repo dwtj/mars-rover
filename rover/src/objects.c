@@ -66,7 +66,7 @@ float object_dist(uint8_t n, readings rs[n]) {
  * This computes the linear width of a circular object using given parameters.
  */
 float object_width(uint8_t theta1, uint8_t theta2, float dist) {
-	double x = tan(((float) abs(theta2 - theta1)) / 2);
+	double x = tan((theta2 - theta1) / 2.0);
 	return 2 * dist * x / (1 - x);
 }
 
@@ -87,7 +87,7 @@ void object_found_cleanup(scan_FSM *fsm)
 
 static bool is_object_there(readings *rs)
 {
-	const uint8_t low = 30, high = 85;
+	const uint8_t low = 5, high = 92;
 	return (low <= rs->ir && rs->ir <= high) && (low <= rs->sonar && rs->sonar <= high);
 }
 
@@ -241,13 +241,13 @@ void objects_scan(scan_results *results)
 	
 	// Copy results generated in `fsm` into `*results`:
 	results->n = fsm.objects_found;
-	wait_button("Entering loop...");
+	//wait_button("Entering loop...");
 	for (uint8_t i = 0; i < fsm.objects_found && i < MAX_OBJECTS; i++) {
 		results->objects[i] = fsm.objects[i];
 	}
 	
 	//results->n = 0;
-	wait_button("Leaving program");
+	//wait_button("Leaving program");
 	return;
 //	wait_button("here");
 }

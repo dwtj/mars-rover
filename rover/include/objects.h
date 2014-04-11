@@ -11,11 +11,11 @@
 
 
 // The maximum number of degrees which can be recorded for a single object.
-#define CUR_OBJECT_WIDTH_MAX 30
+#define CUR_OBJECT_WIDTH_MAX 182
 
 
 // The maximum supported number of objects that the FSM can find in a scan.
-#define MAX_OBJECTS 10
+#define MAX_OBJECTS 30
 
 
 // An object observed by the scan_FSM.
