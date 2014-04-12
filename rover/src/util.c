@@ -8,11 +8,15 @@
  * @date 06/26/2012
  */
 
+#include <stdbool.h>
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
+
 #include "util.h"
-#include <stdbool.h>
 #include "lcd.h"
+#include "usart.h"
+#include "comm.h"
 
 // Global used for interrupt driven delay functions
 volatile unsigned int timer2_tick;
@@ -61,7 +65,18 @@ ISR (TIMER2_COMP_vect) {
 	timer2_tick++;
 }
 
-
+void rError(uint8_t err_num, char* msg)
+{	
+	// TODO: stop current command handling.
+	
+	USART_Transmit(signal_soh);
+	USART_Transmit(signal_error);
+	USART_Transmit(err_num);
+	USART_transmit_buffer(msg);
+	USART_Transmit(signal_eot);
+	
+	lprintf("Error: %d", err_num);
+}
 
 
 /// Initialize PORTC to accept push buttons as input

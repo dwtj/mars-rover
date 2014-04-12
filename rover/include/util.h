@@ -22,6 +22,17 @@ void  move_stepper_motor_by_step(int num_steps, int direction);
 void init_push_buttons(void);
 
 
+// Custom error codes.
+typedef enum {
+	error_txq = 0,
+} error;
+
+
+// Custom error handling function.
+void rError(error err_num, char* msg);
+
+
+
 /**
  * Return the position of button being pushed.
  * @return the position of the left-most button being pushed.  A value of 1 indicates the rightmost button.  0 indicates no button being pressed
