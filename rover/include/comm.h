@@ -9,6 +9,8 @@
 #ifndef COMM_H
 #define COMM_H
 
+#include <stdbool.h>
+
 #include <avr/io.h>
 
 /* The following enumerated types are classes of header codes that head
@@ -37,15 +39,6 @@ typedef enum
 #define NUM_SIGNAL_CODES 9
 
 
-/*A queue to store transmission from rover to control
-  functions related to this are prefixed with txq*/
-#define TXQ_BUFF_SIZE 100
-typedef struct{
-	uint8_t buff[TXQ_BUFF_SIZE];
-	uint8_t write_index;  // points to the next element to be added to the queue.
-	uint8_t read_index;   // points to the next element to be removed from the queue.
-	uint8_t num_elements;
-}txq_t;
 
 // Check for some compile-time protocol definition errors:
 /*
