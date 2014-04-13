@@ -65,17 +65,22 @@ ISR (TIMER2_COMP_vect) {
 	timer2_tick++;
 }
 
+//Stop the currently executing command.
+void abort_command(){
+	control.running = false;
+}
+
+//Transmit an error to control, print error code on LCD, and call abort_command(), then stop executing.
 void rError(uint8_t err_num, char* msg)
 {	
-	// TODO: stop current command handling.
-	
 	USART_Transmit(signal_soh);
 	USART_Transmit(signal_error);
 	USART_Transmit(err_num);
 	USART_transmit_buffer(msg);
 	USART_Transmit(signal_eot);
-	
 	lprintf("Error: %d", err_num);
+	abort_command();
+	while(1); //Stop running this bad code.
 }
 
 

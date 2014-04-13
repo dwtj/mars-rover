@@ -25,6 +25,7 @@ void init_push_buttons(void);
 // Custom error codes.
 typedef enum {
 	error_txq = 0,
+	error_bad_request = 1,
 } error;
 
 

@@ -35,7 +35,7 @@ uint8_t txq_dequeue()
 	// Wrap around if read_index would underflow (go negative).
 	if (txq.read_index > 0) {
 		txq.read_index--;
-		} else {
+	} else {
 		txq.read_index = TXQ_BUFF_SIZE - 1;
 	}
 	

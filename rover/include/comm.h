@@ -28,15 +28,27 @@ typedef enum
 	signal_stx = 2,   // Start of text
 	signal_etx = 3,   // End of text
 	signal_eot = 4,   // End of transmission
-	signal_enq = 5,   // Enquiry
+	signal_enq = 5,   // Enquery
 	signal_ack = 6,   // Acknowledge
 	
 	signal_ping = 7,
 	signal_error = 8,
 	
-	num_signal_codes
+	signal_command = 9,
 } signal;
-#define NUM_SIGNAL_CODES 9
+#define NUM_SIGNAL_CODES 10
+
+
+// IDs for each of the rover's subsystems.
+typedef enum
+{
+	lcd = 0,
+	oi = 1,
+	sonar = 2,
+	servo = 3,
+	ir = 4,
+	rng = 5,
+} subsystems;
 
 
 
