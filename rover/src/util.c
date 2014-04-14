@@ -70,7 +70,7 @@ void abort_command(){
 	control.running = false;
 }
 
-//Transmit an error to control, print error code on LCD, and call abort_command(), then stop executing.
+//Transmit an error to control, print error code on LCD, then cease executing the command and rover.
 void rError(uint8_t err_num, char* msg)
 {	
 	USART_Transmit(signal_soh);

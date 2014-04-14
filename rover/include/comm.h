@@ -22,21 +22,17 @@
 
 typedef enum
 {
-	// The following seven signals match the ASCII control codes.
-	signal_nul = 0,   // NULL
-	signal_soh = 1,   // Start of heading
-	signal_stx = 2,   // Start of text
-	signal_etx = 3,   // End of text
-	signal_eot = 4,   // End of transmission
-	signal_enq = 5,   // Enquery
-	signal_ack = 6,   // Acknowledge
+	signal_null = 0,   // NULL
+	signal_start = 1,   // Start of frame
+	signal_stop = 2,    // End of frame
 	
-	signal_ping = 7,
-	signal_error = 8,
+	signal_error = 3,
 	
-	signal_command = 9,
+	signal_ping = 4,
+	signal_echo = 5,
+	signal_command = 6,
 } signal;
-#define NUM_SIGNAL_CODES 10
+#define NUM_SIGNAL_CODES 7
 
 
 // IDs for each of the rover's subsystems.
