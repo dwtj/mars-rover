@@ -45,6 +45,7 @@ typedef enum
 	ir = 4,
 	rng = 5,
 } subsystems;
+#define NUM_SUBSYS_CODES 6
 
 
 
