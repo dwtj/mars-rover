@@ -9,6 +9,8 @@
 #ifndef COMM_H
 #define COMM_H
 
+#include <stdbool.h>
+
 #include <avr/io.h>
 
 /* The following enumerated types are classes of header codes that head
@@ -20,32 +22,32 @@
 
 typedef enum
 {
-	// The following seven signals match the ASCII control codes.
-	signal_nul = 0,   // NULL
-	signal_soh = 1,   // Start of heading
-	signal_stx = 2,   // Start of text
-	signal_etx = 3,   // End of text
-	signal_eot = 4,   // End of transmission
-	signal_enq = 5,   // Enquiry
-	signal_ack = 6,   // Acknowledge
+	signal_null = 0,   // NULL
+	signal_start = 1,   // Start of frame
+	signal_stop = 2,    // End of frame
 	
-	signal_ping = 7,
-	signal_error = 8,
+	signal_error = 3,
 	
-	num_signal_codes
+	signal_ping = 4,
+	signal_echo = 5,
+	signal_command = 6,
 } signal;
-#define NUM_SIGNAL_CODES 9
+#define NUM_SIGNAL_CODES 7
 
 
-/*A queue to store transmission from rover to control
-  functions related to this are prefixed with txq*/
-#define TXQ_BUFF_SIZE 100
-typedef struct{
-	uint8_t buff[TXQ_BUFF_SIZE];
-	uint8_t write_index;  // points to the next element to be added to the queue.
-	uint8_t read_index;   // points to the next element to be removed from the queue.
-	uint8_t num_elements;
-}txq_t;
+// IDs for each of the rover's subsystems.
+typedef enum
+{
+	lcd = 0,
+	oi = 1,
+	sonar = 2,
+	servo = 3,
+	ir = 4,
+	rng = 5,
+} subsystems;
+#define NUM_SUBSYS_CODES 6
+
+
 
 // Check for some compile-time protocol definition errors:
 /*

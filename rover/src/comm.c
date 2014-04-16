@@ -17,7 +17,7 @@
 #include "util.h"
 
 
-static volatile txq_t txq;
+
 
 static uint8_t signal_null_handler() {
 	// do nothing
@@ -29,52 +29,6 @@ static uint8_t signal_ping_handler() {
 	return 0;
 }
 
-void txq_init() {
-	#warning "TODO"
-}
-
-
-
-uint8_t txq_dequeue()
-{
-	uint8_t ret;
-	
-	if(txq.num_elements == 0) {
-		rError(error_txq, "Transmission queue is empty.");
-	}
-	
-	ret = txq.buff[txq.read_index];
-	
-	// Wrap around if read_index would underflow (go negative).
-	if (txq.read_index > 0) {
-		txq.read_index--;
-	} else {
-		txq.read_index = TXQ_BUFF_SIZE - 1;
-	}
-	
-	txq.num_elements--;
-	return ret;
-}
-
-
-
-void txq_enqueue(uint8_t val)
-{
-	if(txq.num_elements == TXQ_BUFF_SIZE) {
-		rError(error_txq, "Transmission queue is full.");
-	}
-	
-	txq.buff[txq.write_index] = val;
-	
-	// Wrap around if write_index would overflow.
-	if(txq.write_index < TXQ_BUFF_SIZE -1) {
-		txq.write_index++;
-	} else {
-		txq.write_index = 0;
-	}
-	
-	txq.num_elements++;
-}
 
 
 
