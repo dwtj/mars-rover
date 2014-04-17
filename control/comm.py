@@ -3,15 +3,14 @@
 
 
 import serial
-import numpy as np
+#import numpy as np
 from enum import IntEnum
 
-MAX_DATA_FRAME_LENGTH = 100
 
+MAX_DATA_FRAME_LEN = 100
 
 
 ser = None  # The serial connection to the rover.
-
 
 
 class Signal(IntEnum):
@@ -40,7 +39,7 @@ class Subsystem(IntEnum):
 
 
 def connect():
-    ser = serial.Serial(port = 0, baudrate = 57600)
+    ser = serial.Serial(port = 0, baudrate = 57600, timeout = 1)
 
     
 
@@ -48,7 +47,6 @@ def disconnect():
     ser.close()
     ser = None
     
-
 
 
 def send_message(t, subsys = None, command = None, data = None):
@@ -99,7 +97,7 @@ def send_message(t, subsys = None, command = None, data = None):
 
 
 
-def recieve_message():
+def receive_message(t, subsys = None, command = None, has_data = False):
     """ Recieves a message from the rover, and expects it to have the format
     specified by the given arguments.
 
@@ -112,8 +110,8 @@ def recieve_message():
       given `subsys`. This is the expected value of the Command ID byte of the
       message being received. Command is `None` if and only if `subsys` is
       `None`. 
-    - `data` must be a boolean indicating whether or not a sequence of data
-      frames is expected in the message being recieved.
+    - `has_data` must be a boolean indicating whether or not a sequence of data
+      frames is expected in the message being received.
 
     This function returns any data that was included with the response message
     as a `bytes` object.
@@ -124,16 +122,63 @@ def recieve_message():
 
     # TODO: raise errors for timeouts
 
+    if ser.read() != Signal.start:
+        raise Exception("Did not find a start signal in the response message when expected.")
+    if ser.read() != t:
+        raise Exception("The response message's message type was incorrect.")
+    if subsys != None and ser.read() != subsys:
+        raise Exception("The response message's Subsystem ID was incorrect.")
+    if command != None and ser.read() != command:
+        raise Exception("The response message's Command ID was incorrect.")
+
+    if has_data:
+        rv = read_data()
+
+    if ser.read() != Signal.stop:
+        raise Exception("Did not find a stop signal in the response when expected.")
+
+
 
 
 def frame_data(d):
     """ A helper function that takes the bytes object `d` and returns a `bytes`
     object with added data framing bytes. """
 
-    #num_frames = len
+    # The number of full frames to be sent:
+    full_frames = len(d) // MAX_DATA_FRAME_LEN
 
-    rv = bytes()
+    # The final partially-full frame to be sent:
+    partial_frame_len = len(d) % MAX_DATA_FRAME_LEN
+    has_partial_frame = False if partial_frame_len == 0 else True
+
+    frames = []
+    for i in range(full_frames):
+        # `start` is index of first byte of `d` to be copied into this `frame`.
+        start = i * MAX_DATA_FRAME_LEN
+        frame = bytearray(MAX_DATA_FRAME_LEN + 3)
+
+        # Add data and framing info to this `frame`:
+        frame[0] = MAX_DATA_FRAME_LEN
+        frame[1: 1 + MAX_DATA_FRAME_LEN] = d[start: start + MAX_DATA_FRAME_LEN]
+        frame[MAX_DATA_FRAME_LEN + 1] = MAX_DATA_FRAME_LEN
+        frame[MAX_DATA_FRAME_LEN + 2] = True
+
+        # Add this newly formed frame to the list of frames to be sent.
+        frames.append(frame)
+
+    if has_partial_frame:
+        start = full_frames * MAX_DATA_FRAME_LEN
+        frame = bytearray(partial_frame_len + 3)
+
+        frame[0] = partial_frame_len
+        frame[1 : 1 + partial_frame_len] = d[start : ]
     
+    # Set the last byte of the last frame (whether full or partial) to indicate
+    # that there are no more frames.
+    frames[-1][-1] = False
+
+    return b''.join(frames)
+
 
 
 def read_data(d):
@@ -177,30 +222,28 @@ def read_data(d):
 
 def heartbeat():
     """
-    Sends ping and recieves ping signals to the rover indefinitely.
+    Sends ping and receives ping signals to the rover indefinitely.
     """
 
     while True:
         ping()
-        if b == Signal.ping:
-            sys.stdout.write('.')
+        sys.stdout.write('.')
         sleep(1)
 
 
 
 def ping():
-    send(MsgType.ping)
-    response = ser.read(3)
+    send_message(MsgType.ping)
+    receive_message(MsgType.ping)
     
-
 
 
 def echo():
-    
+    raise NotImplemented()
 
 
 
-def tty(stream)
+def tty(stream):
     """
     Indefinitely writes to `stream` (a subclass of `io.IOBase`) whatever data
     is coming from the rover.
