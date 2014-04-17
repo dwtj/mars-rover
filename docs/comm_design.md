@@ -8,6 +8,44 @@ It should be the purpose of `comm.c` (the communications module of `rover`) to f
 - Calibrate a subsystem.
 - Send commands to a subsystem which will stream a list of responses back.
 
+## Message Protocol ##
+
+<table>
+	<tr>
+		<td>
+			Start
+		</td>
+		<td>
+			Message Type
+		</td>
+		<td>
+			Subsystem
+		</td>
+		<td>
+			Data Length
+		</td>
+		<td>
+			Data Byte
+		</td>
+		<td>
+			Data Byte
+		</td>
+		<td>
+			...	
+		</td>
+		<td>
+			Boolean "Keep Going?"
+		</td>
+		<td>
+			...
+		</td>
+		<td>
+			Stop
+		</td>
+	</tr>
+</table>
+
+Start, Message Type and Stop are essential in every message. Subsystem and the data frame (Data Length, Data Byte, and "Keep Going") may be necessary, depending on Message Type and Subsystem. 
 
 ## Design Assumptions ##
 
