@@ -193,15 +193,14 @@ def heartbeat():
 
     while True:
         ping()
-        if b == Signal.ping:
-            sys.stdout.write('.')
+        sys.stdout.write('.')
         sleep(1)
 
 
 
 def ping():
-    send(MsgType.ping)
-    response = ser.read(3)
+    send_message(MsgType.ping)
+    receive_message(MsgType.ping)
     
 
 
