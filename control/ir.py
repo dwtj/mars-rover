@@ -13,8 +13,8 @@ class IRCommand(IntEnum):
 
 def init():
     """ Initializes the IR subsystem for use. """
-    tx_message(Message.command, Subsys.ir, IRCommand.init, None)
-    rx_message(Message.command, Subsys.ir, IRCommand.init, False)
+    tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
+    rx_mesg(Message.command, Subsys.ir, IRCommand.init, False)
 
 
 
@@ -40,8 +40,8 @@ def rover_calibrate():
     Initiates the `rover`-operated calibration routine of the IR subsystem.
     """
 
-    tx_message(Message.command, Subsys.ir, IRCommand.init, None)
-    d = rx_message(Message.command, Subsys.ir, IRCommand.init, True)
+    tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
+    d = rx_mesg(Message.command, Subsys.ir, IRCommand.init, True)
 
     raise NotImplementedError()
 

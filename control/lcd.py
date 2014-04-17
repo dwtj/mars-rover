@@ -12,16 +12,16 @@ class LCDCommand(IntEnum):
 
 def init():
     """ Initializes the rover's LCD subsystem for use.  """
-    tx_message(Message.command, Subsys.lcd, LCDCommand.init, None)
-    rx_message(Message.command, Subsys.lcd, LCDCommand.init, False)
+    tx_mesg(Message.command, Subsys.lcd, LCDCommand.init, None)
+    rx_mesg(Message.command, Subsys.lcd, LCDCommand.init, False)
 
 
 
 def puts(s):
     """ Appends the given string `s` to the rover's LCD display. """
     b = bytes(s, 'utf-8')
-    tx_message(Message.command, Subsys.lcd, LCDCommand.puts, b)
-    rx_message(Message.command, Subsys.lcd, LCDCommand.puts, False)
+    tx_mesg(Message.command, Subsys.lcd, LCDCommand.puts, b)
+    rx_mesg(Message.command, Subsys.lcd, LCDCommand.puts, False)
 
     raise NotImplementedError
 
@@ -29,5 +29,5 @@ def puts(s):
 
 def clear():
     """ Clears the rover's LCD display. """
-    tx_message(Message.command, Subsys.lcd, LCDCommand.clear, None)
-    rx_message(Message.command, Subsys.lcd, LCDCommand.clear, False)
+    tx_mesg(Message.command, Subsys.lcd, LCDCommand.clear, None)
+    rx_mesg(Message.command, Subsys.lcd, LCDCommand.clear, False)

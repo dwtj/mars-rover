@@ -2,6 +2,7 @@
 # program.
 
 
+import sys
 import serial
 #import numpy as np
 from enum import IntEnum
@@ -41,8 +42,8 @@ class Subsys(IntEnum):
 
 
 
-def connect():
-    ser = serial.Serial(port = 0, baudrate = 57600, timeout = 1)
+def connect(port):
+    ser = serial.Serial(port, baudrate = 57600, timeout = 1)
 
     
 
@@ -52,7 +53,7 @@ def disconnect():
     
 
 
-def tx_message(t, subsys = None, command = None, data = None):
+def tx_mesg(t, subsys = None, command = None, data = None):
     """ Sends a message to the rover as described by the arguments.
 
     - `t` must be a `Message`. This is the message type of the message to be
@@ -69,7 +70,7 @@ def tx_message(t, subsys = None, command = None, data = None):
       data frames will be sent.
 
     The message being sent will illicit a subsequent response message (of the
-    same type). Reading this response should be handled by `rx_message()`.
+    same type). Reading this response should be handled by `rx_mesg()`.
 
     You should expect that no checks of correctness are performed on the args.
     If you pass garbage to this function, garbage may well be sent to the rover.
@@ -100,7 +101,7 @@ def tx_message(t, subsys = None, command = None, data = None):
 
 
 
-def rx_message(t, subsys = None, command = None, has_data = False):
+def rx_mesg(t, subsys = None, command = None, has_data = False):
     """ Recieves a message from the rover, and expects it to have the format
     specified by the given arguments.
 
@@ -236,13 +237,23 @@ def heartbeat():
 
 
 def ping():
-    tx_message(Message.ping)
-    rx_message(Message.ping)
+    tx_mesg(Message.ping)
+    rx_mesg(Message.ping)
     
 
 
-def echo():
-    raise NotImplemented()
+def echo(s):
+    """ Sends a message of type `echo` along with the supplied string `s`.
+    Expects an identical message to be returned, i.e., a message of type `echo`
+    along with this same string `s`. """
+
+    b = bytes(s, 'utf-8')
+    tx_mesg(Message.echo, data = b)
+    rv = rx_mesg(Message.echo, data = True)
+    if b != rv:
+        raise Exception("A different string was returned from the rover.")
+    
+    
 
 
 
@@ -254,3 +265,15 @@ def tty(stream):
 
     while True:
         stream.write(ser.read())
+
+
+
+def main():
+    if len(sys.argv) != 2:
+        sys.stderr.write("Expected one argument, the path of the serial tty.")
+        exit()
+    else:
+        connect(sys.argv[1])
+
+if __name__ == __main__:
+    main()

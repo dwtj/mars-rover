@@ -17,8 +17,8 @@ def init():
     the sonar state is made to be "on".
     """
 
-    tx_message(Message.command, Subsys.sonar, SonarCommand.init, None)
-    rx_message(Message.command, Subsys.sonar, SonarCommand.init, False)
+    tx_mesg(Message.command, Subsys.sonar, SonarCommand.init, None)
+    rx_mesg(Message.command, Subsys.sonar, SonarCommand.init, False)
 
 
 

@@ -16,8 +16,8 @@ def init():
     iRobot create.
     """
 
-    tx_message(Message.command, Subsys.oi, OICommand.init, None)
-    rx_message(Message.command, Subsys.oi, OICommand.init, False)
+    tx_mesg(Message.command, Subsys.oi, OICommand.init, None)
+    rx_mesg(Message.command, Subsys.oi, OICommand.init, False)
 
 
 

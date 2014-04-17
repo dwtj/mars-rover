@@ -17,8 +17,8 @@ def init():
     the servo state is made to be "on".
     """
 
-    tx_message(Message.command, Subsys.servo, ServoCommand.init, None)
-    rx_message(Message.command, Subsys.servo, ServoCommand.init, False)
+    tx_mesg(Message.command, Subsys.servo, ServoCommand.init, None)
+    rx_mesg(Message.command, Subsys.servo, ServoCommand.init, False)
 
 
 
@@ -27,8 +27,8 @@ def rover_calibrate():
     """
     Initiates the `rover`-operated calibration routine of the servo subsystem.
     """
-    tx_message(Message.command, Subsys.servo, ServoCommand.calibrate, None)
-    rx_message(Message.command, Subsys.servo, ServoCommand.calibrate, False)
+    tx_mesg(Message.command, Subsys.servo, ServoCommand.calibrate, None)
+    rx_mesg(Message.command, Subsys.servo, ServoCommand.calibrate, False)
 
 
 
@@ -90,5 +90,5 @@ def pulse(p):
         raise ValueError("Argument `p` must be in the open interval (0, 1).")
 
     b = pack("<", p)
-    tx_message(Message.command, Subsys.servo, ServoCommand.pusle, b)
-    rx_message(Message.command, Subsys.servo, ServoCommand.pulse, False)
+    tx_mesg(Message.command, Subsys.servo, ServoCommand.pusle, b)
+    rx_mesg(Message.command, Subsys.servo, ServoCommand.pulse, False)
