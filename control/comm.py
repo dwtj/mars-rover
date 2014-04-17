@@ -39,7 +39,7 @@ class Subsystem(IntEnum):
 
 
 def connect():
-    ser = serial.Serial(port = 0, baudrate = 57600)
+    ser = serial.Serial(port = 0, baudrate = 57600, timeout = 1)
 
     
 
@@ -97,7 +97,7 @@ def send_message(t, subsys = None, command = None, data = None):
 
 
 
-def recieve_message():
+def receive_message(t, subsys = None, command = None, has_data = False):
     """ Recieves a message from the rover, and expects it to have the format
     specified by the given arguments.
 
@@ -110,8 +110,8 @@ def recieve_message():
       given `subsys`. This is the expected value of the Command ID byte of the
       message being received. Command is `None` if and only if `subsys` is
       `None`. 
-    - `data` must be a boolean indicating whether or not a sequence of data
-      frames is expected in the message being recieved.
+    - `has_data` must be a boolean indicating whether or not a sequence of data
+      frames is expected in the message being received.
 
     This function returns any data that was included with the response message
     as a `bytes` object.
@@ -121,6 +121,22 @@ def recieve_message():
     """
 
     # TODO: raise errors for timeouts
+
+    if ser.read() != Signal.start:
+        raise Exception("Did not find a start signal in the response message when expected.")
+    if ser.read() != t:
+        raise Exception("The response message's message type was incorrect.")
+    if subsys != None and ser.read() != subsys:
+        raise Exception("The response message's Subsystem ID was incorrect.")
+    if command != None and ser.read() != command:
+        raise Exception("The response message's Command ID was incorrect.")
+
+    if has_data:
+        rv = read_data()
+
+    if ser.read() != Signal.stop:
+        raise Exception("Did not find a stop signal in the response when expected.")
+
 
 
 
@@ -166,13 +182,13 @@ def frame_data(d):
 
 
 def read_data(d):
-    pass
+    raise NotImplemented()
 
 
 
 def heartbeat():
     """
-    Sends ping and recieves ping signals to the rover indefinitely.
+    Sends ping and receives ping signals to the rover indefinitely.
     """
 
     while True:
@@ -190,7 +206,7 @@ def ping():
 
 
 def echo():
-    pass
+    raise NotImplemented()
 
 
 
