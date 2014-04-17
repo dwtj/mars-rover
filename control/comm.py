@@ -3,15 +3,14 @@
 
 
 import serial
-import numpy as np
+#import numpy as np
 from enum import IntEnum
 
-MAX_DATA_FRAME_LENGTH = 100
 
+MAX_DATA_FRAME_LEN = 100
 
 
 ser = None  # The serial connection to the rover.
-
 
 
 class Signal(IntEnum):
@@ -48,7 +47,6 @@ def disconnect():
     ser.close()
     ser = None
     
-
 
 
 def send_message(t, subsys = None, command = None, data = None):
@@ -130,13 +128,45 @@ def frame_data(d):
     """ A helper function that takes the bytes object `d` and returns a `bytes`
     object with added data framing bytes. """
 
-    #num_frames = len
+    # The number of full frames to be sent:
+    full_frames = len(d) // MAX_DATA_FRAME_LEN
 
-    rv = bytes()
+    # The final partially-full frame to be sent:
+    partial_frame_len = len(d) % MAX_DATA_FRAME_LEN
+    has_partial_frame = False if partial_frame_len == 0 else True
+
+    frames = []
+    for i in range(full_frames):
+        # `start` is index of first byte of `d` to be copied into this `frame`.
+        start = i * MAX_DATA_FRAME_LEN
+        frame = bytearray(MAX_DATA_FRAME_LEN + 3)
+
+        # Add data and framing info to this `frame`:
+        frame[0] = MAX_DATA_FRAME_LEN
+        frame[1: 1 + MAX_DATA_FRAME_LEN] = d[start: start + MAX_DATA_FRAME_LEN]
+        frame[MAX_DATA_FRAME_LEN + 1] = MAX_DATA_FRAME_LEN
+        frame[MAX_DATA_FRAME_LEN + 2] = True
+
+        # Add this newly formed frame to the list of frames to be sent.
+        frames.append(frame)
+
+    if has_partial_frame:
+        start = full_frames * MAX_DATA_FRAME_LEN
+        frame = bytearray(partial_frame_len + 3)
+
+        frame[0] = partial_frame_len
+        frame[1 : 1 + partial_frame_len] = d[start : ]
     
+    # Set the last byte of the last frame (whether full or partial) to indicate
+    # that there are no more frames.
+    frames[-1][-1] = False
+
+    return b''.join(frames)
+
 
 
 def read_data(d):
+    pass
 
 
 
@@ -159,13 +189,12 @@ def ping():
     
 
 
-
 def echo():
-    
+    pass
 
 
 
-def tty(stream)
+def tty(stream):
     """
     Indefinitely writes to `stream` (a subclass of `io.IOBase`) whatever data
     is coming from the rover.
