@@ -1,12 +1,22 @@
 # ir.py
 
-import comm.py
+import comm
+from enum import IntEnum
+
+
+class IRCommand(IntEnum):
+    init = 0
+    calibrate = 1
+    readings = 2
+    
 
 
 def init():
     """ Initializes the IR subsystem for use. """
 
-    raise NotImplementedError
+    # TODO: check that response was appropriate
+    send_message(MsgType.command, Subsystem.ir, IRCommand.init, None)
+    recieve_message(MsgType.command, Subsystem.ir, IRCommand.init, False)
 
 
 
@@ -51,5 +61,8 @@ def readings(n, raw = True, rand = False, timestamps = False):
     If `timestamps` is `true`, then timestamps indicating when a reading was
     taken are streamed back to `control` along with the readings themselves.
     """
+
+    # TODO
+    d = command(MessageType.command, Subsystem.ir, IRCommand.readings, None)
 
     raise NotImplementedError
