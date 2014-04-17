@@ -13,8 +13,6 @@ class IRCommand(IntEnum):
 
 def init():
     """ Initializes the IR subsystem for use. """
-
-    # TODO: check that response was appropriate
     send_message(MsgType.command, Subsystem.ir, IRCommand.init, None)
     recieve_message(MsgType.command, Subsystem.ir, IRCommand.init, False)
 

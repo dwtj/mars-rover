@@ -1,10 +1,24 @@
+# sonar.py
+
+import comm
+from enum import IntEnum
+
+class SonarCommand(IntEnum):
+    init = 0
+    calibrate = 1
+    readings = 2
+
+
 def init():
     """
     Initializes the sonar subsystem for use. Also activates the sonar, i.e.,
     the sonar state is made to be "on".
     """
 
-    raise NotImplementedError
+    send_message(MsgType.command, Subsystem.sonar, SonarCommand.init, None)
+    recieve_message(MsgType.command, Subsystem.sonar, SonarCommand.init, False)
+
+
 
 
 
@@ -14,6 +28,8 @@ def calibrate():
     """
     Initiates the `control`-operated calibration routine of the sonar subsystem.
     """
+
+    raise NotImplementedError
 
 
 
