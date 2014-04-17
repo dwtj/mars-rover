@@ -2,16 +2,20 @@
 # program.
 
 
-import sys
 import serial
 #import numpy as np
 from enum import IntEnum
+from threading import Thread
+from queue import Queue
 
 
 MAX_DATA_FRAME_LEN = 100
+DEFAULT_SERIAL_PORT = "/dev/tty.ElementSerial-ElementSe"
 
 
 ser = None  # The serial connection to the rover.
+
+
 
 
 class Signal(IntEnum):
@@ -41,16 +45,6 @@ class Subsys(IntEnum):
     rng = 5
 
 
-
-def connect(port):
-    ser = serial.Serial(port, baudrate = 57600, timeout = 1)
-
-    
-
-def disconnect():
-    ser.close()
-    ser = None
-    
 
 
 def tx_mesg(t, subsys = None, command = None, data = None):
@@ -121,25 +115,30 @@ def rx_mesg(t, subsys = None, command = None, has_data = False):
     as a `bytes` object.
 
     If there isn't a timely response message, or if the response has
-    unexpected features, an error is raised.
+    unexpected features, an `Exception` is raised.
     """
 
-    # TODO: raise errors for timeouts
+    ser.timeout(1)  # Set timeouts to be 1 second while reading each byte.
+    # If a timeout occurs while trying to read one byte, then a bytes object of
+    # length zero will be returned.
 
     if ser.read() != Signal.start:
-        raise Exception("Did not find a start signal in the response message when expected.")
+        raise Exception("Did not receive the expected Start Signal.")
     if ser.read() != t:
-        raise Exception("The response message's message type was incorrect.")
+        raise Exception("Did not receive the expected Message ID.")
+
     if subsys != None and ser.read() != subsys:
-        raise Exception("The response message's Subsystem ID was incorrect.")
+        raise Exception("Did not receive the expected Subsystem ID.")
     if command != None and ser.read() != command:
-        raise Exception("The response message's Command ID was incorrect.")
+        raise Exception("Did not receive the expected Command ID.")
 
     if has_data:
         rv = read_data()
 
     if ser.read() != Signal.stop:
-        raise Exception("Did not find a stop signal in the response when expected.")
+        raise Exception("Did not receive the expected Stop Signal.")
+
+    ser.timeout(None)  # Disable timeouts.
 
 
 
@@ -186,9 +185,7 @@ def frame_data(d):
 
 
 def read_data(d):
-    """
-    Reads data frame and returns data bytes.
-    """
+    """ Reads data frame and returns data bytes. """
 
     keep_going = True
     num_good_bytes = 0
@@ -225,9 +222,7 @@ def read_data(d):
 
 
 def heartbeat():
-    """
-    Sends ping and receives ping signals to the rover indefinitely.
-    """
+    """ Sends ping and receives ping signals to the rover indefinitely. """
 
     while True:
         ping()
@@ -243,17 +238,28 @@ def ping():
 
 
 def echo(s):
-    """ Sends a message of type `echo` along with the supplied string `s`.
+    """
+    Sends a message of type `echo` along with the supplied string `s`.
     Expects an identical message to be returned, i.e., a message of type `echo`
-    along with this same string `s`. """
+    along with this same string `s`.
+    """
 
     b = bytes(s, 'utf-8')
     tx_mesg(Message.echo, data = b)
     rv = rx_mesg(Message.echo, data = True)
     if b != rv:
         raise Exception("A different string was returned from the rover.")
-    
-    
+
+
+
+def handle_rover_error(data):
+    """
+    Interprets the data segment of an error sent from the `rover` and responds
+    to it as appropriate.
+    """
+
+    raise NotImplementedError()
+
 
 
 
@@ -268,12 +274,38 @@ def tty(stream):
 
 
 
+
+def connect(port = DEFAULT_SERIAL_PORT):
+
+    """ Opens the serial connection on the given `port` and starts the `aux`
+    thread to listen for any unexpected (i.e. un-prompted) messages. """
+
+    ser = serial.Serial(port, baudrate = 57600)
+    start_aux()  # Sends signal that allows `aux` to listen for messages.
+
+
+
+
+def disconnect():
+    stop_aux()
+    ser.close()
+    ser = None
+    aux = None
+    q = None
+    
+
+
+
 def main():
     if len(sys.argv) != 2:
         sys.stderr.write("Expected one argument, the path of the serial tty.")
         exit()
-    else:
-        connect(sys.argv[1])
 
-if __name__ == __main__:
+    connect(sys.argv[1])
+    # TODO: do some stuff
+        
+
+logging.setLevel("INFO")
+
+if __name__ == "__main__":
     main()

@@ -48,8 +48,8 @@ def readings(n, raw = True, rand = False, timestamps = False):
     rather than the approximated distance as calculated by `rover`.
 
     If `rand` is `True`, then readings will not be taken as often as possible.
-    Rather, one each reading should delayed by a random amount of time before
-    being taken.
+    Rather, each reading should delayed by a random amount of time before it
+    is started.
 
     If `timestamps` is `True`, then timestamps indicating when a reading was
     taken are streamed back to `control` along with the readings themselves.
