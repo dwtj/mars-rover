@@ -52,20 +52,23 @@ def disconnect():
 
 
 def send_message(t, subsys = None, command = None, data = None):
-    """ Issues the command specified by the arguments to the rover.
+    """ Sends a message to the rover as described by the arguments.
 
-    - `t` must be a `MsgType`.
-    - `subsys` must be `None` or a `Subsystem`.
-    - Command is `None` if and only if `subsys` is `None`. Otherwise, `command`
-      must be an int that is a valid command code of the given Subsystem.
-    - `data` must be either `None` or a `bytes` object.
+    - `t` must be a `MsgType`. This is the message type of the message to be
+      sent.
+    - `subsys` must be `None` or a `Subsystem`. This is the value to be sent
+      in the subsystem ID byte. If this is `None`, then no such byte will be
+      sent in this message.
+    - `command` is either `None` or an int that is a valid command code (of the
+      given `subsys`. This is the value to be sent in the command ID byte. If
+      this is `None`, then no such byte will be sent in this message. `command`
+      is `None` if and only if `subsys` is `None`. 
+    - `data` must be either `None` or a `bytes` object. This is the data to be
+      sent in the sequence of data frames. In the case that this is `None`, no
+      data frames will be sent.
 
-    A message of type `t` is sent to the rover, and a response message of type
-    `t` is expected in return. This function returns any data included with the
-    response message as a `bytes` object.
-
-    If there isn't a timely response message, or if the response has
-    unexpected features, an error is raised.
+    The message being sent will illicit a subsequent response message (of the
+    same type). Reading this response should be handled by `receive_message()`.
 
     You should expect that no checks of correctness are performed on the args.
     If you pass garbage to this function, garbage may well be sent to the rover.
@@ -97,7 +100,29 @@ def send_message(t, subsys = None, command = None, data = None):
 
 
 def recieve_message():
-    #TODO
+    """ Recieves a message from the rover, and expects it to have the format
+    specified by the given arguments.
+
+    - `t` must be a `MsgType`. This is the expected message type of the
+      message being received.
+    - `subsys` must be `None` or a `Subsystem`. This is the expected Subsystem
+      ID of the message being received. If this is `None`, then no Subsystem ID
+      byte is expected.
+    - `command` must be `None` or an int that is a valid command code of the
+      given `subsys`. This is the expected value of the Command ID byte of the
+      message being received. Command is `None` if and only if `subsys` is
+      `None`. 
+    - `data` must be a boolean indicating whether or not a sequence of data
+      frames is expected in the message being recieved.
+
+    This function returns any data that was included with the response message
+    as a `bytes` object.
+
+    If there isn't a timely response message, or if the response has
+    unexpected features, an error is raised.
+    """
+
+    # TODO: raise errors for timeouts
 
 
 
@@ -111,9 +136,7 @@ def frame_data(d):
     
 
 
-def deframe_data(d):
-    # TODO
-    
+def read_data(d):
 
 
 
