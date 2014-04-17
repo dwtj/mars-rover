@@ -13,8 +13,8 @@ class IRCommand(IntEnum):
 
 def init():
     """ Initializes the IR subsystem for use. """
-    send_message(MsgType.command, Subsystem.ir, IRCommand.init, None)
-    recieve_message(MsgType.command, Subsystem.ir, IRCommand.init, False)
+    tx_message(Message.command, Subsys.ir, IRCommand.init, None)
+    rx_message(Message.command, Subsys.ir, IRCommand.init, False)
 
 
 
@@ -32,7 +32,18 @@ def calibrate():
     sensor.
     """
 
-    raise NotImplementedError
+    raise NotImplementedError()
+
+
+def rover_calibrate():
+    """
+    Initiates the `rover`-operated calibration routine of the IR subsystem.
+    """
+
+    tx_message(Message.command, Subsys.ir, IRCommand.init, None)
+    d = rx_message(Message.command, Subsys.ir, IRCommand.init, True)
+
+    raise NotImplementedError()
 
 
 
@@ -61,6 +72,7 @@ def readings(n, raw = True, rand = False, timestamps = False):
     """
 
     # TODO
-    d = command(MessageType.command, Subsystem.ir, IRCommand.readings, None)
+    command(Message.command, Subsys.ir, IRCommand.readings, None)
+    d = command(Message.command, Subsys.ir, IRCommand.readings, True)
 
-    raise NotImplementedError
+    raise NotImplementedError()

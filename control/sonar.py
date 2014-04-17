@@ -3,10 +3,12 @@
 import comm
 from enum import IntEnum
 
+
 class SonarCommand(IntEnum):
     init = 0
     calibrate = 1
     readings = 2
+
 
 
 def init():
@@ -15,11 +17,8 @@ def init():
     the sonar state is made to be "on".
     """
 
-    send_message(MsgType.command, Subsystem.sonar, SonarCommand.init, None)
-    recieve_message(MsgType.command, Subsystem.sonar, SonarCommand.init, False)
-
-
-
+    tx_message(Message.command, Subsys.sonar, SonarCommand.init, None)
+    rx_message(Message.command, Subsys.sonar, SonarCommand.init, False)
 
 
 
@@ -29,10 +28,7 @@ def calibrate():
     Initiates the `control`-operated calibration routine of the sonar subsystem.
     """
 
-    raise NotImplementedError
-
-
-
+    raise NotImplementedError()
 
 
 
@@ -59,4 +55,4 @@ def readings(n, raw = True, rand = False, timestamps = False):
     taken are streamed back to `control` along with the readings themselves.
     """
 
-    raise NotImplementedError
+    raise NotImplementedError()

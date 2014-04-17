@@ -17,9 +17,18 @@ def init():
     the servo state is made to be "on".
     """
 
-    send_message(MsgType.command, Subsystem.servo, ServoCommand.init, None)
-    recieve_message(MsgType.command, Subsystem.servo, ServoCommand.init, False)
+    tx_message(Message.command, Subsys.servo, ServoCommand.init, None)
+    rx_message(Message.command, Subsys.servo, ServoCommand.init, False)
 
+
+
+
+def rover_calibrate():
+    """
+    Initiates the `rover`-operated calibration routine of the servo subsystem.
+    """
+    tx_message(Message.command, Subsys.servo, ServoCommand.calibrate, None)
+    rx_message(Message.command, Subsys.servo, ServoCommand.calibrate, False)
 
 
 
@@ -27,9 +36,8 @@ def calibrate():
     """
     Initiates the `control`-operated calibration routine of the servo subsystem.
     """
-    send_message(MsgType.command, Subsystem.servo, ServoCommand.calibrate, None)
-    recieve_message(MsgType.command, Subsystem.servo, ServoCommand.calibrate, False)
 
+    raise NotImplementedError()
 
 
 
@@ -42,7 +50,7 @@ def state(s = None)`:
     servo will be turned off.
     """
 
-    raise NotImplementedError
+    raise NotImplementedError()
 
 
 
@@ -61,7 +69,9 @@ def angle(angle, wait = True):
     this "finished" signal.
     """
 
-    raise NotImplementedError
+    raise NotImplementedError()
+    
+
 
 
 
@@ -80,5 +90,5 @@ def pulse(p):
         raise ValueError("Argument `p` must be in the open interval (0, 1).")
 
     b = pack("<", p)
-    send_message(MsgType.command, Subsystem.servo, ServoCommand.pusle, b)
-    recieve_message(MsgType.command, Subsystem.servo, ServoCommand.pulse, False)
+    tx_message(Message.command, Subsys.servo, ServoCommand.pusle, b)
+    rx_message(Message.command, Subsys.servo, ServoCommand.pulse, False)

@@ -14,13 +14,15 @@ ser = None  # The serial connection to the rover.
 
 
 class Signal(IntEnum):
+    """ Different control signals to be sent/received as bytes in a message. """
     null = 0
     start = 1  # Start of message
     stop = 2   # End of message
 
 
 
-class MsgType(IntEnum):
+class Message(IntEnum):
+    """ Identifies different message types. """
     error = 3
     ping = 4
     echo = 5
@@ -28,7 +30,8 @@ class MsgType(IntEnum):
 
 
 
-class Subsystem(IntEnum):
+class Subsys(IntEnum):
+    """ Identifies different subsystems in messages. """
     lcd = 0
     oi = 1
     sonar = 2
@@ -49,12 +52,12 @@ def disconnect():
     
 
 
-def send_message(t, subsys = None, command = None, data = None):
+def tx_message(t, subsys = None, command = None, data = None):
     """ Sends a message to the rover as described by the arguments.
 
-    - `t` must be a `MsgType`. This is the message type of the message to be
+    - `t` must be a `Message`. This is the message type of the message to be
       sent.
-    - `subsys` must be `None` or a `Subsystem`. This is the value to be sent
+    - `subsys` must be `None` or a `Subsys`. This is the value to be sent
       in the subsystem ID byte. If this is `None`, then no such byte will be
       sent in this message.
     - `command` is either `None` or an int that is a valid command code (of the
@@ -66,16 +69,16 @@ def send_message(t, subsys = None, command = None, data = None):
       data frames will be sent.
 
     The message being sent will illicit a subsequent response message (of the
-    same type). Reading this response should be handled by `receive_message()`.
+    same type). Reading this response should be handled by `rx_message()`.
 
     You should expect that no checks of correctness are performed on the args.
     If you pass garbage to this function, garbage may well be sent to the rover.
     """
 
     # Some validation for function arguments:
-    if type(t) != MsgType:
+    if type(t) != Message:
         raise Exception()
-    if subsys != None and type(subsys) != Subsystem:
+    if subsys != None and type(subsys) != Subsys:
         raise Exception()
 
     # `subsys` is `None` iff `command` is `None`:
@@ -97,13 +100,13 @@ def send_message(t, subsys = None, command = None, data = None):
 
 
 
-def receive_message(t, subsys = None, command = None, has_data = False):
+def rx_message(t, subsys = None, command = None, has_data = False):
     """ Recieves a message from the rover, and expects it to have the format
     specified by the given arguments.
 
-    - `t` must be a `MsgType`. This is the expected message type of the
+    - `t` must be a `Message`. This is the expected message type of the
       message being received.
-    - `subsys` must be `None` or a `Subsystem`. This is the expected Subsystem
+    - `subsys` must be `None` or a `Subsys`. This is the expected Subsystem
       ID of the message being received. If this is `None`, then no Subsystem ID
       byte is expected.
     - `command` must be `None` or an int that is a valid command code of the
@@ -233,8 +236,8 @@ def heartbeat():
 
 
 def ping():
-    send_message(MsgType.ping)
-    receive_message(MsgType.ping)
+    tx_message(Message.ping)
+    rx_message(Message.ping)
     
 
 
