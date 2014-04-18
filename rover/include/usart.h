@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define FOSC 1843200  // Clock Speed
+//#define FOSC 1843200  // Clock Speed //commented out because FOSC defined elsewhere to be 1600000. Why was it this number???
 #define BAUD 9600
 #define MYUBRR FOSC/16/BAUD-1
 

@@ -15,6 +15,8 @@
 #include "comm.h"
 #include "lcd.h"
 #include "util.h"
+#include "util.c"
+#include "control.h"
 
 
 
@@ -48,7 +50,7 @@ uint8_t (*signal_handlers[])(char *) = {
 
 
 bool is_valid_signal_code(signal type) {
-	return (bool) type >= 0 && type < num_signal_codes;
+	return (bool) type >= 0 && type < NUM_SIGNAL_CODES;
 }
 
 
