@@ -15,6 +15,7 @@
 typedef enum {
 	error_txq = 0,
 	error_bad_request = 1,
+	error_bad_data_length =2,
 } error;
 
 

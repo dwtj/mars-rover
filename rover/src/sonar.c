@@ -23,6 +23,7 @@
 #include "lcd.h"
 #include "r_error.h"
 #include "sonar.h"
+#include "usart.h"
 
 
 /**

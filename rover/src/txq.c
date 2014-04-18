@@ -76,5 +76,28 @@ void txq_drain() {
 }
 
 
+ISR(ISR_TXBUFF)
+{
+	if(txq.num_elements)//technically redundant; dequeue checks if empty. 
+	{
+		usart_tx(txq_dequeue())
+	}
+	if (!txq.num_elements)
+	{
+		ISR2_flag =1;//Enable the other ISR
+	}
+}
+
+	ISR(OCR3A){
+		//constantly polling txq.
+		if(ISR2_flag && txq.num_elements)
+		{
+			ISR2_flag =0;
+			usart_tx(txq.dequueue)
+		}
+	}
+
+
+
 
 #warning "TODO: implement the two ISRs to implement the txq."
