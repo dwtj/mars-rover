@@ -6,181 +6,257 @@
  */
 
 #warning "TODO: implement echo"
-#warning "Assuming that usart_receive() is bit by bit. if this is wrong, so is our code."
+#warning "Assuming that usart_rx() is bit by bit. if this is wrong, so is our code."
 
 #include "util.h"
-#include "util.c"
+#include "usart.h"
 #include "IR.h"
 #include "open_interface.h"
 #include "sonar.h"
 #include "servo.h"
+#include "comm.h"
+#include "txq.h"
+#include "control.h"
+#include "r_error.h"
 
-//this function waits for a stop bit. it will be called a lot.
-void wait_for_end()
-{
-	if(USART_Receive() != signal.signal_stop)
-	{
-		rError(error_txq, "Did not receive expected stop bit"); //something went wrong!
+
+control controller;  // Lone instance of the `control` struct.
+
+
+
+/**
+ * Reads a single byte via `usart_rx()` and checks that it is a start byte.
+ * This will block until a byte of some sort is received, i.e., there is no timeout.
+ */
+void check_for_start() {
+	uint8_t byte = usart_rx();
+	if (byte != signal_start) {
+		lprintf("start check: %d", byte);
+		wait_button("");
+		r_error(error_txq, "Did not receive expected start byte.");
 	}
 }
+
+
+/**
+ * Reads a single byte via `usart_rx()` and checks that it is a start byte.
+ * This will block until a byte of some sort is received, i.e., there is no timeout.
+ */
+void check_for_end() {
+	if (usart_rx() != signal_stop) {
+		r_error(error_txq, "Did not receive expected stop byte.");
+	}
+}
+
+
 
 void null_handler() {
 	;  // Do Nothing.
 }
 
-//receives a signal, and transmits an equivalent signal. 
-//note that this is not the /same/ signal we receive, but it should be equivalent.
-void ping_handler() {
+
+// Receives a signal, and transmits an equivalent signal. 
+// Note that this is not the /same/ signal we receive, just equivalent.
+void ping_handler() 
+{
+	lcd_putc('.');
+	wait_button("DEBUG: ping_handler");
 	txq_enqueue(signal_start);
 	txq_enqueue(signal_ping);
 	txq_enqueue(signal_stop);
-	wait_for_end();
+	txq_drain();
 }
 
+
+void echo_handler() {
+	#warning "TODO"
+}
+
+
 void error_handler() {
-	rError(error_bad_request,"Bad signal request."); //TODO? Does this need to be more generic? or possibly more specific.
+	#warning "TODO? Does this need to be more generic? or possibly more specific."
+	r_error(error_bad_request,"Bad signal request.");
 }
 
 
 void lcd_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
 			lcd_init();
-					break;
+			break;
 		case 1:
-			lcd_puts(controller.data[0]); //This might be an issue? TODO.
+			#warning "TODO: This is incorrect:"
+			//lcd_puts(controller.data[0]);
 			break;
 		case 2:
 			lcd_clear();
 			break;
 		default:
-			rError(error_bad_request, "Bad LCD Command");
+			r_error(error_bad_request, "Bad LCD Command");
 			break;
 	}
 }
 
+
+
 void oi_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
-			oi_init(); //add parameters
+			#warning "TODO: add parameters:"
+			//oi_init();
 			break;
 		default:
-			rError(error_bad_request, "Bad OI Command");
+			r_error(error_bad_request, "Bad OI Command");
 			break;
 	}
 }
 
 void sonar_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
 			sonar_init();
 			break;
-			case 1:
-			sonar_calibrate();//TODO
+		case 1:
+			#warning "TODO: There doesn't seem to be such a function:"
+			//sonar_calibrate();//TODO
 			break;
 		case 2:
 			sonar_reading();
 			break;
 		default:
-			rError(error_bad_request, "Bad sonar Command");
+			r_error(error_bad_request, "Bad sonar Command");
 			break;
 	}
 }
 
+
+#warning "TODO: fix the servo handlers"
 void servo_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
 			servo_init();
 			break;
 		case 1:
-			servo_calibrate();//TODO
+			//servo_calibrate();//TODO
 			break;
 		case 2:
-			servo_state();//TODO
+			//servo_state();//TODO
 			break;
 		case 3:
 			servo_angle(controller.data[0],true); //read from data[0], then wait to finish moving.
 			break;
 		case 4:
-			servo_pulse_width();//TODO
+			//servo_pulse_width();//TODO
 			break;
 		default:
-			rError(error_bad_request, "Bad servo Command");
+			r_error(error_bad_request, "Bad servo Command");
 			break;
 	}
-	void ir_system(){
-		switch(USART_Receive())
-		{
-			case 0:
-				IR_init();
-				break;
-			case 1:
-				IR_calibrate(); //add parameter
-				break;
-			case 2:
-				IR_reading();
-				break;
-			default:
-				rError(error_bad_request, "Bad IR Command");
-				break;
-		}
+}
+
+void ir_system(){
+	switch(usart_rx())
+	{
+		case 0:
+			IR_init();
+			break;
+		case 1:
+			#warning "Add parameter"
+			//IR_calibrate();
+			break;
+		case 2:
+			IR_reading();
+			break;
+		default:
+			r_error(error_bad_request, "Bad IR Command");
+			break;
 	}
+}
 
-	void rng_system(){
-		switch(USART_Receive())
-		{//TODO?
-			default:
-				rError(error_bad_request, "Bad RNG Command");
-				break;
-		}
+void rng_system(){
+	switch(usart_rx())
+	{
+		#warning "TODO?"
+		default:
+			r_error(error_bad_request, "Bad RNG Command");
+			break;
 	}
+}
 
 
-void (*subsystem_callers[NUM_SUBSYS_CODES])() = {
-	lcd_system, //0
-	oi_system, //1
-	sonar_system, //2
-	servo_system, //3
-	ir_system, //4
-	rng_system, //5
+void (*subsystem_handlers[NUM_SUBSYS_CODES])() = {
+	lcd_system,   // 0
+	oi_system,    // 1
+	sonar_system, // 2
+	servo_system, // 3
+	ir_system,    // 4
+	rng_system,   // 5
 };
 
-void signal_handler(){
-	int id = USART_Receive();
-	subsystem_callers[id]();
+
+
+/**
+ * Reads the Subsystem ID of the current message to decide which subsystem
+ * should handle the rest of the message.
+ */
+void command_handler() {
+	uint8_t subsys = usart_rx();
+	if (0 <= subsys && subsys < NUM_SUBSYS_CODES) {
+		subsystem_handlers[subsys]();
+	} else {
+		r_error(error_bad_request, "Invalid subsystem ID.");
+	}
 }
 
 
 
-#warning "TODO: RX ISR to modify the `control` global variable."
 
-void (*handlers[NUM_SIGNAL_CODES])() = {
-	null_handler,  // 0
-	null_handler,
-	null_handler,
-	null_handler,
-	null_handler,
-	
-	null_handler,  // 5
-	null_handler,  // 6
-	ping_handler,  // 7
-	error_handler,  // 8
-	signal_handler, //9
-};
+/**
+ * Reads the Message Type of the current message being received and calls
+ * the appropriate handler.
+ */
+message_handler() {
+	uint8_t t = usart_rx();  // the message type.
+	switch (t) {
+	case signal_error:
+		#warning "TODO"
+		break;
+	case signal_ping:
+		ping_handler();
+		break;
+	case signal_echo:
+		echo_handler();
+		break;
+	case signal_command:
+		command_handler();
+		break;
+	default:
+		r_error(error_bad_request, "Received an invalid Message ID byte.");
+	}
+}
 
 
-
-
-
-void dispatch()
+/**
+ * Calling this function will drop the rover into "control mode", in which the
+ * rover gives over most of its autonomous functions to commands coming from
+ * the remote control system.
+ */
+void control_mode()
 {
-	while(1) {
-		handlers[controller.current]();
-	}
-}
+	lcd_init();
+	lcd_puts("Control Mode");
+	usart_init(1);
+	wait_ms(1000);
+	lcd_clear();
 
+	// Receive and handle messages from `control` indefinitely:
+	while (true) {
+		check_for_start();
+		message_handler();  // The message type.
+		check_for_end();
+	}
 }

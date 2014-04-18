@@ -22,14 +22,14 @@ void print_serial_to_lcd(uint8_t echo)
 	while(1) {
 		for (i = 0; i < BUF_LEN; i++)
 		{
-			c = USART_Receive();
+			c = usart_rx();
 			if (echo) {
-				USART_Transmit(c);
+				usart_tx(c);
 			}
 			
 			if (c == '\r') {
 				if (echo) {
-					USART_Transmit('\n');
+					usart_tx('\n');
 				}
 				break;
 			}
@@ -67,8 +67,8 @@ void send_messages()
 		
 		if (cur != prev) {
 			if (cur != 0) {
-				USART_transmit_buffer(messages[cur]);
-				USART_transmit_buffer("\r\n");
+				usart_tx_buf(messages[cur]);
+				usart_tx_buf("\r\n");
 			}
 			prev = cur;
 		}
@@ -79,23 +79,23 @@ void send_messages()
 
 void part1(void)
 {
-	USART_Init(1);  // init bluetooth
+	usart_init(1);  // init bluetooth
 	print_serial_to_lcd(0);
 }
 
 void part2 (void){
-	USART_Init(1);  // init bluetooth
+	usart_init(1);  // init bluetooth
 	print_serial_to_lcd(1);
 }
 
 void part3 (void)
 {
-	USART_Init(1);  // init bluetooth
+	usart_init(1);  // init bluetooth
 	send_messages();
 }
 
 void part4() {
-	USART_Init(1);  // init bluetooth
+	usart_init(1);  // init bluetooth
 	send_messages();
 }
 

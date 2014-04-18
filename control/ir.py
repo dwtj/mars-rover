@@ -1,12 +1,20 @@
 # ir.py
 
-import comm.py
+import comm
+from enum import IntEnum
+
+
+class IRCommand(IntEnum):
+    init = 0
+    calibrate = 1
+    readings = 2
+    
 
 
 def init():
     """ Initializes the IR subsystem for use. """
-
-    raise NotImplementedError
+    tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
+    rx_mesg(Message.command, Subsys.ir, IRCommand.init, False)
 
 
 
@@ -24,7 +32,18 @@ def calibrate():
     sensor.
     """
 
-    raise NotImplementedError
+    raise NotImplementedError()
+
+
+def rover_calibrate():
+    """
+    Initiates the `rover`-operated calibration routine of the IR subsystem.
+    """
+
+    tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
+    d = rx_mesg(Message.command, Subsys.ir, IRCommand.init, True)
+
+    raise NotImplementedError()
 
 
 
@@ -52,4 +71,8 @@ def readings(n, raw = True, rand = False, timestamps = False):
     taken are streamed back to `control` along with the readings themselves.
     """
 
-    raise NotImplementedError
+    # TODO
+    command(Message.command, Subsys.ir, IRCommand.readings, None)
+    d = command(Message.command, Subsys.ir, IRCommand.readings, True)
+
+    raise NotImplementedError()

@@ -82,7 +82,7 @@ void send_dist_reading(uint8_t dist, uint16_t reading)
 	static char buf[100];
 	snprintf(buf, 100, "%d, %d\n", dist, reading);
 	
-	USART_transmit_buffer(buf);
+	usart_tx_buf(buf);
 }
 
 
@@ -130,8 +130,8 @@ void IR_calibrate(bool bam_send, bool save_means)
 	lcd_init();
 	init_push_buttons();
 	if (bam_send) {
-		USART_Init(1);
-		USART_transmit_buffer("Distances, Readings\n");
+		usart_init(1);
+		usart_tx_buf("Distances, Readings\n");
 	}
 	
 	float avg;
