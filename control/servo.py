@@ -41,7 +41,7 @@ def calibrate():
 
 
 
-def state(s = None)`:
+def state(s = None):
     """
     Gets and sets the servo's state. If the function is invoked with no
     arguments, or if it is passed `None`, then it returns the servos current
@@ -49,8 +49,21 @@ def state(s = None)`:
     then the servo will be turned on, and if it is passed "off", then the
     servo will be turned off.
     """
+    
+    if s == None:
+        tx_mesg(Message.command, Subsys.servo, ServoCommand.state, False)
+        return rx_mesg(Message.command, Subsys.servo, ServoCommand.state, True)
+    elif s == "on":
+        init()
+    elif s == "off":
+        # TODO: How would I tell the servo to turn off?? Send a 0? Make 
+        # consistent on rover side
+        b = pack("<I", 0)
+        tx_mesg(Message.command, Subsys.servo, ServoCommand.state, b)
+        rx_mesg(Message.command, Subsys.servo, ServoCommand.state, False)
+    else:
+        raise ValueError("Argument `s` must be `None`, \"on\", or \"off\".");
 
-    raise NotImplementedError()
 
 
 
@@ -68,10 +81,18 @@ def angle(angle, wait = True):
     (2) At the same time, the function will continue to block until it receives
     this "finished" signal.
     """
-
-    raise NotImplementedError()
     
-
+    if not (0 <= p and p  <= 180):
+        raise ValueError("Argument `p` must be in the closed interval [0, 180].")
+    
+    b = pack("<I", p)
+    tx_mesg(Message.command, Subsys.servo, ServoCommand.angle, b)
+    
+    # TODO: wait for "finished" signal from rover. 
+    # Is the finished signal in the data sent back? Make consistent with rover
+    #while rx_mesg(Message.command, Subsys.servo, ServoCommand.angle, True) != ServoSignal.finished:
+        #pass
+    rx_mesg(Message.command, Subsys.servo, ServoCommand.angle, False)
 
 
 
@@ -90,5 +111,5 @@ def pulse(p):
         raise ValueError("Argument `p` must be in the open interval (0, 1).")
 
     b = pack("<", p)
-    tx_mesg(Message.command, Subsys.servo, ServoCommand.pusle, b)
+    tx_mesg(Message.command, Subsys.servo, ServoCommand.pulse, b)
     rx_mesg(Message.command, Subsys.servo, ServoCommand.pulse, False)
