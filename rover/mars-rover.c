@@ -8,5 +8,6 @@
 #include "labs.h"
 
 int main() {
-	objects_lab();
+	//objects_lab();
+	control_mode();
 }

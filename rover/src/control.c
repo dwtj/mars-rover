@@ -17,17 +17,31 @@
 #include "comm.h"
 #include "txq.h"
 #include "control.h"
+#include "r_error.h"
 
 
 control controller;  // Lone instance of the `control` struct.
 
 
-//this function waits for a stop bit. it will be called a lot.
-void wait_for_end()
-{
-	if(USART_Receive() != signal_stop)
-	{
-		rError(error_txq, "Did not receive expected stop bit"); //something went wrong!
+
+/**
+ * Reads a single byte via `USART_Receive()` and checks that it is a start byte.
+ * This will block until a byte of some sort is received, i.e., there is no timeout.
+ */
+void check_for_start() {
+	if(USART_Receive() != signal_start) {
+		r_error(error_txq, "Did not receive expected start bit.");
+	}
+}
+
+
+/**
+ * Reads a single byte via `USART_Receive()` and checks that it is a start byte.
+ * This will block until a byte of some sort is received, i.e., there is no timeout.
+ */
+void check_for_end() {
+	if(USART_Receive() != signal_stop) {
+		r_error(error_txq, "Did not receive expected stop bit.");
 	}
 }
 
@@ -41,11 +55,11 @@ void ping_handler() {
 	txq_enqueue(signal_start);
 	txq_enqueue(signal_ping);
 	txq_enqueue(signal_stop);
-	wait_for_end();
 }
 
 void error_handler() {
-	rError(error_bad_request,"Bad signal request."); //TODO? Does this need to be more generic? or possibly more specific.
+	#warning "TODO? Does this need to be more generic? or possibly more specific."
+	r_error(error_bad_request,"Bad signal request.");
 }
 
 
@@ -63,7 +77,7 @@ void lcd_system(){
 			lcd_clear();
 			break;
 		default:
-			rError(error_bad_request, "Bad LCD Command");
+			r_error(error_bad_request, "Bad LCD Command");
 			break;
 	}
 }
@@ -76,7 +90,7 @@ void oi_system(){
 			//oi_init();
 			break;
 		default:
-			rError(error_bad_request, "Bad OI Command");
+			r_error(error_bad_request, "Bad OI Command");
 			break;
 	}
 }
@@ -95,7 +109,7 @@ void sonar_system(){
 			sonar_reading();
 			break;
 		default:
-			rError(error_bad_request, "Bad sonar Command");
+			r_error(error_bad_request, "Bad sonar Command");
 			break;
 	}
 }
@@ -119,7 +133,7 @@ void servo_system(){
 			servo_pulse_width();//TODO
 			break;
 		default:
-			rError(error_bad_request, "Bad servo Command");
+			r_error(error_bad_request, "Bad servo Command");
 			break;
 	}
 }
@@ -138,28 +152,29 @@ void ir_system(){
 			IR_reading();
 			break;
 		default:
-			rError(error_bad_request, "Bad IR Command");
+			r_error(error_bad_request, "Bad IR Command");
 			break;
 	}
 }
 
 void rng_system(){
 	switch(USART_Receive())
-	{//TODO?
+	{
+		#warning "TODO?"
 		default:
-			rError(error_bad_request, "Bad RNG Command");
+			r_error(error_bad_request, "Bad RNG Command");
 			break;
 	}
 }
 
 
 void (*subsystem_callers[NUM_SUBSYS_CODES])() = {
-	lcd_system, //0
-	oi_system, //1
-	sonar_system, //2
-	servo_system, //3
-	ir_system, //4
-	rng_system, //5
+	lcd_system,   // 0
+	oi_system,    // 1
+	sonar_system, // 2
+	servo_system, // 3
+	ir_system,    // 4
+	rng_system,   // 5
 };
 
 void signal_handler() {
@@ -199,3 +214,19 @@ void dispatch()
 	}
 }
 */
+
+
+/**
+ * Calling this function will drop the rover into "control mode", in which the
+ * rover gives over most of its autonomous functions to commands coming from
+ * the remote control system.
+ */
+void control_mode() {
+	USART_Init(1);
+	while (true) {
+		// Receive and handle messages from `control` indefinitely:
+		check_for_start();
+		signal_handler();  // Calls appropriate handlers.
+		check_for_end();
+	}
+}

@@ -177,6 +177,9 @@
     <Compile Include="include\objects.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\r_error.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\servo.h">
       <SubType>compile</SubType>
     </Compile>
@@ -220,6 +223,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\open_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\r_error.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\servo.c">

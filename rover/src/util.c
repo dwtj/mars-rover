@@ -68,24 +68,6 @@ ISR (TIMER2_COMP_vect) {
 	timer2_tick++;
 }
 
-//Stop the currently executing command.
-void abort_command() {
-	controller.running = false;
-}
-
-//Transmit an error to control, print error code on LCD, then cease executing the command and rover.
-void rError(uint8_t err_num, char* msg)
-{	
-	USART_Transmit(signal_start);
-	USART_Transmit(signal_error);
-	USART_Transmit(err_num);
-	USART_transmit_buffer(msg);
-	USART_Transmit(signal_stop);
-	lprintf("Error: %d", err_num);
-	abort_command();
-	while(1); //Stop running this bad code.
-}
-
 
 /// Initialize PORTC to accept push buttons as input
 void init_push_buttons(void) {

@@ -55,23 +55,6 @@ bool is_valid_signal_code(signal type) {
 
 
 
-
-
-
-
-/**
- * Calling this function will drop the rover into `comm_mode`, in which it
- * gives over most of its autonomous functions to commands coming from a remote
- * control system.
- */
-void comm_mode() {
-	USART_Init(1);
-    enable_RX_ISR();
-	while (true) {
-                ; // do nothing.
-	}
-}
-
 void enable_RX_ISR() {
     UCSR0B |= 0b10000000;
 }
@@ -81,8 +64,8 @@ void disable_RX_ISR() {
 }
 
 
-
-
+#warning "TODO: get rid of this old David code?"
+/*
 ISR(USART0_RX_vect) {
     disable_RX_ISR();
     // TODO: disable the handler until a correct connection has been
@@ -94,3 +77,4 @@ ISR(USART0_RX_vect) {
     // TODO
     enable_RX_ISR();
 }
+*/

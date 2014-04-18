@@ -10,6 +10,7 @@
 #include "txq.h"
 #include "comm.h"
 #include "util.h"
+#include "r_error.h"
 
 
 static volatile txq_t txq;
@@ -27,7 +28,7 @@ uint8_t txq_dequeue()
 	uint8_t ret;
 	
 	if(txq.num_elements == 0) {
-		rError(error_txq, "Transmission queue is empty.");
+		r_error(error_txq, "Transmission queue is empty.");
 	}
 	
 	ret = txq.buff[txq.read_index];
@@ -50,7 +51,7 @@ uint8_t txq_dequeue()
 void txq_enqueue(uint8_t val)
 {
 	if(txq.num_elements == TXQ_BUFF_SIZE) {
-		rError(error_txq, "Transmission queue is full.");
+		r_error(error_txq, "Transmission queue is full.");
 	}
 	
 	txq.buff[txq.write_index] = val;

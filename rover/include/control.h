@@ -22,7 +22,7 @@
 #define CONTROL_H_
 
 #define MAX_DATA_LENGTH 100
-typedef struct{
+typedef struct {
 	bool running; //Checked by handlers to see if they should stop.
 	signal current; //Stores the most recent command issued from python.
 	uint8_t data[MAX_DATA_LENGTH];
