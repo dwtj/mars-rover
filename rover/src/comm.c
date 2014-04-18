@@ -7,15 +7,9 @@
 
 
 #include <stdbool.h>
-#include <stdint.h>
-#include <assert.h>
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include "usart.h"
+
 #include "comm.h"
-#include "lcd.h"
-#include "util.h"
-#include "control.h"
+
 
 
 
