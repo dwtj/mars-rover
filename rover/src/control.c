@@ -9,16 +9,23 @@
 #warning "Assuming that usart_receive() is bit by bit. if this is wrong, so is our code."
 
 #include "util.h"
-#include "util.c"
+#include "usart.h"
 #include "IR.h"
 #include "open_interface.h"
 #include "sonar.h"
 #include "servo.h"
+#include "comm.h"
+#include "txq.h"
+#include "control.h"
+
+
+control controller;  // Lone instance of the `control` struct.
+
 
 //this function waits for a stop bit. it will be called a lot.
 void wait_for_end()
 {
-	if(USART_Receive() != signal.signal_stop)
+	if(USART_Receive() != signal_stop)
 	{
 		rError(error_txq, "Did not receive expected stop bit"); //something went wrong!
 	}
@@ -47,9 +54,10 @@ void lcd_system(){
 	{
 		case 0:
 			lcd_init();
-					break;
+			break;
 		case 1:
-			lcd_puts(controller.data[0]); //This might be an issue? TODO.
+			#warning "TODO: This is incorrect:"
+			//lcd_puts(controller.data[0]);
 			break;
 		case 2:
 			lcd_clear();
@@ -64,7 +72,8 @@ void oi_system(){
 	switch(USART_Receive())
 	{
 		case 0:
-			oi_init(); //add parameters
+			#warning "TODO: add parameters:"
+			//oi_init();
 			break;
 		default:
 			rError(error_bad_request, "Bad OI Command");
@@ -78,8 +87,9 @@ void sonar_system(){
 		case 0:
 			sonar_init();
 			break;
-			case 1:
-			sonar_calibrate();//TODO
+		case 1:
+			#warning "TODO: There doesn't seem to be such a function:"
+			//sonar_calibrate();//TODO
 			break;
 		case 2:
 			sonar_reading();
@@ -112,32 +122,35 @@ void servo_system(){
 			rError(error_bad_request, "Bad servo Command");
 			break;
 	}
-	void ir_system(){
-		switch(USART_Receive())
-		{
-			case 0:
-				IR_init();
-				break;
-			case 1:
-				IR_calibrate(); //add parameter
-				break;
-			case 2:
-				IR_reading();
-				break;
-			default:
-				rError(error_bad_request, "Bad IR Command");
-				break;
-		}
-	}
+}
 
-	void rng_system(){
-		switch(USART_Receive())
-		{//TODO?
-			default:
-				rError(error_bad_request, "Bad RNG Command");
-				break;
-		}
+void ir_system(){
+	switch(USART_Receive())
+	{
+		case 0:
+			IR_init();
+			break;
+		case 1:
+			#warning "Add parameter"
+			//IR_calibrate();
+			break;
+		case 2:
+			IR_reading();
+			break;
+		default:
+			rError(error_bad_request, "Bad IR Command");
+			break;
 	}
+}
+
+void rng_system(){
+	switch(USART_Receive())
+	{//TODO?
+		default:
+			rError(error_bad_request, "Bad RNG Command");
+			break;
+	}
+}
 
 
 void (*subsystem_callers[NUM_SUBSYS_CODES])() = {
@@ -149,15 +162,17 @@ void (*subsystem_callers[NUM_SUBSYS_CODES])() = {
 	rng_system, //5
 };
 
-void signal_handler(){
+void signal_handler() {
 	int id = USART_Receive();
 	subsystem_callers[id]();
 }
 
 
 
-#warning "TODO: RX ISR to modify the `control` global variable."
+#warning "TODO: RX ISR to modify the `controller` global variable."
 
+#warning "Is this still being used?"
+/*
 void (*handlers[NUM_SIGNAL_CODES])() = {
 	null_handler,  // 0
 	null_handler,
@@ -171,16 +186,16 @@ void (*handlers[NUM_SIGNAL_CODES])() = {
 	error_handler,  // 8
 	signal_handler, //9
 };
+*/
 
 
 
-
-
+#warning "Is this being used?"
+/*
 void dispatch()
 {
 	while(1) {
 		handlers[controller.current]();
 	}
 }
-
-}
+*/

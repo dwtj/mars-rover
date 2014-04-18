@@ -27,9 +27,9 @@ typedef struct{
 	signal current; //Stores the most recent command issued from python.
 	uint8_t data[MAX_DATA_LENGTH];
 	uint8_t data_idx;
-}control;
+} control;  // To be used to hold the state as messages are being interpreted.
 
-control controller;//instance of struct, use for all structy things
+extern control controller;
 
 
 #endif /* CONTROL_H_ */

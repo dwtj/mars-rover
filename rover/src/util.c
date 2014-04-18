@@ -69,7 +69,7 @@ ISR (TIMER2_COMP_vect) {
 }
 
 //Stop the currently executing command.
-void abort_command(){
+void abort_command() {
 	controller.running = false;
 }
 

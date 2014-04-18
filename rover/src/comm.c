@@ -15,7 +15,6 @@
 #include "comm.h"
 #include "lcd.h"
 #include "util.h"
-#include "util.c"
 #include "control.h"
 
 
