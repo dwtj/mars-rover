@@ -70,7 +70,7 @@ ISR(USART0_RX_vect) {
     disable_RX_ISR();
     // TODO: disable the handler until a correct connection has been
     // TODO: only read if data is available
-    signal s = (signal) USART_Receive();
+    signal s = (signal) usart_rx();
     is_valid_signal_code(s);
                
     signal_handlers[s]((void *) 0);

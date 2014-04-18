@@ -6,7 +6,7 @@
 #include <avr/interrupt.h>
 #include <stdbool.h>
 
-void USART_Init(unsigned char type)
+void usart_init(unsigned char type)
 {
 	unsigned int baud;
 	bool double_rate = 0;
@@ -34,7 +34,7 @@ void USART_Init(unsigned char type)
 	UCSR0C = 0b00001110;
 }
 
-unsigned char USART_Receive( void )
+unsigned char usart_rx( void )
 {
 	/* Wait for data to be received */
 	while ( !(UCSR0A & (1<<RXC0)) )
@@ -43,7 +43,7 @@ unsigned char USART_Receive( void )
 	return UDR0;
 }
 
-void USART_Transmit(uint8_t data)
+void usart_tx(uint8_t data)
 {
 	/* Wait for empty transmit buffer */
 	while ( !( UCSR0A & (1<<UDRE)) )
@@ -52,8 +52,8 @@ void USART_Transmit(uint8_t data)
 	UDR0 = data;
 }
 	
-void USART_transmit_buffer(char *buf) {
+void usart_tx_buf(char *buf) {
 	for (char *cur = buf; *cur != '\0'; cur++) {
-		USART_Transmit(*cur);
+		usart_tx(*cur);
 	}
 }

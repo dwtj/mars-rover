@@ -6,7 +6,7 @@
  */
 
 #warning "TODO: implement echo"
-#warning "Assuming that usart_receive() is bit by bit. if this is wrong, so is our code."
+#warning "Assuming that usart_rx() is bit by bit. if this is wrong, so is our code."
 
 #include "util.h"
 #include "usart.h"
@@ -25,22 +25,22 @@ control controller;  // Lone instance of the `control` struct.
 
 
 /**
- * Reads a single byte via `USART_Receive()` and checks that it is a start byte.
+ * Reads a single byte via `usart_rx()` and checks that it is a start byte.
  * This will block until a byte of some sort is received, i.e., there is no timeout.
  */
 void check_for_start() {
-	if(USART_Receive() != signal_start) {
+	if(usart_rx() != signal_start) {
 		r_error(error_txq, "Did not receive expected start bit.");
 	}
 }
 
 
 /**
- * Reads a single byte via `USART_Receive()` and checks that it is a start byte.
+ * Reads a single byte via `usart_rx()` and checks that it is a start byte.
  * This will block until a byte of some sort is received, i.e., there is no timeout.
  */
 void check_for_end() {
-	if(USART_Receive() != signal_stop) {
+	if(usart_rx() != signal_stop) {
 		r_error(error_txq, "Did not receive expected stop bit.");
 	}
 }
@@ -64,7 +64,7 @@ void error_handler() {
 
 
 void lcd_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
 			lcd_init();
@@ -83,7 +83,7 @@ void lcd_system(){
 }
 
 void oi_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
 			#warning "TODO: add parameters:"
@@ -96,7 +96,7 @@ void oi_system(){
 }
 
 void sonar_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
 			sonar_init();
@@ -114,23 +114,25 @@ void sonar_system(){
 	}
 }
 
+
+#warning "TODO: fix the servo handlers"
 void servo_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
 			servo_init();
 			break;
 		case 1:
-			servo_calibrate();//TODO
+			//servo_calibrate();//TODO
 			break;
 		case 2:
-			servo_state();//TODO
+			//servo_state();//TODO
 			break;
 		case 3:
 			servo_angle(controller.data[0],true); //read from data[0], then wait to finish moving.
 			break;
 		case 4:
-			servo_pulse_width();//TODO
+			//servo_pulse_width();//TODO
 			break;
 		default:
 			r_error(error_bad_request, "Bad servo Command");
@@ -139,7 +141,7 @@ void servo_system(){
 }
 
 void ir_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		case 0:
 			IR_init();
@@ -158,7 +160,7 @@ void ir_system(){
 }
 
 void rng_system(){
-	switch(USART_Receive())
+	switch(usart_rx())
 	{
 		#warning "TODO?"
 		default:
@@ -178,7 +180,7 @@ void (*subsystem_callers[NUM_SUBSYS_CODES])() = {
 };
 
 void signal_handler() {
-	int id = USART_Receive();
+	int id = usart_rx();
 	subsystem_callers[id]();
 }
 
@@ -222,7 +224,7 @@ void dispatch()
  * the remote control system.
  */
 void control_mode() {
-	USART_Init(1);
+	usart_init(1);
 	while (true) {
 		// Receive and handle messages from `control` indefinitely:
 		check_for_start();

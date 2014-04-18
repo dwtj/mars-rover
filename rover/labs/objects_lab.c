@@ -36,8 +36,8 @@ static void part1()
 		lcd_puts(".");
 		servo_angle(deg, true);
 		snprintf(buf, RX_BUFSIZE, "%3d, %3.1f, %3.1f, ", deg, (double) IR_reading(), (double) sonar_reading());
-		USART_transmit_buffer(buf);
-		USART_transmit_buffer("\r\n");
+		usart_tx_buf(buf);
+		usart_tx_buf("\r\n");
 		
 		wait_ms(100);  // Needed to prevent the sonar from being called too frequently.
 	}
@@ -61,7 +61,7 @@ static void part2()
 	
 	//wait_button("here1");
 	
-	USART_transmit_buffer(buf);
+	usart_tx_buf(buf);
 	
 	//wait_button("here2");
 	
@@ -82,8 +82,8 @@ static void part2()
 			//min_id = i;
 		}
 		snprint_object(buf, MY_RX_BUFSIZE, results.objects + i);
-		USART_transmit_buffer(buf);
-		USART_transmit_buffer("\n\n");
+		usart_tx_buf(buf);
+		usart_tx_buf("\n\n");
 	}
 	
 	// go to midpoint of min_id;
@@ -99,7 +99,7 @@ void objects_lab()
 	sonar_init();
 	lcd_init();
 	servo_init();
-	USART_Init(1);  // init bluetooth
+	usart_init(1);  // init bluetooth
 			
 	lcd_puts("Objects Lab Startup...");
 	wait_ms(1000);
