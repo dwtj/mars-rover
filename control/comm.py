@@ -2,11 +2,13 @@
 # program.
 
 
-import serial
-#import numpy as np
+import queue
 from enum import IntEnum
-from threading import Thread
-from queue import Queue
+
+#import numpy as np
+import serial
+
+import aux
 
 
 MAX_DATA_FRAME_LEN = 100
@@ -14,7 +16,6 @@ DEFAULT_SERIAL_PORT = "/dev/tty.ElementSerial-ElementSe"
 
 
 ser = None  # The serial connection to the rover.
-
 
 
 
@@ -70,6 +71,9 @@ def tx_mesg(t, subsys = None, command = None, data = None):
     If you pass garbage to this function, garbage may well be sent to the rover.
     """
 
+    global ser
+    b = bytearray(1)
+
     # Some validation for function arguments:
     if type(t) != Message:
         raise Exception()
@@ -82,16 +86,21 @@ def tx_mesg(t, subsys = None, command = None, data = None):
     if subsys != None and command == None:
         raise Exception()
 
-    ser.write(Signal.start)
-    ser.write(t)
+    b[0] = Signal.start
+    ser.write(b)
+    b[0] = t
+    ser.write(b)
 
     if subsys is not None:
-        ser.write(subsys)
-        ser.write(command)
+        b[0] = subsys
+        ser.write(b)
+        b[0] = command
+        ser.write(b)
         if data is not None:
             ser.write(frame_data(data))
 
-    ser.write(Signal.stop)
+    b[0] = Signal.stop
+    ser.write(b)
 
 
 
@@ -118,9 +127,12 @@ def rx_mesg(t, subsys = None, command = None, has_data = False):
     unexpected features, an `Exception` is raised.
     """
 
-    ser.timeout(1)  # Set timeouts to be 1 second while reading each byte.
-    # If a timeout occurs while trying to read one byte, then a bytes object of
-    # length zero will be returned.
+    global ser
+
+    # Set timeouts to be 1 second while reading each byte. If a timeout occurs
+    # while trying to read one byte, then a bytes object of length zero will be
+    # returned.
+    ser.timeout = 1
 
     if ser.read() != Signal.start:
         raise Exception("Did not receive the expected Start Signal.")
@@ -138,7 +150,7 @@ def rx_mesg(t, subsys = None, command = None, has_data = False):
     if ser.read() != Signal.stop:
         raise Exception("Did not receive the expected Stop Signal.")
 
-    ser.timeout(None)  # Disable timeouts.
+    ser.timeout = None  # Disable timeouts.
 
 
 
@@ -184,8 +196,10 @@ def frame_data(d):
 
 
 
-def read_data(d):
+def read_data():
     """ Reads data frame and returns data bytes. """
+
+    global ser
 
     keep_going = True
     num_good_bytes = 0
@@ -269,6 +283,8 @@ def tty(stream):
     is coming from the rover.
     """
 
+    global ser
+
     while True:
         stream.write(ser.read())
 
@@ -280,14 +296,19 @@ def connect(port = DEFAULT_SERIAL_PORT):
     """ Opens the serial connection on the given `port` and starts the `aux`
     thread to listen for any unexpected (i.e. un-prompted) messages. """
 
+    global ser
     ser = serial.Serial(port, baudrate = 57600)
-    start_aux()  # Sends signal that allows `aux` to listen for messages.
+    if ser == None:
+        raise Exception("Could not connect to serial port.")
+
+    aux.start(ser)  # Sends signal that allows `aux` to listen for messages.
 
 
 
 
 def disconnect():
-    stop_aux()
+    global ser
+    aux.stop()
     ser.close()
     ser = None
     aux = None
@@ -304,8 +325,6 @@ def main():
     connect(sys.argv[1])
     # TODO: do some stuff
         
-
-logging.setLevel("INFO")
 
 if __name__ == "__main__":
     main()
