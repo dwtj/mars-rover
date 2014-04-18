@@ -45,6 +45,7 @@ uint8_t txq_dequeue()
 }
 
 
+
 // Adds an element to the queue and increases number of elements.
 // If there are `TXQ_BUFF_SIZE` number of elements in the queue, and the user
 // attempts to enqueue another element, then a `error_txq` error is sent to control.
@@ -57,7 +58,7 @@ void txq_enqueue(uint8_t val)
 	txq.buff[txq.write_index] = val;
 	
 	// Wrap around if write_index would overflow.
-	if(txq.write_index < TXQ_BUFF_SIZE -1) {
+	if(txq.write_index < TXQ_BUFF_SIZE - 1) {
 		txq.write_index++;
 		} else {
 		txq.write_index = 0;
@@ -65,3 +66,15 @@ void txq_enqueue(uint8_t val)
 	
 	txq.num_elements++;
 }
+
+
+
+void txq_drain() {
+	while (txq.num_elements > 0) {
+		usart_tx(txq_dequeue());
+	}
+}
+
+
+
+#warning "TODO: implement the two ISRs to implement the txq."

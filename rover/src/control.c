@@ -29,7 +29,10 @@ control controller;  // Lone instance of the `control` struct.
  * This will block until a byte of some sort is received, i.e., there is no timeout.
  */
 void check_for_start() {
-	if (usart_rx() != signal_start) {
+	uint8_t byte = usart_rx();
+	if (byte != signal_start) {
+		lprintf("start check: %d", byte);
+		wait_button("");
 		r_error(error_txq, "Did not receive expected start byte.");
 	}
 }
@@ -54,10 +57,14 @@ void null_handler() {
 
 // Receives a signal, and transmits an equivalent signal. 
 // Note that this is not the /same/ signal we receive, just equivalent.
-void ping_handler() {
+void ping_handler() 
+{
+	lcd_putc('.');
+	wait_button("DEBUG: ping_handler");
 	txq_enqueue(signal_start);
 	txq_enqueue(signal_ping);
 	txq_enqueue(signal_stop);
+	txq_drain();
 }
 
 
@@ -247,7 +254,7 @@ void control_mode()
 	lcd_clear();
 
 	// Receive and handle messages from `control` indefinitely:
-	while (true) {	
+	while (true) {
 		check_for_start();
 		message_handler();  // The message type.
 		check_for_end();
