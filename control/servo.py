@@ -1,6 +1,7 @@
 # servo.py
 
 import comm
+import struct
 
 
 class ServoCommand(IntEnum):
@@ -89,6 +90,6 @@ def pulse(p):
     if not (0.0 < p and p < 1.0):
         raise ValueError("Argument `p` must be in the open interval (0, 1).")
 
-    b = pack("<", p)
+    b = struct.pack("<f", p)
     tx_mesg(Message.command, Subsys.servo, ServoCommand.pusle, b)
     rx_mesg(Message.command, Subsys.servo, ServoCommand.pulse, False)
