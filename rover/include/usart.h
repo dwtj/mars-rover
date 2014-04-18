@@ -3,16 +3,20 @@
 
 #include <stdint.h>
 
-#define FOSC 1843200  // Clock Speed
+//#define FOSC 1843200  // Clock Speed //commented out because FOSC defined elsewhere to be 1600000. Why was it this number???
 #define BAUD 9600
 #define MYUBRR FOSC/16/BAUD-1
 
-void USART_Init (unsigned char type);
+void usart_init (unsigned char type);
 
-unsigned char USART_Receive( void );
+unsigned char usart_rx( void );
 
-void USART_Transmit(uint8_t data);
+void usart_tx(uint8_t data);
 
-void USART_transmit_buffer(char *buf);
+void usart_tx_buf(char *buf);
+
+void usart_RX_ISR_enable();
+
+void usart_RX_ISR_disable();
 
 #endif  /* USART_H */

@@ -1,11 +1,17 @@
 # aux.py - The auxiliary thread used for listening to unexpected messages.
 
+from threading import Thread
+import queue
+import logging
+
+import serial
+
 import comm
-from comm import Signal, Message
 
 
 # The `aux` thread itself:
 aux = None
+
 
 # The queue by which signals are passed from the main execution thread to `aux`:
 signal_queue = None
@@ -21,18 +27,29 @@ _stop = object()
 _start = object()
 
 
-def start():
-    """ Starts `aux`. Assumes that `aux` has never been started or that it was
-    previously stopped. """
+# TODO: refactor start so that instantiation of the thread happens elsewhere.
+def start(s = None):
+    """
+    Starts `aux`. Assumes that `aux` has never been started or that it was
+    previously stopped. If this is being invoked for the first time, i.e., if
+    `aux` is being initialized, then the serial connection to be read must be
+    passed as argument `s`.
+    """
+
+    global aux, ser, signal_queue, logger, _start
 
     if aux is None or signal_queue is None:
+
+        if type(s) is not serial.Serial:
+            raise Exception("")
+
         # This is the first time that this function has been called.
-        signal_queue = Queue()
+        signal_queue = queue.Queue()
 
         logger = logging.getLogger("aux")
         logger.setLevel("INFO")
 
-        aux = Thread(target = unexpected_listener, daemon = True)
+        aux = Thread(target = unexpected_listener, args = (s,), daemon = True)
         aux.start()
 
     signal_queue.put(_start)
@@ -44,13 +61,14 @@ def start():
 def stop():
     """ Starts `aux`. Assumes that `aux` was previously stopped. """
 
-    q.put(_stop)
-    q.join()  # Blocks until this signal is processed.
+    global signal_queue, _stop
+    signal_queue.put(_stop)
+    signal_queue.join()  # Blocks until this signal is processed.
 
 
 
 
-def listen():
+def listen(ser):
     """ A helper function used by `unexpected_listener` in the `aux` thread
     to listen for a single message from the rover.
 
@@ -67,7 +85,7 @@ def listen():
     two cases, an appropriate response message is sent to the `rover`.
     """
 
-    ser.timeout(0.1)
+    ser.timeout = 0.1
 
     # Any start and stop control bytes are read into here:
     sig = bytearray(1)  
@@ -86,25 +104,25 @@ def listen():
     if n == 0:
         return  # No bytes were transmitted from `rover` before the timeout.
  
-    if sig[0] == Signal.start:
+    if sig[0] == comm.Signal.start:
         logger.info("Receiving an unexpected message...")
         n = ser.readinto(mesg)  # Read Message ID
-        mesg = mesg[0]  # Reuse the reference.
+        mesg = int(mesg[0])  # Reuse the reference.
         if n == 1:
-            if mesg in {Message.error, Message.echo}:
+            if mesg in {comm.Message.error, comm.Message.echo}:
                 d = comm.read_data()
             n = ser.readinto(sig)  # Read stop signal byte.
-            if n == 1 and sig[0] == Signal.stop:
+            if n == 1 and sig[0] == comm.Signal.stop:
                 valid = True
  
     if valid:
-        if mesg == Message.ping:
-            comm.tx_mesg(Message.ping)
+        if mesg == comm.Message.ping:
+            comm.tx_mesg(comm.Message.ping)
             logger.info("Received a ping message. Responding to it now...")
-        elif mesg == Message.echo:
+        elif mesg == comm.Message.echo:
             logger.info("Received an echo message. Responding to it now...")
-            comm.tx_mesg(Message.echo, data = d)
-        elif mesg == Message.error:
+            comm.tx_mesg(comm.Message.echo, data = d)
+        elif mesg == comm.Message.error:
             logger.info("Received an error message. Handling it now...")
             handle_rover_error(d)
     else:
@@ -112,7 +130,7 @@ def listen():
 
 
 
-def unexpected_listener():
+def unexpected_listener(ser):
     """
     This function is run in the auxiliary thread to listen for unexpected
     messages sent from the `rover`. It should never be run in the main exec
@@ -128,11 +146,15 @@ def unexpected_listener():
     raised.
     """
 
+    if type(ser) is not serial.Serial:
+        raise Exception("")
+
+
     logger.info("Thread started.")
     
     while (True):
         # Block until `signal_queue` contains the `_start` signal:
-        sig = signal_queue.get(block = True, wait = None)
+        sig = signal_queue.get(True, None)
         if sig is not _start:
             Exception("The initial signal to start `aux` was not as expected.")
 
@@ -144,9 +166,9 @@ def unexpected_listener():
         # stop signal is delivered via the queue. Report anything that happens
         # on `ser`.
         while sig is not _stop:
-            listen()
+            listen(ser)
             try:
-                sig = q.get(block = False)
+                sig = signal_queue.get(block = False)
             except queue.Empty:
                 sig = None
 

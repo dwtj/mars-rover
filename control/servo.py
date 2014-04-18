@@ -1,6 +1,7 @@
 # servo.py
 
 import comm
+import struct
 
 
 class ServoCommand(IntEnum):
@@ -58,7 +59,7 @@ def state(s = None):
     elif s == "off":
         # TODO: How would I tell the servo to turn off?? Send a 0? Make 
         # consistent on rover side
-        b = pack("<I", 0)
+        b = struct.pack("<I", 0)
         tx_mesg(Message.command, Subsys.servo, ServoCommand.state, b)
         rx_mesg(Message.command, Subsys.servo, ServoCommand.state, False)
     else:
@@ -85,7 +86,7 @@ def angle(angle, wait = True):
     if not (0 <= p and p  <= 180):
         raise ValueError("Argument `p` must be in the closed interval [0, 180].")
     
-    b = pack("<I", p)
+    b = struct.pack("<I", p)
     tx_mesg(Message.command, Subsys.servo, ServoCommand.angle, b)
     
     # TODO: wait for "finished" signal from rover. 
@@ -110,6 +111,6 @@ def pulse(p):
     if not (0.0 < p and p < 1.0):
         raise ValueError("Argument `p` must be in the open interval (0, 1).")
 
-    b = pack("<", p)
+    b = struct.pack("<f", p)
     tx_mesg(Message.command, Subsys.servo, ServoCommand.pulse, b)
     rx_mesg(Message.command, Subsys.servo, ServoCommand.pulse, False)

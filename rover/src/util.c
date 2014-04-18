@@ -9,14 +9,17 @@
  */
 
 #include <stdbool.h>
-
+#include <stdint.h>
+#include <assert.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+#include "control.h"
 #include "util.h"
 #include "lcd.h"
 #include "usart.h"
 #include "comm.h"
+
 
 // Global used for interrupt driven delay functions
 volatile unsigned int timer2_tick;
@@ -24,7 +27,7 @@ void timer2_start(char unit);
 void timer2_stop();
 
 
-/// Blocks for a specified number of milliseconds
+// Blocks for a specified number of milliseconds
 void wait_ms(unsigned int time_val) {
 	//Seting OC value for time requested
 	OCR2=250; 				//Clock is 16 MHz. At a prescaler of 64, 250 timer ticks = 1ms.
@@ -36,7 +39,7 @@ void wait_ms(unsigned int time_val) {
 
 	timer2_stop();
 }
-
+#warning "TODO: PROBABLY uncomment this"
 
 // Start timer2
 void timer2_start(char unit) {
@@ -63,24 +66,6 @@ void timer2_stop() {
 // Interrupt handler (runs every 1 ms)
 ISR (TIMER2_COMP_vect) {
 	timer2_tick++;
-}
-
-//Stop the currently executing command.
-void abort_command(){
-	control.running = false;
-}
-
-//Transmit an error to control, print error code on LCD, then cease executing the command and rover.
-void rError(uint8_t err_num, char* msg)
-{	
-	USART_Transmit(signal_soh);
-	USART_Transmit(signal_error);
-	USART_Transmit(err_num);
-	USART_transmit_buffer(msg);
-	USART_Transmit(signal_eot);
-	lprintf("Error: %d", err_num);
-	abort_command();
-	while(1); //Stop running this bad code.
 }
 
 
