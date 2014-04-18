@@ -5,6 +5,18 @@
  *  Author: asr
  */ 
 
+#include <stdbool.h>
+#include <stdint.h>
+#include <assert.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
+#include "usart.h"
+#include "comm.h"
+#include "lcd.h"
+#include "util.h"
+
+
 
 #ifndef CONTROL_H_
 #define CONTROL_H_
@@ -13,10 +25,11 @@
 typedef struct{
 	bool running; //Checked by handlers to see if they should stop.
 	signal current; //Stores the most recent command issued from python.
-	uint8_t data[100];
+	uint8_t data[MAX_DATA_LENGTH];
 	uint8_t data_idx;
 }control;
 
+control controller;//instance of struct, use for all structy things
 
 
 #endif /* CONTROL_H_ */
