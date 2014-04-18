@@ -17,7 +17,7 @@ bool has_errored = false;
 
 
 
-//Stop the currently executing command.
+// Stop the currently executing command.
 void abort_command() {
 	controller.running = false;
 	#warning "need to stop adding to the queue and empty it."
@@ -35,5 +35,7 @@ void r_error(uint8_t err_num, char* msg)
 	usart_tx(signal_stop);
 	lprintf("Error: %d", err_num);
 	abort_command();
-	while(1); //Stop running this bad code.
+	while(1) {
+		; // Halt indefinitely because something bad happened.
+	}
 }

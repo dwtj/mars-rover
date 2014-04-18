@@ -48,8 +48,8 @@ uint8_t (*signal_handlers[])(char *) = {
 
 
 
-bool is_valid_signal_code(signal type) {
-	return (bool) type >= 0 && type < NUM_SIGNAL_CODES;
+bool is_valid_signal(signal sig) {
+	return 0 <= sig && sig < NUM_SIGNAL_CODES;
 }
 
 

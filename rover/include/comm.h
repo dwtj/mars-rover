@@ -20,14 +20,13 @@
    sequence with the rover. The rover's responses are headed by the same
    code. */
 
-typedef enum
-{
-	signal_null = 0,   // NULL
-	signal_start = 1,   // Start of frame
-	signal_stop = 2,    // End of frame
+#warning "TODO: refactor these into control signals and message types."
+typedef enum {
+	signal_null = 0,    // NULL
+	signal_start = 1,   // Start of message
+	signal_stop = 2,    // End of message
 	
 	signal_error = 3,
-	
 	signal_ping = 4,
 	signal_echo = 5,
 	signal_command = 6,
@@ -36,8 +35,7 @@ typedef enum
 
 
 // IDs for each of the rover's subsystems.
-typedef enum
-{
+typedef enum {
 	lcd = 0,
 	oi = 1,
 	sonar = 2,
@@ -64,6 +62,7 @@ void enable_RX_ISR();
 
 void disable_RX_ISR();
 
-bool is_valid_signal_code(signal type);
+#warning "TODO: turn this into is_valid_message_type()"
+bool is_valid_signal(signal sig);
 
 #endif /* COMM_H */
