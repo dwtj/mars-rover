@@ -51,7 +51,7 @@ It should be the purpose of `comm.c` (the communications module of `rover`) to f
 	</tr>
 </table>
 
-Start, Message Type and Stop are essential in every message. Subsystem and the data frame (Data Length, Data Byte, and "Keep Going") may be necessary, depending on Message Type and Subsystem. 
+Start, Message and Stop are essential in every message. Subsys and the data frame (Data Length, Data Byte, and "Keep Going") may be necessary, depending on Message and Subsys. 
 
 ## Design Assumptions ##
 

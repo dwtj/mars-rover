@@ -208,41 +208,38 @@ def frame_data(d):
 
 def read_data():
     """ Reads data frame and returns data bytes. """
+    
+    global ser
 
     global ser
 
     keep_going = True
     num_good_bytes = 0
-    data_bytes = b''
     temp_bytes_list = []
-    good_bytes_list = []
-
+    data_bytes_list = []
+    
     # Keep reading data frames until there are no more data frames:
     while keep_going:
-        data_length = ser.read()
+        frame_length = ser.read()
+        
+        temp_bytes_list = [0]*frame_length
 
-        # Get next data frame
-        temp_bytes_list = []
-        for x in range(0, data_length):
-            temp_bytes_list.append(ser.read())
-
+        if ser.readinto(temp_bytes_list) != frame_length:
+            raise Exception("Did not receive all expected data bytes.")
+        
         # Add only the good bytes to the list:
         num_good_bytes = ser.read()
-        good_bytes_list += temp_bytes_list[0:num_good_bytes]
-
+        data_bytes_list += temp_bytes_list[0:num_good_bytes]
+        
         # Check to see if we should keep going:
         keep_going_byte = ser.read()
         
         if keep_going_byte == b'\x00':
             keep_going = False
         elif keep_going_byte != b'\x01':
-            # TODO: something is wrong if its not 0 or 1
-            pass
+            raise Exception("Invalid \"Keep Going\" byte.")
 
-    data_bytes = b''.join(good_bytes_list)
-
-    return data_bytes
-    
+    return b''.join(data_bytes_list)
 
 
 def heartbeat():
