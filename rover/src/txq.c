@@ -8,9 +8,9 @@
 #include <stdint.h>
 
 #include "txq.h"
-#include "comm.h"
 #include "util.h"
 #include "r_error.h"
+#include "usart.h"
 
 
 static volatile txq_t txq;
@@ -34,10 +34,10 @@ uint8_t txq_dequeue()
 	ret = txq.buff[txq.read_index];
 	
 	// Wrap around if read_index would underflow (go negative).
-	if (txq.read_index > 0) {
-		txq.read_index--;
+	if (txq.read_index < TXQ_BUFF_SIZE - 1) {
+		txq.read_index++;
 	} else {
-		txq.read_index = TXQ_BUFF_SIZE - 1;
+		txq.read_index = 0;
 	}
 	
 	txq.num_elements--;
@@ -60,7 +60,7 @@ void txq_enqueue(uint8_t val)
 	// Wrap around if write_index would overflow.
 	if(txq.write_index < TXQ_BUFF_SIZE - 1) {
 		txq.write_index++;
-		} else {
+	} else {
 		txq.write_index = 0;
 	}
 	

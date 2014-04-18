@@ -13,6 +13,8 @@
 #include "util.h"
 #include "lcd.h"
 #include "usart.h"
+#include "control.h"
+#include "IR.h"
 
 #define MAX_DIST 50
 #define MIN_DIST 9
@@ -46,6 +48,12 @@ void IR_init()
 void IR_start() {
 	ADCSRA |= 0x40;
 }
+
+float IR_reading() {
+	IR_start();
+	return(IR_conv(IR_read()));
+}
+
 
 
 /**
@@ -87,8 +95,6 @@ void send_dist_reading(uint8_t dist, uint16_t reading)
 
 
 
-
-
 /*
  * Implments the third-order polynomial conversion from IR ADC readings, `d`,
  * to distances (in cm) as described in `sensors/ir/calibration_data.md`.
@@ -108,13 +114,6 @@ uint16_t IR_run() {
 	IR_start();
 	return(IR_read());
 }
-
-
-float IR_reading() {
-	IR_start();
-	return(IR_conv(IR_read()));
-}
-
 
 
 /*
@@ -167,5 +166,25 @@ void IR_calibrate(bool bam_send, bool save_means)
         if (save_means) {
 		    calib_data[dist] = (uint16_t) round(avg);
         }
+	}
+}
+
+//Handler from the ir_system, moved from control for readability.
+void ir_system(){
+	switch(usart_rx())
+	{
+		case 0:
+		IR_init();
+		break;
+		case 1:
+		#warning "Add parameter"
+		//IR_calibrate();
+		break;
+		case 2:
+		IR_reading();
+		break;
+		default:
+		r_error(error_bad_request, "Bad IR Command");
+		break;
 	}
 }

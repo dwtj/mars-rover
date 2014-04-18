@@ -10,6 +10,7 @@
 #include <string.h>
 #include "util.h"
 #include "lcd.h"
+#include "r_error.h"
 
 
 #define HD_LCD_CLEAR 0x01
@@ -31,6 +32,26 @@
 
 void lcd_toggle_clear(char delay);
 void lcd_home_anyloc(unsigned char location);
+
+//Handler for the LCD system
+void lcd_system(){
+	switch(usart_rx())
+	{
+		case 0:
+		lcd_init();
+		break;
+		case 1:
+		#warning "TODO: This is incorrect:"
+		//lcd_puts(controller.data[0]);
+		break;
+		case 2:
+		lcd_clear();
+		break;
+		default:
+		r_error(error_bad_request, "Bad LCD Command");
+		break;
+	}
+}
 
 /// Initializes PORTA to communicate with LCD controller
 void lcd_init(void) {

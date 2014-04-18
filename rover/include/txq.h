@@ -24,7 +24,7 @@ typedef struct{
 
 void txq_init();
 
-
+void txq_drain();
 
 uint8_t txq_dequeue();
 

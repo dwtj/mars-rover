@@ -48,7 +48,7 @@
         <InterfaceName>JTAG</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.jtagicemkii</ToolType>
-      <ToolNumber>00B0000051D6</ToolNumber>
+      <ToolNumber>070000004693</ToolNumber>
       <ToolName>JTAGICE mkII</ToolName>
     </com_atmel_avrdbg_tool_jtagicemkii>
     <com_atmel_avrdbg_tool_jtagice3plus>
@@ -162,9 +162,6 @@
     <None Include="labs\usart_lab.c">
       <SubType>compile</SubType>
     </None>
-    <Compile Include="include\comm.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="include\control.h">
       <SubType>compile</SubType>
     </Compile>
@@ -202,9 +199,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="mars-rover.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\comm.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\control.c">

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "util.h"
 #include "open_interface.h"
+#include "r_error.h"
 
 /// Allocate memory for a the sensor data
 oi_t* oi_alloc() {
@@ -117,6 +118,19 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 	oi_byte_tx(left_wheel& 0xff);
 }
 
+//Handler for OI, moved from control.
+void oi_system(){
+	switch(usart_rx())
+	{
+		case 0:
+		#warning "TODO: add parameters:"
+		//oi_init();
+		break;
+		default:
+		r_error(error_bad_request, "Bad OI Command");
+		break;
+	}
+}
 
 /// Loads a song onto the iRobot Create
 void oi_load_song(int song_index, int num_notes, unsigned char *notes, unsigned char *duration) {

@@ -8,11 +8,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "lcd.h"
-#include "servo.h"
 #include <avr/io.h>
 #include <math.h>
 #include <util.h>
+#include "lcd.h"
+#include "servo.h"
+#include "control.h"
+
 const uint16_t TOP = 43000; // period is 21.5ms
 
 
@@ -53,6 +55,33 @@ void servo_manual_calib()
 		wait_ms(200);
 	}
 }
+
+
+#warning "TODO: fix the servo handlers"
+void servo_system(){
+	switch(usart_rx())
+	{
+		case 0:
+			servo_init();
+			break;
+		case 1:
+			//servo_calibrate();//TODO
+			break;
+		case 2:
+			//servo_state();//TODO
+			break;
+		case 3:
+			servo_angle(controller.data[0],true); //read from data[0], then wait to finish moving.
+			break;
+		case 4:
+			//servo_pulse_width();//TODO
+			break;
+		default:
+			r_error(error_bad_request, "Bad servo Command");
+			break;
+	}
+}
+
 
 /**
  * Expects a floating point value (strictly) between 0.0 and 1.0.
