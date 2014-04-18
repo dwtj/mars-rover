@@ -5,7 +5,7 @@
  *  Author: asr
  */
 
-#warning "TODO: IMPLEMENT PING, implement echo, DETERMINE WHERE SUBSYSTEM_ID, SIGNAL_ID, how to read the fricken data frame in general."
+#warning "TODO: implement echo"
 #warning "Assuming that usart_receive() is bit by bit. if this is wrong, so is our code."
 
 #include "util.h"
@@ -28,13 +28,17 @@ void null_handler() {
 	;  // Do Nothing.
 }
 
+//receives a signal, and transmits an equivalent signal. 
+//note that this is not the /same/ signal we receive, but it should be equivalent.
 void ping_handler() {
-	USART_Transmit(signal.signal_ping);
+	txq_enqueue(signal_start);
+	txq_enqueue(signal_ping);
+	txq_enqueue(signal_stop);
 	wait_for_end();
 }
 
 void error_handler() {
-	rError(error_bad_request,"Bad signal request.");//TODO? Does this need to be more generic? or possibly more specific
+	rError(error_bad_request,"Bad signal request."); //TODO? Does this need to be more generic? or possibly more specific.
 }
 
 
@@ -45,7 +49,7 @@ void lcd_system(){
 			lcd_init();
 					break;
 		case 1:
-			lcd_puts(controller.data[0]);//This might be an issue? TODO.
+			lcd_puts(controller.data[0]); //This might be an issue? TODO.
 			break;
 		case 2:
 			lcd_clear();
