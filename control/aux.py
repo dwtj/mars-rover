@@ -61,9 +61,9 @@ def start(s = None):
 def stop():
     """ Starts `aux`. Assumes that `aux` was previously stopped. """
 
-    global _stop
-    q.put(_stop)
-    q.join()  # Blocks until this signal is processed.
+    global signal_queue, _stop
+    signal_queue.put(_stop)
+    signal_queue.join()  # Blocks until this signal is processed.
 
 
 
@@ -107,7 +107,7 @@ def listen(ser):
     if sig[0] == comm.Signal.start:
         logger.info("Receiving an unexpected message...")
         n = ser.readinto(mesg)  # Read Message ID
-        mesg = mesg[0]  # Reuse the reference.
+        mesg = int(mesg[0])  # Reuse the reference.
         if n == 1:
             if mesg in {comm.Message.error, comm.Message.echo}:
                 d = comm.read_data()

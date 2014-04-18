@@ -2,6 +2,7 @@
 # program.
 
 
+import sys
 import queue
 from enum import IntEnum
 
@@ -134,20 +135,29 @@ def rx_mesg(t, subsys = None, command = None, has_data = False):
     # returned.
     ser.timeout = 1
 
-    if ser.read() != Signal.start:
+    b = bytearray(1)
+
+    n = ser.readinto(b)
+    if n != 1 or b[0] != int(Signal.start):
+        print(b)  # DEBUG
         raise Exception("Did not receive the expected Start Signal.")
-    if ser.read() != t:
+
+    n = ser.readinto(b)
+    if n != 1 or b[0] != t:
         raise Exception("Did not receive the expected Message ID.")
 
-    if subsys != None and ser.read() != subsys:
+    n = ser.readinto()
+    if subsys != None and (n != 1 or b[0] != subsys):
         raise Exception("Did not receive the expected Subsystem ID.")
-    if command != None and ser.read() != command:
+
+    ser.readinto(b)
+    if command != None and (n != 1 or b[0] != command):
         raise Exception("Did not receive the expected Command ID.")
 
     if has_data:
         rv = read_data()
 
-    if ser.read() != Signal.stop:
+    if int(ser.read()) != Signal.stop:
         raise Exception("Did not receive the expected Stop Signal.")
 
     ser.timeout = None  # Disable timeouts.
@@ -246,8 +256,10 @@ def heartbeat():
 
 
 def ping():
+    aux.stop()
     tx_mesg(Message.ping)
     rx_mesg(Message.ping)
+    aux.start()
     
 
 
@@ -297,10 +309,16 @@ def connect(port = DEFAULT_SERIAL_PORT):
     thread to listen for any unexpected (i.e. un-prompted) messages. """
 
     global ser
-    ser = serial.Serial(port, baudrate = 57600)
+    ser = serial.Serial(port, baudrate = 57600, stopbits = serial.STOPBITS_TWO)
     if ser == None:
         raise Exception("Could not connect to serial port.")
 
+    # Clear whatever data might already be in the serial buffer.
+    ser.timeout = 0
+    while ser.read() != b'':
+        pass
+
+    ser.timeout = 1
     aux.start(ser)  # Sends signal that allows `aux` to listen for messages.
 
 
@@ -318,13 +336,15 @@ def disconnect():
 
 
 def main():
+    """
     if len(sys.argv) != 2:
         sys.stderr.write("Expected one argument, the path of the serial tty.")
         exit()
+    """
 
-    connect(sys.argv[1])
-    # TODO: do some stuff
-        
+    connect()
+    ping()
+
 
 if __name__ == "__main__":
     main()
