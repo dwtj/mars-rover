@@ -45,24 +45,4 @@ typedef enum {
 } subsystems;
 #define NUM_SUBSYS_CODES 6
 
-
-
-// Check for some compile-time protocol definition errors:
-/*
-#if num_signal_codes != NUM_SIGNAL_CODES
-#error "Protocol Definition Error: The Number of signal codes is not consistent."
-#endif
-*/
-
-/* Declares an array of functions, each of which will handle a signal request. */
-extern uint8_t (*signal_handlers[NUM_SIGNAL_CODES])(char *);
-
-
-void enable_RX_ISR();
-
-void disable_RX_ISR();
-
-#warning "TODO: turn this into is_valid_message_type()"
-bool is_valid_signal(signal sig);
-
 #endif /* COMM_H */

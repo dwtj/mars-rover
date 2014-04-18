@@ -57,3 +57,13 @@ void usart_tx_buf(char *buf) {
 		usart_tx(*cur);
 	}
 }
+
+
+void usart_RX_ISR_enable() {
+	UCSR0B |= 0b10000000;
+}
+
+
+void usart_RX_ISR_disable() {
+	UCSR0B &= 0b01111111;
+}

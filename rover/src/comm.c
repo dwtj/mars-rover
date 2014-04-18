@@ -19,62 +19,6 @@
 
 
 
-
-static uint8_t signal_null_handler() {
-	// do nothing
-	return 0;
-}
-
-static uint8_t signal_ping_handler() {
-	lcd_putc('.');
-	return 0;
-}
-
-
-
-
-
-/**
- * Assign signal handler functions to an array. The signal code itself is used
- * to index into the array to reach the handler.
- */
-uint8_t (*signal_handlers[])(char *) = {
-	signal_null_handler,
-	signal_ping_handler
-};
-
-
-
-
-
-
 bool is_valid_signal(signal sig) {
 	return 0 <= sig && sig < NUM_SIGNAL_CODES;
 }
-
-
-
-
-void enable_RX_ISR() {
-    UCSR0B |= 0b10000000;
-}
-
-void disable_RX_ISR() {
-    UCSR0B &= 0b01111111;
-}
-
-
-#warning "TODO: get rid of this old David code?"
-/*
-ISR(USART0_RX_vect) {
-    disable_RX_ISR();
-    // TODO: disable the handler until a correct connection has been
-    // TODO: only read if data is available
-    signal s = (signal) usart_rx();
-    is_valid_signal_code(s);
-               
-    signal_handlers[s]((void *) 0);
-    // TODO
-    enable_RX_ISR();
-}
-*/

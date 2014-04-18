@@ -15,4 +15,8 @@ void usart_tx(uint8_t data);
 
 void usart_tx_buf(char *buf);
 
+void usart_RX_ISR_enable();
+
+void usart_RX_ISR_disable();
+
 #endif  /* USART_H */

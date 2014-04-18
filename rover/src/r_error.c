@@ -25,15 +25,15 @@ void abort_command() {
 
 
 //Transmit an error to control, print error code on LCD, then cease executing the command and rover.
-void r_error(uint8_t err_num, char* msg)
+void r_error(uint8_t err_num, char* mesg)
 {
 	#warning "I suspect that this needs to be revised."
 	usart_tx(signal_start);
 	usart_tx(signal_error);
 	usart_tx(err_num);
-	usart_tx_buf(msg);
+	usart_tx_buf(mesg);
 	usart_tx(signal_stop);
-	lprintf("Error: %d", err_num);
+	lprintf("Error: %d: %s", err_num, mesg);
 	abort_command();
 	while(1) {
 		; // Halt indefinitely because something bad happened.

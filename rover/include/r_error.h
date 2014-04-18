@@ -17,7 +17,7 @@ typedef enum {
 
 
 // Custom error handling function.
-void r_error(error err_num, char* msg);
+void r_error(error err_num, char* mesg);
 
 
 // A boolean flag indicating whether an error has occurred.

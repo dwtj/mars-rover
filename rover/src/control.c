@@ -30,7 +30,7 @@ control controller;  // Lone instance of the `control` struct.
  */
 void check_for_start() {
 	if (usart_rx() != signal_start) {
-		r_error(error_txq, "Did not receive expected start bit.");
+		r_error(error_txq, "Did not receive expected start byte.");
 	}
 }
 
@@ -41,7 +41,7 @@ void check_for_start() {
  */
 void check_for_end() {
 	if (usart_rx() != signal_stop) {
-		r_error(error_txq, "Did not receive expected stop bit.");
+		r_error(error_txq, "Did not receive expected stop byte.");
 	}
 }
 
@@ -51,12 +51,18 @@ void null_handler() {
 	;  // Do Nothing.
 }
 
+
 // Receives a signal, and transmits an equivalent signal. 
 // Note that this is not the /same/ signal we receive, just equivalent.
 void ping_handler() {
 	txq_enqueue(signal_start);
 	txq_enqueue(signal_ping);
 	txq_enqueue(signal_stop);
+}
+
+
+void echo_handler() {
+	#warning "TODO"
 }
 
 
@@ -84,6 +90,8 @@ void lcd_system(){
 			break;
 	}
 }
+
+
 
 void oi_system(){
 	switch(usart_rx())
@@ -184,7 +192,6 @@ void (*subsystem_handlers[NUM_SUBSYS_CODES])() = {
 
 
 
-
 /**
  * Reads the Subsystem ID of the current message to decide which subsystem
  * should handle the rest of the message.
@@ -221,42 +228,9 @@ message_handler() {
 		command_handler();
 		break;
 	default:
-		r_error(error_bad_request, "Received an invalid Message ID byte.")
+		r_error(error_bad_request, "Received an invalid Message ID byte.");
 	}
 }
-
-
-#warning "TODO: RX ISR to modify the `controller` global variable."
-
-#warning "Is this still being used?"
-/*
-void (*handlers[NUM_SIGNAL_CODES])() = {
-	null_handler,  // 0
-	null_handler,
-	null_handler,
-	null_handler,
-	null_handler,
-	
-	null_handler,  // 5
-	null_handler,  // 6
-	ping_handler,  // 7
-	error_handler,  // 8
-	signal_handler, //9
-};
-*/
-
-
-
-#warning "Is this being used?"
-/*
-void dispatch()
-{
-	while(1) {
-		handlers[controller.current]();
-	}
-}
-*/
-
 
 
 /**
@@ -266,7 +240,11 @@ void dispatch()
  */
 void control_mode()
 {
+	lcd_init();
+	lcd_puts("Control Mode");
 	usart_init(1);
+	wait_ms(1000);
+	lcd_clear();
 
 	// Receive and handle messages from `control` indefinitely:
 	while (true) {	
