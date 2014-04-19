@@ -1,6 +1,4 @@
-# comm.py - The module by which the control program communicates with the rover
-# program.
-
+# comm.py - The heart of the communication system between `control` and `rover`.
 
 import sys
 import queue
@@ -8,54 +6,29 @@ from enum import IntEnum
 
 #import numpy as np
 
+import codes
 import sentinel
 
 
 MAX_DATA_FRAME_LEN = 100
 
 
-
-class Signal(IntEnum):
-    """ Different control signals to be sent/received as bytes in a message. """
-    null = 0
-    start = 1  # Start of message
-    stop = 2   # End of message
+# The sentinel object through which communication with the rover is performed:
+sen = sentinel.Sentinel()
 
 
-
-class Message(IntEnum):
-    """ Identifies different message types. """
-    error = 3
-    ping = 4
-    echo = 5
-    command = 6
-
-
-
-class Subsys(IntEnum):
-    """ Identifies different subsystems in messages. """
-    lcd = 0
-    oi = 1
-    sonar = 2
-    servo = 3
-    ir = 4
-    rng = 5
-
-
-
-
-def tx_mesg(t, subsys = None, command = None, data = None):
+def tx_mesg(t, subsys_id = None, command_id = None, data = None):
     """ Sends a message to the rover as described by the arguments.
 
     - `t` must be a `Message`. This is the message type of the message to be
       sent.
-    - `subsys` must be `None` or a `Subsys`. This is the value to be sent
+    - `subsys_id` must be `None` or a `Subsys`. This is the value to be sent
       in the subsystem ID byte. If this is `None`, then no such byte will be
       sent in this message.
-    - `command` is either `None` or an int that is a valid command code (of the
-      given `subsys`. This is the value to be sent in the command ID byte. If
-      this is `None`, then no such byte will be sent in this message. `command`
-      is `None` if and only if `subsys` is `None`. 
+    - `command_id` is either `None` or an int that is a valid command code (of
+      the given `subsys_id`. This is the value to be sent in the command ID
+      byte. If this is `None`, then no such byte will be sent in this message.
+      Note that `command_id` is `None` if and only if `subsys_id` is `None`. 
     - `data` must be either `None` or a `bytes` object. This is the data to be
       sent in the sequence of data frames. In the case that this is `None`, no
       data frames will be sent.
@@ -67,52 +40,47 @@ def tx_mesg(t, subsys = None, command = None, data = None):
     If you pass garbage to this function, garbage may well be sent to the rover.
     """
 
-    global ser
-    b = bytearray(1)
+    global sen
 
     # Some validation for function arguments:
     if type(t) != Message:
         raise Exception()
-    if subsys != None and type(subsys) != Subsys:
+    if subsys_id != None and type(subsys_id) != Subsys:
         raise Exception()
 
-    # `subsys` is `None` iff `command` is `None`:
-    if subsys == None and command != None:
+    # `subsys_id` is `None` iff `command_id` is `None`:
+    if subsys_id == None and command_id != None:
         raise Exception()
-    if subsys != None and command == None:
+    if subsys_id != None and command_id == None:
         raise Exception()
 
-    b[0] = Signal.start
-    ser.write(b)
-    b[0] = t
-    ser.write(b)
+    sentinel.write_int(Signal.start)
+    sentinel.write_int(t)
 
-    if subsys is not None:
-        b[0] = subsys
-        ser.write(b)
-        b[0] = command
-        ser.write(b)
+    if subsys_id is not None:
+        sentinel.write_int(subsys_id)
+        sentinel.write_int(command_id)
         if data is not None:
             ser.write(frame_data(data))
 
-    b[0] = Signal.stop
-    ser.write(b)
+    sentinel.write_int(Signal.stop)
 
 
 
-def rx_mesg(t, subsys = None, command = None, has_data = False):
+
+def rx_mesg(t, subsys_id = None, command_id = None, has_data = False):
     """ Recieves a message from the rover, and expects it to have the format
     specified by the given arguments.
 
     - `t` must be a `Message`. This is the expected message type of the
       message being received.
-    - `subsys` must be `None` or a `Subsys`. This is the expected Subsystem
+    - `subsys_id` must be `None` or a `Subsys`. This is the expected Subsystem
       ID of the message being received. If this is `None`, then no Subsystem ID
       byte is expected.
-    - `command` must be `None` or an int that is a valid command code of the
-      given `subsys`. This is the expected value of the Command ID byte of the
-      message being received. Command is `None` if and only if `subsys` is
-      `None`. 
+    - `command_id` must be `None` or an int that is a valid command code of the
+      given `subsys_id`. This is the expected value of the Command ID byte of
+      the message being received. Note that `command_id` is `None` if and only
+      if `subsys_id` is `None`. 
     - `has_data` must be a boolean indicating whether or not a sequence of data
       frames is expected in the message being received.
 
@@ -123,39 +91,26 @@ def rx_mesg(t, subsys = None, command = None, has_data = False):
     unexpected features, an `Exception` is raised.
     """
 
-    global ser
+    global sen
 
-    # Set timeouts to be 1 second while reading each byte. If a timeout occurs
-    # while trying to read one byte, then a bytes object of length zero will be
-    # returned.
-    ser.timeout = 1
-
-    b = bytearray(1)
-
-    n = ser.readinto(b)
-    if n != 1 or b[0] != int(Signal.start):
-        print(b)  # DEBUG
+    if sen.read_int() != Signal.start:
         raise Exception("Did not receive the expected Start Signal.")
 
-    n = ser.readinto(b)
-    if n != 1 or b[0] != t:
+    if sen.read_int() != t:
         raise Exception("Did not receive the expected Message ID.")
 
-    n = ser.readinto()
-    if subsys != None and (n != 1 or b[0] != subsys):
+    if (subsys_id != None) and (sen.read_int() != subsys_id):
         raise Exception("Did not receive the expected Subsystem ID.")
 
-    ser.readinto(b)
-    if command != None and (n != 1 or b[0] != command):
+    if (command_id != None) and (sen.read_int() != command_id):
         raise Exception("Did not receive the expected Command ID.")
 
     if has_data:
         rv = read_data()
 
-    if int(ser.read()) != Signal.stop:
+    if sen.read_int() != Signal.stop:
         raise Exception("Did not receive the expected Stop Signal.")
 
-    ser.timeout = None  # Disable timeouts.
 
 
 
@@ -204,9 +159,7 @@ def frame_data(d):
 def read_data():
     """ Reads data frame and returns data bytes. """
     
-    global ser
-
-    global ser
+    global sen
 
     keep_going = True
     num_good_bytes = 0
@@ -319,3 +272,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

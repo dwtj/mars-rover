@@ -81,11 +81,11 @@ class Sentinel():
 
     def read(self, size = 1):
         """
-        Reads and returns the `bytes` object (of the given `size`) from
-        the `read()` method of the `Serial` object encapsulated by this
-        `Sentinel object. See `Serial.read()` for details.
+        Reads and returns the `bytes` object (of the given `size`) from the
+        `read()` method of the `Serial` object encapsulated by this `Sentinel`
+        object. See `Serial.read()` for details.
         
-        The timeout is hard-coded to be 1 second.
+        The `timeout` is hard-coded to be 1 second.
         """
 
         if self.is_watching:
@@ -95,6 +95,44 @@ class Sentinel():
         return self.ser.read(size)
 
 
+    def read_into(self, b):
+        """
+        Reads from the encapsulated `Serial` object into the given `bytearray`
+        object using `Serial.read_into()`. 
+
+        The `timeout` is hard-coded to be 1 second.
+        """
+
+        if self.is_watching:
+            raise Exception("You cannot read when the sentinel is watching.")
+
+        self.ser.timeout = 1
+        self.ser.read_into(b)
+
+        
+
+
+    def read_int(self)
+        """
+        A simple wrapper for `Sentinel.read()` that reads a single byte from
+        the encapsulated `Serial` object and returns it as an unsigned integer.
+        If there was nothing to read from the serial connection, then `None` is
+        returned.
+
+        The `timeout` is hard-coded to be 1 second.
+        """
+
+        # TODO: Find a much more efficient way!
+
+        if self.is_watching:
+            raise Exception("You cannot read when the sentinel is watching.")
+
+        b = bytearray(1)
+        n = read_into(b)
+        return b[0] if n == 1 else None
+        
+        
+
 
 
     def write(self, data):
@@ -103,7 +141,7 @@ class Sentinel():
         `write()` method of the `Serial` object encapsulated by this `Sentinel`
         object. See `Serial.write()` for details.
 
-        The write_timeout is hard-coded to be 3 seconds.
+        The `write_timeout` is hard-coded to be 3 seconds.
         """
 
         if self.is_watching:
@@ -112,6 +150,29 @@ class Sentinel():
         self.ser.write_timeout = 3
         return self.ser.write(data)
 
+
+
+
+    def write_int(self, i)
+        """
+        A simple wrapper for `Sentinel.write()` that writes a single `int` in
+        the range [0..255] to the encapsulated `Serial` object.
+
+        The `write_timeout` is hard-coded to be 3 seconds.
+        """
+
+        # TODO: Find a much more efficient way!
+
+        if self.is_watching:
+            raise Exception("You cannot write when the sentinel is watching.")
+
+        if type(i) != int or i < 0 or i > 255:
+            raise Exception("The argument is not an 8-bit unsigned integer.")
+
+        b = bytearray(1)
+        b[0] = i
+        self.ser.write(b)
+        
 
 
 
