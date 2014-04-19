@@ -2,11 +2,10 @@
 
 import sys
 import queue
-from enum import IntEnum
 
 #import numpy as np
 
-import codes
+from codes import Signal, MesgID, SubsysID
 import sentinel
 
 
@@ -20,9 +19,9 @@ sen = sentinel.Sentinel()
 def tx_mesg(t, subsys_id = None, command_id = None, data = None):
     """ Sends a message to the rover as described by the arguments.
 
-    - `t` must be a `Message`. This is the message type of the message to be
+    - `t` must be a `MesgID`. This is the message type of the message to be
       sent.
-    - `subsys_id` must be `None` or a `Subsys`. This is the value to be sent
+    - `subsys_id` must be `None` or a `SubsysID`. This is the value to be sent
       in the subsystem ID byte. If this is `None`, then no such byte will be
       sent in this message.
     - `command_id` is either `None` or an int that is a valid command code (of
@@ -42,10 +41,12 @@ def tx_mesg(t, subsys_id = None, command_id = None, data = None):
 
     global sen
 
+    # TODO: rename `t` to be `mesg_id`.
+
     # Some validation for function arguments:
-    if type(t) != Message:
+    if type(t) != MesgID:
         raise Exception()
-    if subsys_id != None and type(subsys_id) != Subsys:
+    if subsys_id != None and type(subsys_id) != SubsysID:
         raise Exception()
 
     # `subsys_id` is `None` iff `command_id` is `None`:
@@ -72,9 +73,9 @@ def rx_mesg(t, subsys_id = None, command_id = None, has_data = False):
     """ Recieves a message from the rover, and expects it to have the format
     specified by the given arguments.
 
-    - `t` must be a `Message`. This is the expected message type of the
+    - `t` must be a `MesgID`. This is the expected message type of the
       message being received.
-    - `subsys_id` must be `None` or a `Subsys`. This is the expected Subsystem
+    - `subsys_id` must be `None` or a `SubsysID`. This is the expected Subsystem
       ID of the message being received. If this is `None`, then no Subsystem ID
       byte is expected.
     - `command_id` must be `None` or an int that is a valid command code of the
@@ -110,7 +111,6 @@ def rx_mesg(t, subsys_id = None, command_id = None, has_data = False):
 
     if sen.read_int() != Signal.stop:
         raise Exception("Did not receive the expected Stop Signal.")
-
 
 
 
@@ -156,38 +156,35 @@ def frame_data(d):
 
 
 
+
 def read_data():
     """ Reads data frame and returns data bytes. """
     
     global sen
 
-    keep_going = True
-    num_good_bytes = 0
-    temp_bytes_list = []
-    data_bytes_list = []
+    # A list of data frames without the three framing bytes (i.e. the "length",
+    # "real length", and "more data" bytes):
+    frames = []
     
-    # Keep reading data frames until there are no more data frames:
-    while keep_going:
-        frame_length = ser.read()
+    # In each iteration, read a data frame and add it to the `frames` list
+    # until there are no more data frames to be read.
+    more_frames = True
+    while more_frames:
+        frame_length = sen.read_int()
+        frame = bytearray(frame_length)
+        if sen.readinto(frame) != frame_length:
+            raise Exception("Did not receive enough data bytes.")
         
-        temp_bytes_list = [0]*frame_length
-
-        if ser.readinto(temp_bytes_list) != frame_length:
-            raise Exception("Did not receive all expected data bytes.")
-        
-        # Add only the good bytes to the list:
-        num_good_bytes = ser.read()
-        data_bytes_list += temp_bytes_list[0:num_good_bytes]
+        # Add only the good bytes to de-framed data:
+        num_good_bytes = ser.read_int()
+        frames.append(frame[0 : num_good_bytes])
         
         # Check to see if we should keep going:
-        keep_going_byte = ser.read()
+        more_frames = False if ser.read() == b'\x00' else True
         
-        if keep_going_byte == b'\x00':
-            keep_going = False
-        elif keep_going_byte != b'\x01':
-            raise Exception("Invalid \"Keep Going\" byte.")
+    return b''.join(frames)
 
-    return b''.join(data_bytes_list)
+
 
 
 def heartbeat():
@@ -201,11 +198,13 @@ def heartbeat():
 
 
 def ping():
-    aux.stop()
-    tx_mesg(Message.ping)
-    rx_mesg(Message.ping)
-    aux.start()
-    
+    global sen
+    sen.stop_watch()
+    tx_mesg(MesgID.ping)
+    rx_mesg(MesgID.ping)
+    sen.start_watch()
+
+  
 
 
 def echo(s):
@@ -216,10 +215,11 @@ def echo(s):
     """
 
     b = bytes(s, 'utf-8')
-    tx_mesg(Message.echo, data = b)
-    rv = rx_mesg(Message.echo, data = True)
+    tx_mesg(MesgID.echo, data = b)
+    rv = rx_mesg(MesgID.echo, data = True)
     if b != rv:
         raise Exception("A different string was returned from the rover.")
+
 
 
 
@@ -250,26 +250,28 @@ def tty(stream):
 
 
 
-def main():
-    """
-    if len(sys.argv) != 2:
-        sys.stderr.write("Expected one argument, the path of the serial tty.")
-        exit()
-    """
-
-    connect()
-    ping()
-    """
-    # Manually Issue and Read.
+def manual_ping():
+    global ser
     ser.write(b'\x01')
     ser.write(b'\x04')
     ser.write(b'\x02')
     print(ser.read())
     print(ser.read())
     print(ser.read())
+
+
+
+
+def main():
     """
+    if len(sys.argv) != 2:
+        sys.stderr.write("Expected one argument, the path of the serial tty.")
+        exit()
+    """
+    ping()
+
+
 
 
 if __name__ == "__main__":
     main()
-

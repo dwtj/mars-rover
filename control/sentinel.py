@@ -6,6 +6,8 @@ import logging
 
 import serial
 
+from codes import Signal, MesgID
+
 
 DEFAULT_SERIAL_PORT = "/dev/tty.ElementSerial-ElementSe"
 
@@ -55,7 +57,7 @@ class Sentinel():
 
         self.ser.timeout = 0
         count = 0
-        while ser.read() != b'':
+        while self.ser.read() != b'':
             count += 1
         if count > 0:
             self.logger.warning("The serial buffer was not initially empty.")
@@ -95,10 +97,11 @@ class Sentinel():
         return self.ser.read(size)
 
 
-    def read_into(self, b):
+    def readinto(self, b):
         """
-        Reads from the encapsulated `Serial` object into the given `bytearray`
-        object using `Serial.read_into()`. 
+        Reads from the encapsulated `Serial` object into `b` (a `bytearray`
+        object) using `Serial.readinto()`. Returns the number of bytes read
+        into `b`.
 
         The `timeout` is hard-coded to be 1 second.
         """
@@ -107,12 +110,12 @@ class Sentinel():
             raise Exception("You cannot read when the sentinel is watching.")
 
         self.ser.timeout = 1
-        self.ser.read_into(b)
+        return self.ser.readinto(b)
 
         
 
 
-    def read_int(self)
+    def read_int(self):
         """
         A simple wrapper for `Sentinel.read()` that reads a single byte from
         the encapsulated `Serial` object and returns it as an unsigned integer.
@@ -128,7 +131,7 @@ class Sentinel():
             raise Exception("You cannot read when the sentinel is watching.")
 
         b = bytearray(1)
-        n = read_into(b)
+        n = readinto(b)
         return b[0] if n == 1 else None
         
         
@@ -153,7 +156,7 @@ class Sentinel():
 
 
 
-    def write_int(self, i)
+    def write_int(self, i):
         """
         A simple wrapper for `Sentinel.write()` that writes a single `int` in
         the range [0..255] to the encapsulated `Serial` object.
@@ -323,25 +326,25 @@ class Sentinel():
         if n == 0:
             return  # No bytes were transmitted from `rover` before the timeout.
      
-        if sig[0] == comm.Signal.start:
+        if sig[0] == Signal.start:
             self.logger.info("Receiving an unexpected message...")
             n = self.ser.readinto(mesg)  # Read Message ID
             mesg = int(mesg[0])  # Reuse the reference.
             if n == 1:
-                if mesg in {comm.Message.error, comm.Message.echo}:
+                if mesg in {MesgID.error, MesgID.echo}:
                     d = comm.read_data()
                 n = self.ser.readinto(sig)  # Read stop signal byte.
-                if n == 1 and sig[0] == comm.Signal.stop:
+                if n == 1 and sig[0] == Signal.stop:
                     valid = True
      
         if valid:
-            if mesg == comm.Message.ping:
-                comm.tx_mesg(comm.Message.ping)
+            if mesg == MesgID.ping:
+                comm.tx_mesg(MesgID.ping)
                 self.logger.info("Received ping message. Responding to it...")
-            elif mesg == comm.Message.echo:
+            elif mesg == MesgID.echo:
                 self.logger.info("Received echo message. Responding to it...")
-                comm.tx_mesg(comm.Message.echo, data = d)
-            elif mesg == comm.Message.error:
+                comm.tx_mesg(MesgID.echo, data = d)
+            elif mesg == MesgID.error:
                 self.logger.warning("Received error message. Handling it...")
                 self._rover_error_handler(d)
         else:
