@@ -404,13 +404,23 @@ class Sentinel():
 
 
 
-    def heartbeat():
+    def heartbeat(self):
         """ Sends ping and receives ping signals to the rover indefinitely. """
 
         while True:
-            ping()
+            self.ping()
             sys.stdout.write('.')
             time.sleep(1)
+
+
+
+
+    def seed_rng(self, seed):
+        """ Sends the given `seed` to the `rover` to seed its psuedo-random
+        number generator. """
+
+        raise NotImplementedError
+        # TODO
 
 
 
