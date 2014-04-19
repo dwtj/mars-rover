@@ -18,7 +18,6 @@
 #include "util.h"
 #include "lcd.h"
 #include "usart.h"
-#include "comm.h"
 
 
 // Global used for interrupt driven delay functions

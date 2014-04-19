@@ -29,4 +29,7 @@ float IR_conv(uint16_t d);
 
 void IR_calibrate(bool bam_send, bool save_means);
 
+//Handler for IR system
+void ir_system();
+
 #endif /* IR_H_ */

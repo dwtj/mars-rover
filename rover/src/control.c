@@ -5,8 +5,29 @@
  *  Author: asr
  */
 
-#warning "TODO: implement echo"
-#warning "Assuming that usart_rx() is bit by bit. if this is wrong, so is our code."
+#warning "TODO: URGENT: ISR x 2: 1 on TX_COMPLETE [or something similar], the other is when the queue stops being empty, ie when num_elements goes from 0 to one, or shortly after. check every few ms?"
+#warning "TODO: CONTINUTED: Copy items from txq to hardware buffer (when the hardware buffer is ready to take input. There exists an interript for when the hardware buffer is ready to recieive (txq buffer read perhaps?). We want to shift into the hardware buffer from TXQ. But maybe we don't want two, because interference. (??)"
+
+/************************************************************************/
+/* put this in TXQ.C
+	ISR_TXBUFF{														
+ 	usart_tx(txq_dequeue())		
+	 if !(txq_num_elements)
+	 {
+		 ENABLE NUMBER 2, YO
+	 }
+ 	}
+ 	
+ 	ISR_TIMER/OCR{
+ 		//ONLY ACTIVE WHEN THERE ARE ZERO ELEMENTS
+ 		//constantly polling txq. 
+		 if(txq.num_elements)
+		 {//this disables itself
+			 usart_tx(txq.dequueue)
+		 }
+ 		}                                                                     */
+/************************************************************************/
+
 
 #include "util.h"
 #include "usart.h"
@@ -14,10 +35,10 @@
 #include "open_interface.h"
 #include "sonar.h"
 #include "servo.h"
-#include "comm.h"
 #include "txq.h"
 #include "control.h"
 #include "r_error.h"
+#include "lcd.h"
 
 
 control controller;  // Lone instance of the `control` struct.
@@ -49,7 +70,6 @@ void check_for_end() {
 }
 
 
-
 void null_handler() {
 	;  // Do Nothing.
 }
@@ -60,7 +80,7 @@ void null_handler() {
 void ping_handler() 
 {
 	lcd_putc('.');
-	wait_button("DEBUG: ping_handler");
+	//wait_button("DEBUG: ping_handler");
 	txq_enqueue(signal_start);
 	txq_enqueue(signal_ping);
 	txq_enqueue(signal_stop);
@@ -69,118 +89,50 @@ void ping_handler()
 
 
 void echo_handler() {
-	#warning "TODO"
+	uint8_t data_length = usart_rx();
+	//We don't want to deal with that multi-frame garbage here.
+	if(data_length > MAX_DATA_LENGTH || data_length < 1)
+	{
+		r_error(error_bad_data_length, "Error length should be between 1 and MAX_DATA_LENGTH");
+	}
+	int i = 0;
+	//encode
+	for(i =0; i< data_length; i++)
+	{
+		controller.data[i] = usart_rx();
+	}
+	uint8_t real_length = usart_rx();
+	uint8_t more = usart_rx();
+	check_for_end();
+	
+	//send it back;
+	txq_enqueue(signal_start);
+	for(i=0; i<real_length; i++)
+	{
+		txq_enqueue(controller.data[i]);
+	}
+	txq_enqueue(signal_stop);
+	txq_drain();
+	
+	//More data is comoing? 
+	//it should go back to echo_handler! 
+	if(more == 1)
+	{
+		check_for_start();
+		message_handler();
+	}
 }
 
 
 void error_handler() {
-	#warning "TODO? Does this need to be more generic? or possibly more specific."
 	r_error(error_bad_request,"Bad signal request.");
 }
 
 
-void lcd_system(){
-	switch(usart_rx())
-	{
-		case 0:
-			lcd_init();
-			break;
-		case 1:
-			#warning "TODO: This is incorrect:"
-			//lcd_puts(controller.data[0]);
-			break;
-		case 2:
-			lcd_clear();
-			break;
-		default:
-			r_error(error_bad_request, "Bad LCD Command");
-			break;
-	}
-}
-
-
-
-void oi_system(){
-	switch(usart_rx())
-	{
-		case 0:
-			#warning "TODO: add parameters:"
-			//oi_init();
-			break;
-		default:
-			r_error(error_bad_request, "Bad OI Command");
-			break;
-	}
-}
-
-void sonar_system(){
-	switch(usart_rx())
-	{
-		case 0:
-			sonar_init();
-			break;
-		case 1:
-			#warning "TODO: There doesn't seem to be such a function:"
-			//sonar_calibrate();//TODO
-			break;
-		case 2:
-			sonar_reading();
-			break;
-		default:
-			r_error(error_bad_request, "Bad sonar Command");
-			break;
-	}
-}
-
-
-#warning "TODO: fix the servo handlers"
-void servo_system(){
-	switch(usart_rx())
-	{
-		case 0:
-			servo_init();
-			break;
-		case 1:
-			//servo_calibrate();//TODO
-			break;
-		case 2:
-			//servo_state();//TODO
-			break;
-		case 3:
-			servo_angle(controller.data[0],true); //read from data[0], then wait to finish moving.
-			break;
-		case 4:
-			//servo_pulse_width();//TODO
-			break;
-		default:
-			r_error(error_bad_request, "Bad servo Command");
-			break;
-	}
-}
-
-void ir_system(){
-	switch(usart_rx())
-	{
-		case 0:
-			IR_init();
-			break;
-		case 1:
-			#warning "Add parameter"
-			//IR_calibrate();
-			break;
-		case 2:
-			IR_reading();
-			break;
-		default:
-			r_error(error_bad_request, "Bad IR Command");
-			break;
-	}
-}
-
 void rng_system(){
 	switch(usart_rx())
 	{
-		#warning "TODO?"
+		#warning "TODO?"s
 		default:
 			r_error(error_bad_request, "Bad RNG Command");
 			break;
@@ -213,17 +165,15 @@ void command_handler() {
 }
 
 
-
-
 /**
  * Reads the Message Type of the current message being received and calls
  * the appropriate handler.
  */
-message_handler() {
+void message_handler() {
 	uint8_t t = usart_rx();  // the message type.
 	switch (t) {
 	case signal_error:
-		#warning "TODO"
+		error_handler();
 		break;
 	case signal_ping:
 		ping_handler();
@@ -259,4 +209,9 @@ void control_mode()
 		message_handler();  // The message type.
 		check_for_end();
 	}
+}
+
+//leftover from comm.c. Probably unnecessary.
+bool is_valid_signal(signal sig) {
+	return 0 <= sig && sig < NUM_SIGNAL_CODES;
 }

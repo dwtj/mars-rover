@@ -11,6 +11,10 @@ void lcd_home_line2(void);
 void lcd_home_line3(void);
 void lcd_home_line4(void);
 
+
+//Handler for LCD
+void lcd_system();
+
 /// Prints a string to the lcd; Google "printf" for documentation.
 void lprintf(const char *formatter, ...);
 

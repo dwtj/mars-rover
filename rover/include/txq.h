@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 
+volatile uint8_t ISR2_flag;
 
 /*A queue to store transmission from rover to control
   functions related to this are prefixed with txq*/
@@ -24,7 +25,7 @@ typedef struct{
 
 void txq_init();
 
-
+void txq_drain();
 
 uint8_t txq_dequeue();
 
