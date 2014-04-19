@@ -201,4 +201,7 @@ void oi_play_song(int index);
 /// This will cause the iRobot to enter the Passive state
 void go_charge(void);
 
+//Handler for OI (moved from control), used for Control-Rover communication
+void oi_system();
+
 #endif  /* OPEN_INTERFACE_H */

@@ -65,9 +65,20 @@ float object_dist(uint8_t n, readings rs[n]) {
 /**
  * This computes the linear width of a circular object using given parameters.
  */
+/*
+#warning "this implementation does not work."
 float object_width(uint8_t theta1, uint8_t theta2, float dist) {
 	double x = tan((theta2 - theta1) / 2.0);
 	return 2 * dist * x / (1 - x);
+}
+*/
+
+
+/**
+ * This computes the angular width of the object.
+ */
+float object_width(uint8_t theta1, uint8_t theta2, float dist) {
+	return theta2 - theta1;
 }
 
 

@@ -162,9 +162,6 @@
     <None Include="labs\usart_lab.c">
       <SubType>compile</SubType>
     </None>
-    <Compile Include="include\comm.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="include\control.h">
       <SubType>compile</SubType>
     </Compile>
@@ -202,9 +199,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="mars-rover.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\comm.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\control.c">

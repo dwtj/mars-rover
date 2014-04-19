@@ -15,4 +15,6 @@ float sonar_reading(void);
 
 uint16_t sonar_reading_polling(void);
 
+void sonar_system();
+
 #endif // SONAR_H

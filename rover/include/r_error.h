@@ -9,10 +9,13 @@
 #ifndef R_ERROR_H_
 #define R_ERROR_H_
 
+#include <stdbool.h>
+
 // Custom error codes.
 typedef enum {
 	error_txq = 0,
 	error_bad_request = 1,
+	error_bad_data_length =2,
 } error;
 
 
