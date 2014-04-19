@@ -327,6 +327,7 @@ class Sentinel():
         from `aux` that the watch is actually started.
         """
 
+        self.logger.debug("Sending a message to start watching the connection.")
         e = threading.Event()
         self.aux_queue.put((_start, e))
         e.wait()
@@ -341,9 +342,75 @@ class Sentinel():
         from `aux` that the watch is actually stopped.
         """
 
+        self.logger.debug("Sending a message to stop watching the connection.")
         e = threading.Event()
         self.aux_queue.put((_stop, e))
         e.wait()
+
+
+
+
+    def ping(self):
+        """ Sends a `ping` message to `rover` and expects a `ping` message in
+        response. """
+
+        self.stop_watch()
+
+        self.logger.info("Sending a `ping` message to `rover`.")
+        self.tx_mesg(MesgID.ping)
+        self.rx_mesg(MesgID.ping)
+        self.logger.info("Received a `ping` message from `rover`.")
+
+        self.start_watch()
+
+
+
+
+    def echo(self, s):
+        """
+        Sends a message of type `echo` along with the supplied string `s`.
+        Expects an identical message to be returned, i.e., a message of type
+        `echo` along with this same string `s`.
+        """
+
+        self.stop_watch()
+
+        self.logger.info("Sending an `echo` message to `rover`.")
+        sent_data = bytes(s, 'utf-8')
+
+        tx_mesg(MesgID.echo, data = sent_data)
+        returned_data = rx_mesg(MesgID.echo, data = True)
+
+        if sent_data != returned_data:
+            raise Exception("A different string was returned from the rover.")
+        self.logger.info("Received correct `echo` message from the `rover`.")
+
+        self.start_watch()
+
+
+
+
+    def printout(self, stream):
+        """ Indefinitely write to `stdout` data coming from the `rover`. """
+
+        buf = bytearray(512)
+
+        while True:
+            n = self.readinto(b)
+            s = buf[0:n].decode('utf-8')
+            stream.write(s)
+            time.sleep(0.1)
+
+
+
+
+    def heartbeat():
+        """ Sends ping and receives ping signals to the rover indefinitely. """
+
+        while True:
+            ping()
+            sys.stdout.write('.')
+            time.sleep(1)
 
 
 
@@ -353,6 +420,7 @@ class Sentinel():
         handles it appropriately. """
 
         raise NotImplementedError
+
 
 
 
@@ -394,8 +462,6 @@ class Sentinel():
         frames[-1][-1] = False
 
         return b''.join(frames)
-
-
 
 
 
@@ -524,11 +590,11 @@ class Sentinel():
      
         if valid:
             if mesg == MesgID.ping:
-                comm.tx_mesg(MesgID.ping)
+                self.tx_mesg(MesgID.ping)
                 self.logger.info("Received ping message. Responding to it...")
             elif mesg == MesgID.echo:
                 self.logger.info("Received echo message. Responding to it...")
-                comm.tx_mesg(MesgID.echo, data = d)
+                self.tx_mesg(MesgID.echo, data = d)
             elif mesg == MesgID.error:
                 self.logger.warning("Received error message. Handling it...")
                 self._rover_error_handler(d)
