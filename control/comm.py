@@ -7,16 +7,11 @@ import queue
 from enum import IntEnum
 
 #import numpy as np
-import serial
 
-import aux
+import sentinel
 
 
 MAX_DATA_FRAME_LEN = 100
-DEFAULT_SERIAL_PORT = "/dev/tty.ElementSerial-ElementSe"
-
-
-ser = None  # The serial connection to the rover.
 
 
 
@@ -299,39 +294,6 @@ def tty(stream):
         s = b.decode('utf-8')
         stream.write(s)
 
-
-
-
-def connect(port = DEFAULT_SERIAL_PORT):
-
-    """ Opens the serial connection on the given `port` and starts the `aux`
-    thread to listen for any unexpected (i.e. un-prompted) messages. """
-
-    global ser
-    ser = serial.Serial(port, baudrate = 57600, stopbits = serial.STOPBITS_TWO)
-    if ser == None:
-        raise Exception("Could not connect to serial port.")
-
-    # Clear whatever data might already be in the serial buffer.
-    ser.timeout = 0
-    while ser.read() != b'':
-        pass
-
-    ser.timeout = 1
-    #DEBUG
-    #aux.start(ser)  # Sends signal that allows `aux` to listen for messages.
-
-
-
-
-def disconnect():
-    global ser
-    aux.stop()
-    ser.close()
-    ser = None
-    aux = None
-    q = None
-    
 
 
 
