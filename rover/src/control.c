@@ -79,7 +79,7 @@ void null_handler() {
 // Note that this is not the /same/ signal we receive, just equivalent.
 void ping_handler() 
 {
-	lcd_putc('.');
+	lcd_putc('p');
 	//wait_button("DEBUG: ping_handler");
 	txq_enqueue(signal_start);
 	txq_enqueue(signal_ping);
@@ -88,12 +88,14 @@ void ping_handler()
 }
 
 
-void echo_handler() {
+void echo_handler()
+{
+	lcd_putc('e');
 	uint8_t data_length = usart_rx();
 	//We don't want to deal with that multi-frame garbage here.
 	if(data_length > MAX_DATA_LENGTH || data_length < 1)
 	{
-		r_error(error_bad_data_length, "Error length should be between 1 and MAX_DATA_LENGTH");
+		r_error(error_bad_data_length, "Length should be between 1 and MAX_DATA_LENGTH");
 	}
 	int i = 0;
 	//encode
@@ -132,7 +134,7 @@ void error_handler() {
 void rng_system(){
 	switch(usart_rx())
 	{
-		#warning "TODO?"s
+		#warning "TODO?"
 		default:
 			r_error(error_bad_request, "Bad RNG Command");
 			break;

@@ -27,7 +27,7 @@ class Sentinel():
     aux_queue = None
 
     # A logger for reporting what `aux` finds.
-    aux_log = None
+    logger = None
 
     # The serial connection to the rover.
     ser = None
@@ -47,8 +47,7 @@ class Sentinel():
         # Create the Serial, Queue, and Logger to be used throughout this
         # sentinel's lifespan:
 
-        self.ser = serial.Serial()
-        self.ser.port = port
+        self.ser = serial.Serial(port)
         self.ser.baudrate = 57600
         self.ser.stopbits = serial.STOPBITS_TWO
 
@@ -71,7 +70,7 @@ class Sentinel():
 
         # Start the `aux` thread:
 
-        self.aux = threading.Thread(target = _watchman, args = (self,))
+        self.aux = threading.Thread(target = self._watchman)
         self.aux.daemon = True
         self.aux.start()
         self.is_watching = False  # The `aux` thread is not initially watching.
@@ -167,7 +166,7 @@ class Sentinel():
         if self.read_int() != Signal.start:
             raise Exception("Did not receive the expected Start Signal.")
 
-        if self.read_int() != t:
+        if self.read_int() != mesg_id:
             raise Exception("Did not receive the expected Message ID.")
 
         if (subsys_id != None) and (self.ser.read_int() != subsys_id):
@@ -237,7 +236,7 @@ class Sentinel():
             raise Exception("You cannot read when the sentinel is watching.")
 
         b = bytearray(1)
-        n = readinto(b)
+        n = self.readinto(b)
         return b[0] if n == 1 else None
 
 
@@ -274,7 +273,10 @@ class Sentinel():
         if self.is_watching:
             raise Exception("You cannot write when the sentinel is watching.")
 
-        if type(i) != int or i < 0 or i > 255:
+        # Checks to make sure that `i` can be converted to an `int`:
+        i = int(i)
+
+        if i < 0 or i > 255:
             raise Exception("The argument is not an 8-bit unsigned integer.")
 
         b = bytearray(1)
@@ -329,7 +331,7 @@ class Sentinel():
 
         self.logger.debug("Sending a message to start watching the connection.")
         e = threading.Event()
-        self.aux_queue.put((_start, e))
+        self.aux_queue.put((self._start, e))
         e.wait()
 
 
@@ -344,7 +346,7 @@ class Sentinel():
 
         self.logger.debug("Sending a message to stop watching the connection.")
         e = threading.Event()
-        self.aux_queue.put((_stop, e))
+        self.aux_queue.put((self._stop, e))
         e.wait()
 
 
@@ -378,8 +380,8 @@ class Sentinel():
         self.logger.info("Sending an `echo` message to `rover`.")
         sent_data = bytes(s, 'utf-8')
 
-        tx_mesg(MesgID.echo, data = sent_data)
-        returned_data = rx_mesg(MesgID.echo, data = True)
+        self.tx_mesg(MesgID.echo, data = sent_data)
+        returned_data = self.rx_mesg(MesgID.echo, has_data = True)
 
         if sent_data != returned_data:
             raise Exception("A different string was returned from the rover.")
@@ -494,7 +496,7 @@ class Sentinel():
         reported to `logger`, and an `Exception` is raised.
         """
 
-        logger.info("Thread started.")
+        self.logger.info("Thread started.")
 
         handlers = {
             False : self._not_watching_handler,
