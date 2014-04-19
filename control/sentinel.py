@@ -6,10 +6,15 @@ import logging
 
 import serial
 
-from codes import Signal, MesgID
+from codes import Signal, MesgID, SubsysID
+
+
 
 
 DEFAULT_SERIAL_PORT = "/dev/tty.ElementSerial-ElementSe"
+DATA_FRAME_MAX_LEN = 100
+
+
 
 
 class Sentinel():
@@ -74,9 +79,108 @@ class Sentinel():
 
 
 
+
     def __del__(self):
         self.stop_watch()
         self.ser.close()
+
+
+
+
+    def tx_mesg(self, mesg_id, subsys_id=None, command_id=None, data=None):
+        """ Sends a message to the rover as described by the arguments.
+
+        - `mesg_id` must be the `MesgID` of the message to be sent.
+        - `subsys_id` must be `None` or a `SubsysID`. This is the value to be
+          sent in the subsystem ID byte. If this is `None`, then no such byte
+          will be sent in this message.
+        - `command_id` is either `None` or an int that is a valid command code
+          (of the subsystem identified by `subsys_id`). This is the value to be
+          sent in the command ID byte. If this is `None`, then no such byte
+          will be sent in this message. Note that `command_id` is `None` if and
+          only if `subsys_id` is `None`. 
+        - `data` must be either `None` or a `bytes` object. This is the data to
+          be sent in the sequence of data frames. In the case that this is
+          `None`, no data frames will be sent.
+
+        The message being sent will illicit a subsequent response message (of
+        the same type). Reading this response should be handled by `rx_mesg()`.
+
+        You should expect that no checks of correctness are performed on the
+        args. If you pass garbage to this function, garbage may well be sent
+        to the rover.
+        """
+
+        if self.is_watching:
+            mesg = "You cannot send a message when the sentinel is watching."
+            raise Exception(mesg)
+
+        # Some validation for function arguments:
+        if type(mesg_id) != MesgID:
+            raise Exception("The `mesg_id` is not of type `MesgID`.")
+        if subsys_id != None and type(subsys_id) != SubsysID:
+            raise Exception("The `subsys_id` is not of type `SubsysID`.")
+
+        iff_mesg = "`subsys_id` is None if and only if `command_id` is None."
+        if subsys_id == None and command_id != None:
+            raise Exception(iff_mesg)
+        if subsys_id != None and command_id == None:
+            raise Exception(iff_mesg)
+
+        self.write_int(Signal.start)
+        self.write_int(mesg_id)
+
+        if subsys_id is not None:
+            self.write_int(subsys_id)
+            self.write_int(command_id)
+            if data is not None:
+                self.write_frames(data)
+
+        self.write_int(Signal.stop)
+
+
+
+
+    def rx_mesg(self, mesg_id, subsys_id=None, command_id=None, has_data=False):
+        """ Recieves a message from the rover, and expects it to have the
+        format specified by the given arguments.
+
+        - `mesg_id` must be a `MesgID`. This is the expected message type of
+          the message being received.
+        - `subsys_id` must be `None` or a `SubsysID`. This is the expected
+          Subsystem ID of the message being received. If this is `None`, then
+          no Subsystem ID byte is expected.
+        - `command_id` must be `None` or an int that is a valid command code of
+          the given `subsys_id`. This is the expected value of the Command ID
+          byte of the message being received. Note that `command_id` is `None`
+          if and only if `subsys_id` is `None`. 
+        - `has_data` must be a boolean indicating whether or not a sequence of
+          data frames is expected in the message being received.
+
+        This function returns any data that was included with the response
+        message as a `bytes` object.
+
+        If there isn't a timely response message, or if the response has
+        unexpected features, an `Exception` is raised.
+        """
+
+        if self.read_int() != Signal.start:
+            raise Exception("Did not receive the expected Start Signal.")
+
+        if self.read_int() != t:
+            raise Exception("Did not receive the expected Message ID.")
+
+        if (subsys_id != None) and (self.ser.read_int() != subsys_id):
+            raise Exception("Did not receive the expected Subsystem ID.")
+
+        if (command_id != None) and (self.ser.read_int() != command_id):
+            raise Exception("Did not receive the expected Command ID.")
+
+        if has_data:
+            rv = read_data()
+
+        if self.read_int() != Signal.stop:
+            raise Exception("Did not receive the expected Stop Signal.")
 
 
 
@@ -97,6 +201,8 @@ class Sentinel():
         return self.ser.read(size)
 
 
+
+
     def readinto(self, b):
         """
         Reads from the encapsulated `Serial` object into `b` (a `bytearray`
@@ -112,7 +218,7 @@ class Sentinel():
         self.ser.timeout = 1
         return self.ser.readinto(b)
 
-        
+ 
 
 
     def read_int(self):
@@ -133,8 +239,7 @@ class Sentinel():
         b = bytearray(1)
         n = readinto(b)
         return b[0] if n == 1 else None
-        
-        
+
 
 
 
@@ -175,8 +280,43 @@ class Sentinel():
         b = bytearray(1)
         b[0] = i
         self.ser.write(b)
-        
 
+
+
+
+    def write_frames(self, data):
+        """ Takes the given data, frames it, and sends it across the serial
+        connection to the rover. """
+        self.write(seninel._frame_data(data))
+
+
+
+
+    def read_frames(self):
+        """ Reads a sequence of data frames from the serial connection and
+        returns the data bytes (without the framing bytes). """
+        
+        # A list of data frames without the three framing bytes (i.e. the
+        # "length", "real length", and "more data" bytes):
+        frames = []
+        
+        # In each iteration, read a data frame and add it to the `frames` list
+        # until there are no more data frames to be read.
+        more_frames = True
+        while more_frames:
+            frame_length = self.ser.read_int()
+            frame = bytearray(frame_length)
+            if self.ser.readinto(frame) != frame_length:
+                raise Exception("Did not receive enough data bytes.")
+            
+            # Add only the good bytes to de-framed data:
+            num_good_bytes = self.ser.read_int()
+            frames.append(frame[0 : num_good_bytes])
+            
+            # Check to see if we should keep going:
+            more_frames = False if self.ser.read() == b'\x00' else True
+            
+        return b''.join(frames)
 
 
 
@@ -209,7 +349,53 @@ class Sentinel():
 
 
     def _rover_error_handler(self, data):
+        """ Interprets the data segment of an error sent from the `rover` and
+        handles it appropriately. """
+
         raise NotImplementedError
+
+
+
+    def _frame_data(d):
+        """ A (pure) helper function that takes the bytes object `d` and
+        returns a `bytes` object with added data framing bytes. """
+
+        # The number of full frames to be sent:
+        full_frames = len(d) // DATA_FRAME_MAX_LEN
+
+        # The final partially-full frame to be sent:
+        partial_frame_len = len(d) % DATA_FRAME_MAX_LEN
+        has_partial_frame = False if partial_frame_len == 0 else True
+
+        frames = []
+        for i in range(full_frames):
+            # `start` is index of first byte of `d` to be copied to this `frame`:
+            start = i * DATA_FRAME_MAX_LEN
+            frame = bytearray(DATA_FRAME_MAX_LEN + 3)
+
+            # Add data and framing info to this `frame`:
+            frame[0] = DATA_FRAME_MAX_LEN
+            frame[1:1+DATA_FRAME_MAX_LEN] = d[start:start+DATA_FRAME_MAX_LEN]
+            frame[DATA_FRAME_MAX_LEN + 1] = DATA_FRAME_MAX_LEN
+            frame[DATA_FRAME_MAX_LEN + 2] = True
+
+            # Add this newly formed frame to the list of frames to be sent.
+            frames.append(frame)
+
+        if has_partial_frame:
+            start = full_frames * DATA_FRAME_MAX_LEN
+            frame = bytearray(partial_frame_len + 3)
+
+            frame[0] = partial_frame_len
+            frame[1 : 1 + partial_frame_len] = d[start : ]
+        
+        # Set the last byte of the last frame (whether full or partial) to
+        # indicate that there are no more frames:
+        frames[-1][-1] = False
+
+        return b''.join(frames)
+
+
 
 
 
@@ -285,7 +471,6 @@ class Sentinel():
         except:
             # No message arrived in the queue, so just keep watching.
             pass
-
 
 
 
