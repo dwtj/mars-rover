@@ -295,7 +295,9 @@ def tty(stream):
     global ser
 
     while True:
-        stream.write(ser.read())
+        b = ser.read()
+        s = b.decode('utf-8')
+        stream.write(s)
 
 
 
