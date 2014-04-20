@@ -37,11 +37,26 @@ void usart_init(uint8_t type)
 uint8_t usart_rx(void)
 {
 	/* Wait for data to be received */
-	while ( !(UCSR0A & (1<<RXC0)) )
-	;
+	while (!(UCSR0A & (1<<RXC0))) {
+	    ;
+    }
+    #warning "DEBUG: Why does adding some wait time change the behavior?"
+    //wait_ms(50);
 	/* Get and return received data from buffer */
 	return UDR0;
 }
+
+
+/**
+ * Reads and ignores data from usart until there is no more.
+ */
+void usart_drain_rx()
+{
+    while (UCSR0A & (1 << RXC0)) {
+        uint8_t nowhere = UDR0;
+    }
+}
+
 
 void usart_tx(uint8_t data)
 {

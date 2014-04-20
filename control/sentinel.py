@@ -88,7 +88,7 @@ class Sentinel():
 
     def tx_mesg(self, mesg_id, subsys_id=None, command_id=None, data=None):
         """ Sends a message to the rover as described by the arguments.
-
+        
         - `mesg_id` must be the `MesgID` of the message to be sent.
         - `subsys_id` must be `None` or a `SubsysID`. This is the value to be
           sent in the subsystem ID byte. If this is `None`, then no such byte
@@ -101,40 +101,41 @@ class Sentinel():
         - `data` must be either `None` or a `bytes` object. This is the data to
           be sent in the sequence of data frames. In the case that this is
           `None`, no data frames will be sent.
-
+        
         The message being sent will illicit a subsequent response message (of
         the same type). Reading this response should be handled by `rx_mesg()`.
-
+        
         You should expect that no checks of correctness are performed on the
         args. If you pass garbage to this function, garbage may well be sent
         to the rover.
         """
-
+        
         if self.is_watching:
             mesg = "You cannot send a message when the sentinel is watching."
             raise Exception(mesg)
-
+        
         # Some validation for function arguments:
         if type(mesg_id) != MesgID:
             raise Exception("The `mesg_id` is not of type `MesgID`.")
         if subsys_id != None and type(subsys_id) != SubsysID:
             raise Exception("The `subsys_id` is not of type `SubsysID`.")
-
+        
         iff_mesg = "`subsys_id` is None if and only if `command_id` is None."
         if subsys_id == None and command_id != None:
             raise Exception(iff_mesg)
         if subsys_id != None and command_id == None:
             raise Exception(iff_mesg)
-
+        
         self.write_int(Signal.start)
         self.write_int(mesg_id)
-
+        
         if subsys_id is not None:
             self.write_int(subsys_id)
             self.write_int(command_id)
-            if data is not None:
-                self.write_frames(data)
-
+        
+        if data is not None:
+            self.write_frames(data)
+        
         self.write_int(Signal.stop)
 
 
@@ -289,7 +290,8 @@ class Sentinel():
     def write_frames(self, data):
         """ Takes the given data, frames it, and sends it across the serial
         connection to the rover. """
-        self.write(seninel._frame_data(data))
+        framed_data = _frame_data(data)
+        self.write(framed_data)
 
 
 

@@ -77,6 +77,8 @@ bool rx_frame()
     // Notice that `i` now holds the expected data frame length.
     control.data_len = usart_rx();
     if (control.data_len > i) {
+        lprintf("%d, %d", i, control.data_len);  // DEBUG
+        wait_button("");  // DEBUG
 		r_error(error_bad_message, "The real data frame length cannot be larger than the expected data frame length.");
     }
 
@@ -147,8 +149,10 @@ static void echo_handler()
 	    txq_drain();
     }
 
+
     // End of the response message:
 	txq_enqueue(signal_stop);
+	txq_drain();
 }
 
 
@@ -228,6 +232,9 @@ void control_mode()
 	wait_ms(1000);
 	lcd_clear();
 
+    txq_init();
+
+    usart_drain_rx();
 
 	// Receive and handle messages from `control` indefinitely:
 	while (true)
@@ -248,6 +255,7 @@ void control_mode()
             sprintf(mesg, "Recieved %u instead of expected stop byte.", byte);
 		    r_error(error_txq, mesg);
 	    }
+        txq_drain();
         lcd_putc(')');  // DEBUG: found stop byte
 	}
 }

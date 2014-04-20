@@ -11,6 +11,8 @@ void usart_init (uint8_t type);
 
 uint8_t usart_rx(void);
 
+void usart_drain_rx(void);
+
 void usart_tx(uint8_t data);
 
 void usart_tx_buf(char *buf);
