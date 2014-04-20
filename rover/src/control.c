@@ -69,13 +69,17 @@ bool rx_frame()
 	}
 
     // Copy bytes coming from serial into `control.data`.
+    lcd_putc('['); // DEBUG
     int i = 0;
     for (i = 0; i < control.data_len; i++) {
         control.data[i] = usart_rx();
+        lcd_putc('.'); // DEBUG
     }
+    lcd_putc(']'); // DEBUG
 
     // Notice that `i` now holds the expected data frame length.
     control.data_len = usart_rx();
+    lcd_putc(control.data_len + '0');  // DEBUG
     if (control.data_len > i) {
         lprintf("%d, %d", i, control.data_len);  // DEBUG
         wait_button("");  // DEBUG

@@ -1,10 +1,22 @@
 
 // Code adapted from Atmel Data sheet page 176, 180. Changed to use macros that refer to the USART unit 0.
 
-#include "usart.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdbool.h>
+
+#include "usart.h"
+#include "r_error.h"
+
+
+/**
+ * Checks whether a data overrun has occurred since the UDR0 was last read.
+ */
+static bool _has_data_overrun() {
+    return UCSR0A & (1 << DOR0);
+}
+
+
 
 void usart_init(uint8_t type)
 {
@@ -60,6 +72,10 @@ void usart_drain_rx()
 
 void usart_tx(uint8_t data)
 {
+    if (_has_data_overrun()) {
+        r_error(error_data_overrun, "Data from `control` was lost by data overrun.");
+    }
+
 	/* Wait for empty transmit buffer */
 	while ( !( UCSR0A & (1<<UDRE)) )
 		;
