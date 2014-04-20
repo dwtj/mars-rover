@@ -41,155 +41,170 @@
 #include "lcd.h"
 
 
-control controller;  // Lone instance of the `control` struct.
+
+control_t control;  // Lone instance of the `control` struct.
 
 
 
 /**
- * Reads a single byte via `usart_rx()` and checks that it is a start byte.
- * This will block until a byte of some sort is received, i.e., there is no timeout.
+ * Reads a single frame from the current message being received on the serial
+ * connection into `control.data`. Returns whether another frame is coming.
+ * Note that the *real* data length of this frame is what ends up being stored
+ * `control.data_len`.
+ *
+ * To be clear, whatever was previously stored in `control.data` and
+ * `control.data_len` is clobbered.
  */
-void check_for_start() {
-	uint8_t byte = usart_rx();
-	if (byte != signal_start) {
-		lprintf("start check: %d", byte);
-		wait_button("");
-		r_error(error_txq, "Did not receive expected start byte.");
-	}
-}
-
-
-/**
- * Reads a single byte via `usart_rx()` and checks that it is a start byte.
- * This will block until a byte of some sort is received, i.e., there is no timeout.
- */
-void check_for_end() {
-	if (usart_rx() != signal_stop) {
-		r_error(error_txq, "Did not receive expected stop byte.");
-	}
-}
-
-
-void null_handler() {
-	;  // Do Nothing.
-}
-
-
-// Receives a signal, and transmits an equivalent signal. 
-// Note that this is not the /same/ signal we receive, just equivalent.
-void ping_handler() 
+bool rx_frame()
 {
-	lcd_putc('p');
-	//wait_button("DEBUG: ping_handler");
+    // Get the (expected) length of this data frame:
+    control.data_len = usart_rx();
+	if(control.data_len > DATA_FRAME_MAX_LEN) {
+		r_error(error_bad_message, "Data frame length must not exceed DATA_FRAME_MAX_LEN");
+	}
+
+    // Copy bytes coming from serial into `control.data`.
+    int i = 0;
+    for (i = 0; i < control.data_len; i++) {
+        control.data[i] = usart_rx();
+    }
+
+    // Notice that `i` now holds the expected data frame length.
+    control.data_len = usart_rx();
+    if (control.data_len > i) {
+		r_error(error_bad_message, "The real data frame length cannot be larger than the expected data frame length.");
+    }
+
+    // The last byte in this frame indicates whether another frame is coming:
+    return usart_rx();
+}
+
+
+
+/**
+ * Adds the complete contents of `control.data` as a frame, along with
+ * the appropriate framing bytes to the `txq`. The argument `another_frame`
+ * indicates whether the another frame byte should be either 0 or 1.
+ */
+void tx_frame(bool another_frame)
+{
+    txq_enqueue(control.data_len);
+    for (int i = 0; i < control.data_len; i++) {
+        txq_enqueue(control.data[i]);
+    }
+    txq_enqueue(control.data_len);
+    txq_enqueue(another_frame);
+}
+
+
+
+static void error_handler() {
+    #warning "TODO: Figure out what to do in `error_handler()`."
+	r_error(error_from_control, "Received an error message from `control`.");
+}
+
+
+
+/**
+ * A `ping` message has been received, so this function transmits an
+ * equivalent `ping` message in response.
+ */
+static void ping_handler() 
+{
+	lcd_putc('p');  // DEBUG
 	txq_enqueue(signal_start);
-	txq_enqueue(signal_ping);
+	txq_enqueue(mesg_ping);
 	txq_enqueue(signal_stop);
 	txq_drain();
 }
 
 
-void echo_handler()
+/**
+ * This should be called after the current message has been determined to be of
+ * type `mesg_echo`. It reads the data stored in the message's sequence of
+ * data frames and responds with a message whose data frames contain the same
+ * data.
+ */
+static void echo_handler()
 {
-	lcd_putc('e');
-	uint8_t data_length = usart_rx();
-	//We don't want to deal with that multi-frame garbage here.
-	if(data_length > MAX_DATA_LENGTH || data_length < 1)
-	{
-		r_error(error_bad_data_length, "Length should be between 1 and MAX_DATA_LENGTH");
-	}
-	int i = 0;
-	//encode
-	for(i =0; i< data_length; i++)
-	{
-		controller.data[i] = usart_rx();
-	}
-	uint8_t real_length = usart_rx();
-	uint8_t more = usart_rx();
-	check_for_end();
-	
-	//send it back;
+	lcd_putc('e');  // DEBUG
+
+    // Start of the response message:
 	txq_enqueue(signal_start);
-	for(i=0; i<real_length; i++)
-	{
-		txq_enqueue(controller.data[i]);
-	}
+
+    // In each iteration, a data frame is de-framed
+    bool another_frame = true;
+    while (another_frame)
+    {
+        another_frame = rx_frame();
+        tx_frame(another_frame);
+        #warning "txq_drain() is a temporary measure until asynchronous drainage is implemented."
+	    txq_drain();
+    }
+
+    // End of the response message:
 	txq_enqueue(signal_stop);
-	txq_drain();
-	
-	//More data is comoing? 
-	//it should go back to echo_handler! 
-	if(more == 1)
-	{
-		check_for_start();
-		message_handler();
-	}
 }
-
-
-void error_handler() {
-	r_error(error_bad_request,"Bad signal request.");
-}
-
-
-void rng_system(){
-	switch(usart_rx())
-	{
-		#warning "TODO?"
-		default:
-			r_error(error_bad_request, "Bad RNG Command");
-			break;
-	}
-}
-
-
-void (*subsystem_handlers[NUM_SUBSYS_CODES])() = {
-	lcd_system,   // 0
-	oi_system,    // 1
-	sonar_system, // 2
-	servo_system, // 3
-	ir_system,    // 4
-	rng_system,   // 5
-};
 
 
 
 /**
- * Reads the Subsystem ID of the current message to decide which subsystem
- * should handle the rest of the message.
+ * This should be called after the current message has been determined to be
+ * of type `mesg_command`. It reads the Subsystem ID of the current message to
+ * decide which subsystem should handle the rest of the message.
  */
-void command_handler() {
+static void command_handler()
+{
+    // Choices for functions to be called next.
+    static void (*subsystem_handlers[NUM_SUBSYS_CODES])() = {
+        lcd_system,   // 0
+        oi_system,    // 1
+        sonar_system, // 2
+        servo_system, // 3
+        ir_system,    // 4
+    };
+
+    // Use the supplied `subsys` code to choose which handler to use.
 	uint8_t subsys = usart_rx();
 	if (0 <= subsys && subsys < NUM_SUBSYS_CODES) {
 		subsystem_handlers[subsys]();
 	} else {
-		r_error(error_bad_request, "Invalid subsystem ID.");
+		r_error(error_bad_message, "Invalid subsystem ID.");
 	}
 }
+
+
+
+static void seed_rng_handler() {
+    #warning "TODO: seed_rng_handler() is not yet implemented"
+}
+
 
 
 /**
  * Reads the Message Type of the current message being received and calls
  * the appropriate handler.
  */
-void message_handler() {
-	uint8_t t = usart_rx();  // the message type.
-	switch (t) {
-	case signal_error:
-		error_handler();
-		break;
-	case signal_ping:
-		ping_handler();
-		break;
-	case signal_echo:
-		echo_handler();
-		break;
-	case signal_command:
-		command_handler();
-		break;
-	default:
-		r_error(error_bad_request, "Received an invalid Message ID byte.");
-	}
+static void mesg_handler()
+{
+    // Choices for functions to be called next.
+    static void (*mesg_handlers[NUM_MESG_CODES])() = {
+        error_handler,     // 0
+        ping_handler,      // 1
+        echo_handler,      // 2
+        command_handler,   // 3
+        seed_rng_handler,  // 4
+    };
+
+    // Use the supplied `mesg_id` to choose which handler to use.
+	uint8_t mesg_id = usart_rx();  // the message type.
+    if (0 <= mesg_id && mesg_id < NUM_MESG_CODES) {
+        mesg_handlers[mesg_id]();
+    } else {
+		r_error(error_bad_message, "Received an invalid Message ID byte.");
+    }
 }
+
 
 
 /**
@@ -199,21 +214,33 @@ void message_handler() {
  */
 void control_mode()
 {
+    uint8_t byte;
+    char mesg[60];  // Size is somewhat arbitrary, but should be big enough.
+
 	lcd_init();
 	lcd_puts("Control Mode");
 	usart_init(1);
 	wait_ms(1000);
 	lcd_clear();
 
-	// Receive and handle messages from `control` indefinitely:
-	while (true) {
-		check_for_start();
-		message_handler();  // The message type.
-		check_for_end();
-	}
-}
 
-//leftover from comm.c. Probably unnecessary.
-bool is_valid_signal(signal sig) {
-	return 0 <= sig && sig < NUM_SIGNAL_CODES;
+	// Receive and handle messages from `control` indefinitely:
+	while (true)
+    {
+        // Check for start byte indefinitely:
+        byte = usart_rx();
+	    if (byte != signal_start) {
+            sprintf(mesg, "Received %u instead of expected start byte.", byte);
+            r_error(error_txq, mesg);
+	    }
+
+		mesg_handler();  // Calls the appropriate sequence of handlers.
+
+        // Check for stop byte indefinitely:
+        byte = usart_rx();
+        if (byte != signal_stop) {
+            sprintf(mesg, "Recieved %u instead of expected stop byte.", byte);
+		    r_error(error_txq, mesg);
+	    }
+	}
 }

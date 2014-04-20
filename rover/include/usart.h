@@ -7,9 +7,9 @@
 #define BAUD 9600
 #define MYUBRR FOSC/16/BAUD-1
 
-void usart_init (unsigned char type);
+void usart_init (uint8_t type);
 
-unsigned char usart_rx( void );
+uint8_t usart_rx(void);
 
 void usart_tx(uint8_t data);
 

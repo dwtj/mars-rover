@@ -13,9 +13,9 @@
 
 // Custom error codes.
 typedef enum {
-	error_txq = 0,
-	error_bad_request = 1,
-	error_bad_data_length =2,
+	error_txq = 0,          // Something went wrong when using `txq`.
+	error_bad_message = 1,  // A malformed message was received from `control`.
+    error_from_control = 2, // An error message was received from `control`.
 } error;
 
 

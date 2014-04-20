@@ -203,21 +203,21 @@ char *sonar_get_state() {
 }
 
 
-void sonar_system(){
-	switch(usart_rx())
-	{
-		case 0:
+void sonar_system()
+{
+	switch(usart_rx()) {
+	case 0:
 		sonar_init();
 		break;
-		case 1:
+	case 1:
 		#warning "TODO: There doesn't seem to be such a function:"
 		//sonar_calibrate();//TODO
 		break;
-		case 2:
+	case 2:
 		sonar_reading();
 		break;
-		default:
-		r_error(error_bad_request, "Bad sonar Command");
+	default:
+		r_error(error_bad_message, "Bad sonar Command");
 		break;
 	}
 }

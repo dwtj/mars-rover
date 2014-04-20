@@ -6,7 +6,7 @@
 #include <avr/interrupt.h>
 #include <stdbool.h>
 
-void usart_init(unsigned char type)
+void usart_init(uint8_t type)
 {
 	unsigned int baud;
 	bool double_rate = 0;
@@ -34,7 +34,7 @@ void usart_init(unsigned char type)
 	UCSR0C = 0b00001110;
 }
 
-unsigned char usart_rx( void )
+uint8_t usart_rx(void)
 {
 	/* Wait for data to be received */
 	while ( !(UCSR0A & (1<<RXC0)) )

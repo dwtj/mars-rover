@@ -34,21 +34,21 @@ void lcd_toggle_clear(char delay);
 void lcd_home_anyloc(unsigned char location);
 
 //Handler for the LCD system
-void lcd_system(){
-	switch(usart_rx())
-	{
-		case 0:
+void lcd_system()
+{
+	switch(usart_rx()) {
+	case 0:
 		lcd_init();
 		break;
-		case 1:
+	case 1:
 		#warning "TODO: This is incorrect:"
 		//lcd_puts(controller.data[0]);
 		break;
-		case 2:
+	case 2:
 		lcd_clear();
 		break;
-		default:
-		r_error(error_bad_request, "Bad LCD Command");
+	default:
+		r_error(error_bad_message, "Bad LCD Command");
 		break;
 	}
 }
