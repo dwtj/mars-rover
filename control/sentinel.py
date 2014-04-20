@@ -378,12 +378,12 @@ class Sentinel():
         self.stop_watch()
 
         self.logger.info("Sending an `echo` message to `rover`.")
-        sent_data = bytes(s, 'utf-8')
+        tx_data = bytes(s, 'utf-8')
 
-        self.tx_mesg(MesgID.echo, data = sent_data)
+        self.tx_mesg(MesgID.echo, data = tx_data)
         returned_data = self.rx_mesg(MesgID.echo, has_data = True)
 
-        if sent_data != returned_data:
+        if tx_data != rx_data:
             raise Exception("A different string was returned from the rover.")
         self.logger.info("Received correct `echo` message from the `rover`.")
 
@@ -436,44 +436,6 @@ class Sentinel():
 
 
 
-    def _frame_data(d):
-        """ A (pure) helper function that takes the bytes object `d` and
-        returns a `bytes` object with added data framing bytes. """
-
-        # The number of full frames to be sent:
-        full_frames = len(d) // DATA_FRAME_MAX_LEN
-
-        # The final partially-full frame to be sent:
-        partial_frame_len = len(d) % DATA_FRAME_MAX_LEN
-        has_partial_frame = False if partial_frame_len == 0 else True
-
-        frames = []
-        for i in range(full_frames):
-            # `start` is index of first byte of `d` to be copied to this `frame`:
-            start = i * DATA_FRAME_MAX_LEN
-            frame = bytearray(DATA_FRAME_MAX_LEN + 3)
-
-            # Add data and framing info to this `frame`:
-            frame[0] = DATA_FRAME_MAX_LEN
-            frame[1:1+DATA_FRAME_MAX_LEN] = d[start:start+DATA_FRAME_MAX_LEN]
-            frame[DATA_FRAME_MAX_LEN + 1] = DATA_FRAME_MAX_LEN
-            frame[DATA_FRAME_MAX_LEN + 2] = True
-
-            # Add this newly formed frame to the list of frames to be sent.
-            frames.append(frame)
-
-        if has_partial_frame:
-            start = full_frames * DATA_FRAME_MAX_LEN
-            frame = bytearray(partial_frame_len + 3)
-
-            frame[0] = partial_frame_len
-            frame[1 : 1 + partial_frame_len] = d[start : ]
-        
-        # Set the last byte of the last frame (whether full or partial) to
-        # indicate that there are no more frames:
-        frames[-1][-1] = False
-
-        return b''.join(frames)
 
 
 
@@ -612,3 +574,56 @@ class Sentinel():
                 self._rover_error_handler(d)
         else:
             raise Exception("A malformed message was received from `rover`.")
+
+
+
+
+def _frame_data(d):
+    """ A (pure) helper function that takes the `bytes` or `bytearray` object,
+    `d`, and returns a `bytes` object with added data framing bytes. """
+
+    # Handle the degenerate case:
+    if len(d) == 0:
+        return b'\x00\x00\x00'
+
+    # The list of individual frames to be concatenated at the end:
+    frames = []
+
+    # Index of first element to be copied into current frame:
+    start = 0   
+
+    # Index of last element copied into the current frame:
+    end = DATA_FRAME_MAX_LEN - 1
+
+    # Add all of the full frames, one frame per iteration.
+    while end < len(d):
+        # The number of data bytes to be copied from `d` into this `frame`:
+        to_be_copied = DATA_FRAME_MAX_LEN
+
+        frame = bytearray(to_be_copied + 3)
+        frame[0] = to_be_copied                  # The expected length byte.
+        frame[1:1+to_be_copied] = d[start:end+1] # Copy some data into `frame`.
+        frame[-2] = to_be_copied                 # The real length byte.
+        frame[-1] = True                         # The has_more_frames byte.
+
+        frames.append(frame)
+
+        start += DATA_FRAME_MAX_LEN
+        end += DATA_FRAME_MAX_LEN
+        
+    if start == len(d):
+        # All frames were full frames, i.e. there is no final partial frame.
+        frames[-1][-1] = False
+    else:
+        # There is a final partial frame:
+        to_be_copied = len(d) - start
+
+        frame = bytearray(to_be_copied + 3)
+        frame[0] = to_be_copied
+        frame[1:1+to_be_copied] = d[start:]
+        frame[-2] = to_be_copied
+        frame[-1] = False
+
+        frames.append(frame)
+
+    return b''.join(frames)

@@ -116,7 +116,7 @@ static void error_handler() {
  */
 static void ping_handler() 
 {
-	lcd_putc('p');  // DEBUG
+	lcd_putc('p');  // DEBUG: the ping handler has started
 	txq_enqueue(signal_start);
 	txq_enqueue(mesg_ping);
 	txq_enqueue(signal_stop);
@@ -132,7 +132,7 @@ static void ping_handler()
  */
 static void echo_handler()
 {
-	lcd_putc('e');  // DEBUG
+	lcd_putc('e');  // DEBUG: the echo handler has started
 
     // Start of the response message:
 	txq_enqueue(signal_start);
