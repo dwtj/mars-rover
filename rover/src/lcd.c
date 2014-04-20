@@ -8,9 +8,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "util.h"
 #include "lcd.h"
 #include "r_error.h"
+#include "control.h"
 
 
 #define HD_LCD_CLEAR 0x01
@@ -41,8 +43,26 @@ void lcd_system()
 		lcd_init();
 		break;
 	case 1:
-		#warning "TODO: This is incorrect:"
-		//lcd_puts(controller.data[0]);
+		; //Cannot make a variable declaration in the first line of a case. 
+		bool another_frame = true;
+		while (another_frame)
+		{
+			uint8_t len = usart_rx();
+			int i = 0;
+			//populate the array with date to *possibly* transmit
+			for(i =0; i<len; i++)
+			{
+				control.data[i] = usart_rx();
+			}
+			//Now len is equal to the REAL data length
+			len = usart_rx();
+			//Display the actual data received.
+			for(i=0; i<len; i++)
+			{
+				lcd_puts(control.data[i]);
+			}
+			another_frame = usart_rx();
+		}
 		break;
 	case 2:
 		lcd_clear();

@@ -1,7 +1,9 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include "util.h"
 #include "open_interface.h"
 #include "r_error.h"
+#include "control.h"
 
 /// Allocate memory for a the sensor data
 oi_t* oi_alloc() {
@@ -121,10 +123,38 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 //Handler for OI, moved from control.
 void oi_system()
 {
+
 	switch (usart_rx()) {
 	case 0:
-		#warning "TODO: add parameters:"
-		//oi_init();
+		oi_init(&(control.oi_state));
+		break;
+	//Move
+	case 1:
+		while()
+		usart_rx();//read and disregard length.
+		uint8_t speed = usart_rx();
+		uint8_t dist = usart_rx();
+		bool stream = usart_rx();
+		#warning "Stream functionality to be implemented later"
+		move_dist(&(control.oi_state), dist, speed);
+		usart_rx(); //read and ignore data length
+		usart_rx(); //Read and ignore more byte
+		break;
+	//Turn
+	case 2:
+		usart_rx(); //read and ignore length
+		uint8_t angle = usart_rx();
+		turn(&(control.oi_state), angle);
+		usart_rx(); //Read and ignore real length
+		usart_rx(); //read and ignore more  byte
+		break;
+	//Sing me a song.
+	case 3:
+		//we only have the one song....
+		char song[] = {96, 96, 96, 96 92, 94, 96, 94, 96};
+		char duration[] = {8, 8, 8, 8, 12, 12, 8, 8, 8}; //These probably need to be edited.
+		oi_load_song(0,9, song[0], duration[0]);//??
+		oi_play_song(0);
 		break;
 	default:
 		r_error(error_bad_message, "Bad OI Command");
