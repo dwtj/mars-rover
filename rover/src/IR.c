@@ -169,22 +169,22 @@ void IR_calibrate(bool bam_send, bool save_means)
 	}
 }
 
-//Handler from the ir_system, moved from control for readability.
+
+
 void ir_system(){
-	switch(usart_rx())
-	{
-		case 0:
+	switch(usart_rx()) {
+	case 0:
 		IR_init();
 		break;
-		case 1:
+	case 1:
 		#warning "Add parameter"
 		//IR_calibrate();
 		break;
-		case 2:
+	case 2:
 		IR_reading();
 		break;
-		default:
-		r_error(error_bad_request, "Bad IR Command");
+	default:
+		r_error(error_bad_message, "Bad IR Command");
 		break;
 	}
 }

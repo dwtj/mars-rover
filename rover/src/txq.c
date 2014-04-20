@@ -75,7 +75,7 @@ void txq_drain() {
 	}
 }
 
-
+/*
 ISR(ISR_TXBUFF)
 {
 	if(txq.num_elements)//technically redundant; dequeue checks if empty. 
@@ -96,7 +96,7 @@ ISR(ISR_TXBUFF)
 			usart_tx(txq.dequueue)
 		}
 	}
-
+*/
 
 
 
