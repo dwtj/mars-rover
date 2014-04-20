@@ -14,11 +14,11 @@ class Signal(IntEnum):
 
 class MesgID(IntEnum):
     """ Identifies different message types. """
-    error = 3
-    ping = 4
-    echo = 5
-    command = 6
-    seed_rng = 7
+    error = 0
+    ping = 1
+    echo = 2
+    command = 3
+    seed_rng = 4
 
 
 

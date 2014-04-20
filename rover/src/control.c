@@ -6,7 +6,7 @@
  */
 
 #warning "TODO: URGENT: ISR x 2: 1 on TX_COMPLETE [or something similar], the other is when the queue stops being empty, ie when num_elements goes from 0 to one, or shortly after. check every few ms?"
-#warning "TODO: CONTINUTED: Copy items from txq to hardware buffer (when the hardware buffer is ready to take input. There exists an interript for when the hardware buffer is ready to recieive (txq buffer read perhaps?). We want to shift into the hardware buffer from TXQ. But maybe we don't want two, because interference. (??)"
+#warning "TODO: CONTINUTED: Copy items from txq to hardware buffer (when the hardware buffer is ready to take input. There exists an interript for when the hardware buffer is ready to recieive (txq buffer read perhaps?). We want to shift into the hardware buffer from TXQ. But maybe we don't want two, because interference. (?)"
 
 /************************************************************************/
 /* put this in TXQ.C
@@ -27,6 +27,11 @@
 		 }
  		}                                                                     */
 /************************************************************************/
+
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
 
 
 #include "util.h"
@@ -233,6 +238,7 @@ void control_mode()
             sprintf(mesg, "Received %u instead of expected start byte.", byte);
             r_error(error_txq, mesg);
 	    }
+        lcd_putc('(');  // DEBUG: found start byte
 
 		mesg_handler();  // Calls the appropriate sequence of handlers.
 
@@ -242,5 +248,6 @@ void control_mode()
             sprintf(mesg, "Recieved %u instead of expected stop byte.", byte);
 		    r_error(error_txq, mesg);
 	    }
+        lcd_putc(')');  // DEBUG: found stop byte
 	}
 }
