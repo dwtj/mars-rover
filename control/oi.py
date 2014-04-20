@@ -18,12 +18,13 @@ def init(sen):
 
 
 
-def move(sen, speed = 500, distance = None):
+def move(sen, speed = 500, distance = 3000, stream = False):
     """
     Moves the rover. `speed` is an integer in the range (0, 500]. `distance`, 
     if provided, is in millimeters and is an integer in range [-3000, 3000]. 
-    Negative `distance` values command the robot to move backwards. If
-    distance is not provided, the rover will move until stop() is called.
+    Negative `distance` values command the robot to move backwards.
+   
+    TODO: what bytes in data frame mean what (in both directions)
     """
     
     sen.stop_watch()
@@ -34,17 +35,13 @@ def move(sen, speed = 500, distance = None):
     if not (0 < distance and distance <= 300) and distance != None:
         raise ValueError("Argument `distance` must be in the closed interval [-3000, 3000].")
 
-    if distance != None:
-        # TODO: Pack just speed. Don't block?
-        pass
-    else:
-        # TODO: Pack together speed and distance. Indicate somehow that there 
-        # is a specific distance to move. Block until "finished" signal?
-        b = pack("<Ii", speed, distance)
-        sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.move, b)
-        sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, False)
+    b = pack("<Hh?", speed, distance, stream)
+    sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.move, b)
+    data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, True)
     
-    # TODO: Something with collision detection
+    # ^ TODO: return this data right after sen.start_watch()??
+
+    # TODO: in byte describing why rover stopped: left, right bumper? other?
 
     sen.start_watch()
 
@@ -63,25 +60,14 @@ def rotate(sen, angle):
 
 
 
-def stop(sen):
-    """
-    If the rover is currently moving, this function stops it.
-    """
-    
-    raise NotImplementedError()
-    sen.stop_watch()
-    # TODO
-    sen.start_watch()
-
-
-
 def play_song(sen):
     """
     Plays a song on the rover.
     """
-	
-	raise NotImplementedError()
+    
+    raise NotImplementedError()
 
     sen.stop_watch()
     # TODO
     sen.start_watch()
+
