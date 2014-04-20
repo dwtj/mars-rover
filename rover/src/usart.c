@@ -5,6 +5,7 @@
 #include <avr/interrupt.h>
 #include <stdbool.h>
 
+#include "util.h"
 #include "usart.h"
 #include "r_error.h"
 
@@ -28,33 +29,25 @@ static bool _has_frame_error() {
 
 
 
-void usart_init(uint8_t type)
+void usart_init()
 {
-	unsigned int baud;
-	bool double_rate = 0;
-	if (type == 0) {
-		// configure for serial connection
-		baud = 25;  // Code for baud rate 38.4k without double speed.
-	} else if (type == 1) {
-		// configure for bluetooth connection
-		baud = 34;  // Code for baud rate 57.6k at double speed.
-		double_rate = 1;
-	} else {
-		return;  // error: type not defined
-	}
-	
-	/* Set baud rate */
-	UBRR0H = (unsigned char)(baud>>8);
-	UBRR0L = (unsigned char)baud;
+	/* Set baud rate via the UBRR */
+	UBRR0H = USART_UBRR >> 8;
+	UBRR0L = USART_UBRR;
 
-	/*Enable double speed? */
-	UCSR0A = double_rate ? 0b00000010 : 0b00000000;
+	UCSR0A = USART_2X ? 0x02 : 0x00;  // Enable double speed?
 
-	/* Enable receiver and transmitter */
-	 UCSR0B = 0b00011000;
-	/* Set frame format: 8data, 2stop bit */
-	UCSR0C = 0b00001110;
+	UCSR0B = 0b00011000; // Enable both receiver and transmitter.
+
+    UCSR0C = 0x00;
+    UCSR0C |= 0b0 << UMSEL0;  // Set asynchronous mode.
+    //UCSR0C |= 0b10 << UPM0;   // Set parity mode to even.
+    UCSR0C |= 0b00 << UPM0;   // Set parity mode to even.
+    UCSR0C |= 0b1 << USBS0;   // Use two stop bits.
+    UCSR0C |= 0b11 << UCSZ0;  // Set character size to be 8-bits.
 }
+
+
 
 uint8_t usart_rx(void)
 {
@@ -81,6 +74,7 @@ uint8_t usart_rx(void)
 }
 
 
+
 /**
  * Reads and ignores data from usart until there is no more.
  */
@@ -92,6 +86,7 @@ void usart_drain_rx()
 }
 
 
+
 void usart_tx(uint8_t data)
 {
 	/* Wait for empty transmit buffer */
@@ -100,6 +95,8 @@ void usart_tx(uint8_t data)
 	/* Put data into buffer, sends the data */
 	UDR0 = data;
 }
+
+
 	
 void usart_tx_buf(char *buf) {
 	for (char *cur = buf; *cur != '\0'; cur++) {
@@ -108,9 +105,11 @@ void usart_tx_buf(char *buf) {
 }
 
 
+
 void usart_RX_ISR_enable() {
 	UCSR0B |= 0b10000000;
 }
+
 
 
 void usart_RX_ISR_disable() {

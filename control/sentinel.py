@@ -10,12 +10,8 @@ import serial
 from codes import Signal, MesgID, SubsysID
 
 
-
-
 DEFAULT_SERIAL_PORT = "/dev/tty.ElementSerial-ElementSe"
 DATA_FRAME_MAX_LEN = 100
-
-
 
 
 class Sentinel():
@@ -48,9 +44,13 @@ class Sentinel():
         # Create the Serial, Queue, and Logger to be used throughout this
         # sentinel's lifespan:
 
-        self.ser = serial.Serial(port)
+        self.ser = serial.Serial()
+        self.ser.port = port
         self.ser.baudrate = 57600
+        self.ser.bytesize = serial.EIGHTBITS
         self.ser.stopbits = serial.STOPBITS_TWO
+        self.ser.parity = serial.PARITY_NONE
+        self.ser.open()
 
         self.aux_queue = queue.Queue()
 
@@ -165,6 +165,8 @@ class Sentinel():
         unexpected features, an `Exception` is raised.
         """
 
+        rv = None
+
         if self.read_int() != Signal.start:
             raise Exception("Did not receive the expected Start Signal.")
 
@@ -178,10 +180,12 @@ class Sentinel():
             raise Exception("Did not receive the expected Command ID.")
 
         if has_data:
-            rv = read_data()
+            rv = self.read_frames()
 
         if self.read_int() != Signal.stop:
             raise Exception("Did not receive the expected Stop Signal.")
+
+        return rv
 
 
 
@@ -253,21 +257,21 @@ class Sentinel():
         The `write_timeout` is hard-coded to be 3 seconds.
         """
 
-        time.sleep(0.05)  # DEBUG
-
         if self.is_watching:
             raise Exception("You cannot write when the sentinel is watching.")
 
         self.ser.write_timeout = 3
-        return self.ser.write(data)
+
+        # Slow down the rate at which individual bytes are sent across:
+        for i in range(len(data)):
+            self.write_int(data[i])
 
 
 
 
     def write_int(self, i):
-        """
-        A simple wrapper for `Sentinel.write()` that writes a single `int` in
-        the range [0..255] to the encapsulated `Serial` object.
+        """ Writes a single `int` in the range [0..255] to the encapsulated
+        `Serial` object.
 
         The `write_timeout` is hard-coded to be 3 seconds.
         """
@@ -285,7 +289,8 @@ class Sentinel():
 
         b = bytearray(1)
         b[0] = i
-        self.write(b)
+        self.ser.write(b)
+        self.ser.flush()
 
 
 
@@ -361,14 +366,11 @@ class Sentinel():
         """ Sends a `ping` message to `rover` and expects a `ping` message in
         response. """
 
-        self.stop_watch()
-
         self.logger.info("Sending a `ping` message to `rover`.")
         self.tx_mesg(MesgID.ping)
         self.rx_mesg(MesgID.ping)
         self.logger.info("Received a `ping` message from `rover`.")
 
-        self.start_watch()
 
 
 
@@ -380,19 +382,15 @@ class Sentinel():
         `echo` along with this same string `s`.
         """
 
-        self.stop_watch()
-
         self.logger.info("Sending an `echo` message to `rover`.")
         tx_data = bytes(s, 'utf-8')
 
         self.tx_mesg(MesgID.echo, data = tx_data)
-        returned_data = self.rx_mesg(MesgID.echo, has_data = True)
+        rx_data = self.rx_mesg(MesgID.echo, has_data = True)
 
         if tx_data != rx_data:
             raise Exception("A different string was returned from the rover.")
         self.logger.info("Received correct `echo` message from the `rover`.")
-
-        self.start_watch()
 
 
 
@@ -562,7 +560,7 @@ class Sentinel():
             mesg = int(mesg[0])  # Reuse the reference.
             if n == 1:
                 if mesg in {MesgID.error, MesgID.echo}:
-                    d = comm.read_data()
+                    d = self.read_frames()
                 n = self.ser.readinto(sig)  # Read stop signal byte.
                 if n == 1 and sig[0] == Signal.stop:
                     valid = True

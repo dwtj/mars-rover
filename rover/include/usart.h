@@ -2,12 +2,13 @@
 #define USART_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
-//#define FOSC 1843200  // Clock Speed //commented out because FOSC defined elsewhere to be 1600000. Why was it this number???
-#define BAUD 9600
-#define MYUBRR FOSC/16/BAUD-1
+#define USART_UBRR 16
+#define USART_2X false
+// BAUD = 57.6KHz with this UBRR, if FOSC is 16MHz and double-speed is not set.
 
-void usart_init (uint8_t type);
+void usart_init();
 
 uint8_t usart_rx(void);
 

@@ -62,8 +62,11 @@ control_t control;  // Lone instance of the `control` struct.
  */
 bool rx_frame()
 {
+    bool rv;
+
     // Get the (expected) length of this data frame:
     control.data_len = usart_rx();
+    lcd_putc(control.data_len + '0');  // DEBUG
 	if(control.data_len > DATA_FRAME_MAX_LEN) {
 		r_error(error_bad_message, "Data frame length must not exceed DATA_FRAME_MAX_LEN");
 	}
@@ -87,7 +90,9 @@ bool rx_frame()
     }
 
     // The last byte in this frame indicates whether another frame is coming:
-    return usart_rx();
+    rv = usart_rx();
+    lcd_putc(rv ? 'y' : 'n');  // DEBUG
+    return rv;
 }
 
 
@@ -142,6 +147,7 @@ static void echo_handler()
 
     // Start of the response message:
 	txq_enqueue(signal_start);
+	txq_enqueue(mesg_echo);
 
     // In each iteration, a data frame is de-framed
     bool another_frame = true;
@@ -232,7 +238,7 @@ void control_mode()
 
 	lcd_init();
 	lcd_puts("Control Mode");
-	usart_init(1);
+	usart_init();
 	wait_ms(1000);
 	lcd_clear();
 
