@@ -59,26 +59,27 @@ void servo_manual_calib()
 
 #warning "TODO: fix the servo handlers"
 void servo_system(){
-	switch(usart_rx())
-	{
-		case 0:
-			servo_init();
-			break;
-		case 1:
-			//servo_calibrate();//TODO
-			break;
-		case 2:
-			//servo_state();//TODO
-			break;
-		case 3:
-			servo_angle(controller.data[0],true); //read from data[0], then wait to finish moving.
-			break;
-		case 4:
-			//servo_pulse_width();//TODO
-			break;
-		default:
-			r_error(error_bad_request, "Bad servo Command");
-			break;
+	switch (usart_rx()) {
+    case 0:
+        servo_init();
+        break;
+    case 1:
+        //servo_calibrate();//TODO
+        break;
+    case 2:
+        //servo_state();//TODO
+        break;
+    case 3:
+        #warning "This is wrong, because data has not been loaded yet."
+        // Read from data[0], then wait to finish moving.
+        servo_angle(control.data[0], true);
+        break;
+    case 4:
+        //servo_pulse_width();//TODO
+        break;
+    default:
+        r_error(error_bad_message, "Bad servo Command");
+        break;
 	}
 }
 

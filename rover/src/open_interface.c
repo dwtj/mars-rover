@@ -119,15 +119,15 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 }
 
 //Handler for OI, moved from control.
-void oi_system(){
-	switch(usart_rx())
-	{
-		case 0:
+void oi_system()
+{
+	switch (usart_rx()) {
+	case 0:
 		#warning "TODO: add parameters:"
 		//oi_init();
 		break;
-		default:
-		r_error(error_bad_request, "Bad OI Command");
+	default:
+		r_error(error_bad_message, "Bad OI Command");
 		break;
 	}
 }

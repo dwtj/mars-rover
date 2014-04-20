@@ -21,27 +21,39 @@
 #ifndef CONTROL_H_
 #define CONTROL_H_
 
-/* The following enumerated types are classes of header codes that head
-   packets being sent between the the control program and the rover. */
+/**
+ * The following enumerated types are classes of header codes that head
+ * packets being sent between the the control program and the rover.
+ */
 
-/* The `signal` codes are used by the control program to initiate a signal
-   sequence with the rover. The rover's responses are headed by the same
-   code. */
 
-#warning "TODO: refactor these into control signals and message types."
+/**
+ * Codes to distinguish between different types of control signals:
+ */
 typedef enum {
 	signal_null = 0,    // NULL
 	signal_start = 1,   // Start of message
 	signal_stop = 2,    // End of message
-	
-	signal_error = 3,
-	signal_ping = 4,
-	signal_echo = 5,
-	signal_command = 6,
 } signal;
-#define NUM_SIGNAL_CODES 7
+#define NUM_SIGNAL_CODES 3
 
-// IDs for each of the rover's subsystems.
+
+/**
+ * Codes to distinguish between different types of messages:
+ */
+typedef enum {
+	mesg_error = 0,
+	mesg_ping = 1,
+	mesg_echo = 2,
+    mesg_rng_seed = 3,
+	mesg_command = 4,
+} mesg;
+#define NUM_MESG_CODES 5
+
+
+/**
+ * Codes to distinguish between different subsystems:
+ */
 typedef enum {
 	lcd = 0,
 	oi = 1,
@@ -53,16 +65,21 @@ typedef enum {
 #define NUM_SUBSYS_CODES 6
 
 
-
-#define MAX_DATA_LENGTH 100
+#define DATA_FRAME_MAX_LEN 100
 typedef struct {
-	bool running; //Checked by handlers to see if they should stop.
-	signal current; //Stores the most recent command issued from python.
-	uint8_t data[MAX_DATA_LENGTH];
-	uint8_t data_idx;
-} control;  // To be used to hold the state as messages are being interpreted.
+	bool running;  // Checked by handlers to see if they should stop.
+	uint8_t data[DATA_FRAME_MAX_LEN];
+	uint8_t data_len;
+} control_t;  // To be used to hold the state as messages are being interpreted.
 
-extern control controller;
+
+extern control_t control;
+
+
+void read_frame();
+
+
+void write_frame();
 
 
 #endif /* CONTROL_H_ */

@@ -2,53 +2,65 @@
 
 import comm
 from enum import IntEnum
+from codes import MesgID, SubsysID, IRCommand
 
 
-class IRCommand(IntEnum):
-    init = 0
-    calibrate = 1
-    readings = 2
-    
 
 
-def init():
+def init(sen):
     """ Initializes the IR subsystem for use. """
-    tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
-    rx_mesg(Message.command, Subsys.ir, IRCommand.init, False)
+    sen.stop_watch()
+    sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.init, None)
+    sen.rx_mesg(MesgID.command, SubsysID.ir, IRCommand.init, False)
+    sen.start_watch()
 
 
 
 
 
-def calibrate():
+def calibrate(sen):
     """
     Initiates the `control`-operated calibration routine of the IR subsystem.
-
-    TODO: UPDATE THIS:
-    Communicates with the rover to generate calibration data for the infared
-    (IR) sensor. The results are returned as a two-column ndarray where the
-    first column is the (human-measured) distance from an object and the second
-    column is the integer output from the ATmega's ADC connected to the IR
-    sensor.
     """
 
+    sen.start_watch()
+    # TODO
+    sen.stop_watch()
     raise NotImplementedError()
 
 
-def rover_calibrate():
+
+
+def rover_calibrate(sen):
     """
     Initiates the `rover`-operated calibration routine of the IR subsystem.
     """
 
-    tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
-    d = rx_mesg(Message.command, Subsys.ir, IRCommand.init, True)
+    sen.start_watch()
+    sen.tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
+    rx_d = sen.rx_mesg(Message.command, Subsys.ir, IRCommand.init, True)
+    sen.stop_watch()
 
     raise NotImplementedError()
 
 
 
+def _use_calibration_data(sen, calib_data):
+    """
+    TODO:
+    Another funciton communicates with the rover to generate calibration data
+    for the infared (IR) sensor. The results passed to this function as a
+    two-column ndarray where the first column is the (human-measured) distance
+    from an object and the second column is the integer output from the
+    ATmega's ADC connected to the IR sensor. This data is used to modify the
+    method by which raw ADC readings are interpreted.
+    """
 
-def readings(n, raw = True, rand = False, timestamps = False):
+    raise NotImplementedError()
+
+
+
+def readings(sen, n, raw = True, rand = False, timestamps = False):
     """
     Gets an `ndarray` of IR readings from the `rover`.
 
@@ -71,8 +83,13 @@ def readings(n, raw = True, rand = False, timestamps = False):
     taken are streamed back to `control` along with the readings themselves.
     """
 
-    # TODO
-    command(Message.command, Subsys.ir, IRCommand.readings, None)
-    d = command(Message.command, Subsys.ir, IRCommand.readings, True)
+    sen.stop_watch()
+
+    # TODO: Specify transmit and response data protocol.
+    tx_d = b''
+    sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, tx_d)
+    rx_d = sen.rx_mesg(MessageID.command, SubsysID.ir, IRCommand.readings, True)
+
+    sen.start_watch()
 
     raise NotImplementedError()

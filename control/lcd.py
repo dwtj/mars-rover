@@ -1,33 +1,33 @@
 # lcd.py
 
-import comm
-from enum import IntEnum
+from codes import MesgID, SubsysID, LCDCommand
 
 
-class LCDCommand(IntEnum):
-    init = 0
-    puts = 1
-    clear = 2
 
-
-def init():
+def init(sen):
     """ Initializes the rover's LCD subsystem for use.  """
-    tx_mesg(Message.command, Subsys.lcd, LCDCommand.init, None)
-    rx_mesg(Message.command, Subsys.lcd, LCDCommand.init, False)
+    sen.stop_watch()
+    sen.tx_mesg(MesgID.command, SubsysID.lcd, LCDCommand.init, None)
+    sen.rx_mesg(MesgID.command, SubsysID.lcd, LCDCommand.init, False)
+    sen.start_watch()
 
 
 
-def puts(s):
+def puts(sen, string):
     """ Appends the given string `s` to the rover's LCD display. """
+    sen.stop_watch()
     b = bytes(s, 'utf-8')
-    tx_mesg(Message.command, Subsys.lcd, LCDCommand.puts, b)
-    rx_mesg(Message.command, Subsys.lcd, LCDCommand.puts, False)
+    sen.tx_mesg(MesgID.command, SubsysID.lcd, LCDCommand.puts, b)
+    sen.rx_mesg(MesgID.command, SubsysID.lcd, LCDCommand.puts, False)
+    sen.start_watch()
 
     raise NotImplementedError
 
 
 
-def clear():
+def clear(s):
     """ Clears the rover's LCD display. """
-    tx_mesg(Message.command, Subsys.lcd, LCDCommand.clear, None)
-    rx_mesg(Message.command, Subsys.lcd, LCDCommand.clear, False)
+    sen.stop_watch()
+    sen.tx_mesg(MesgID.command, SubsysID.lcd, LCDCommand.clear, None)
+    sen.rx_mesg(MesgID.command, SubsysID.lcd, LCDCommand.clear, False)
+    sen.start_watch()

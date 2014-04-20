@@ -1,29 +1,24 @@
 # oi.py
 
-import comm
-from enum import IntEnum
-
-
-class OICommand(IntEnum):
-    init = 0
-    move = 1
-    rotate = 2
-    stop = 3
-    play_song = 4
+from codes import MesgID, SubsysID, OICommand
 
 
 
-def init():
+def init(sen):
     """
     Initializes the rover's open interface subsystem, that is, the open-
     interface over USART communication system between the ATmega128 and the
     iRobot create.
     """
 
-    tx_mesg(Message.command, Subsys.oi, OICommand.init, None)
-    rx_mesg(Message.command, Subsys.oi, OICommand.init, False)
+    sen.stop_watch()
+    sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.init, None)
+    sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.init, False)
+    sen.start_watch()
 
-def move(speed = 500, distance = None):
+
+
+def move(sen, speed = 500, distance = None):
     """
     Moves the rover. `speed` is an integer in the range (0, 500]. `distance`, 
     if provided, is in millimeters and is an integer in range [-3000, 3000]. 
@@ -31,6 +26,8 @@ def move(speed = 500, distance = None):
     distance is not provided, the rover will move until stop() is called.
     """
     
+    sen.stop_watch()
+
     if not 0 < speed and speed <= 500:
         raise ValueError("Argument `speed` must be in the interval (0, 500].")
     
@@ -44,32 +41,47 @@ def move(speed = 500, distance = None):
         # TODO: Pack together speed and distance. Indicate somehow that there 
         # is a specific distance to move. Block until "finished" signal?
         b = pack("<Ii", speed, distance)
-        tx_mesg(Message.command, Subsys.oi, OICommand.move, b)
-        rx_mesg(Message.command, Subsys.oi, OICommand.move, False)
+        sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.move, b)
+        sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, False)
     
     # TODO: Something with collision detection
 
+    sen.start_watch()
 
-def rotate(angle):
+
+
+def rotate(sen, angle):
     """
     Expects `angle` in range (-360, 360). Positive values represent clockwise 
     motion and negative values represent counterclockwise motion. 
     """
-    
+
     raise NotImplementedError()
+    sen.stop_watch()
+    # TODO
+    sen.start_watch()
 
 
-def stop():
+
+def stop(sen):
     """
     If the rover is currently moving, this function stops it.
     """
     
     raise NotImplementedError()
+    sen.stop_watch()
+    # TODO
+    sen.start_watch()
 
-def play_song():
+
+
+def play_song(sen):
     """
     Plays a song on the rover.
     """
 	
 	raise NotImplementedError()
 
+    sen.stop_watch()
+    # TODO
+    sen.start_watch()

@@ -1,48 +1,46 @@
 # servo.py
 
-import comm
 import struct
 
-
-class ServoCommand(IntEnum):
-    init = 0
-    calibrate = 1
-    state = 2
-    angle = 3
-    pulse = 4
+from codes import MesgID, SubsysID, ServoCommand
 
 
-def init():
+def init(sen):
     """
     Initializes the servo subsystem for use. Also activates the servo, i.e.,
     the servo state is made to be "on".
     """
 
-    tx_mesg(Message.command, Subsys.servo, ServoCommand.init, None)
-    rx_mesg(Message.command, Subsys.servo, ServoCommand.init, False)
+    sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.init, None)
+    sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.init, False)
 
 
 
 
-def rover_calibrate():
+def rover_calibrate(sen):
     """
     Initiates the `rover`-operated calibration routine of the servo subsystem.
     """
-    tx_mesg(Message.command, Subsys.servo, ServoCommand.calibrate, None)
-    rx_mesg(Message.command, Subsys.servo, ServoCommand.calibrate, False)
+    sen.stop_watch()
+    sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.calibrate, None)
+    sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.calibrate, False)
+    sen.stop_watch()
 
 
 
-def calibrate():
+def calibrate(sen):
     """
     Initiates the `control`-operated calibration routine of the servo subsystem.
     """
 
     raise NotImplementedError()
+    sen.stop_watch()
+    # TODO
+    sen.start_watch()
 
 
 
-def state(s = None):
+def state(sen, s = None):
     """
     Gets and sets the servo's state. If the function is invoked with no
     arguments, or if it is passed `None`, then it returns the servos current
@@ -51,26 +49,34 @@ def state(s = None):
     servo will be turned off.
     """
     
+    sen.stop_watch()
+
     if s == None:
-        tx_mesg(Message.command, Subsys.servo, ServoCommand.state, False)
-        return rx_mesg(Message.command, Subsys.servo, ServoCommand.state, True)
+        sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, False)
+        rv = sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, True)
+        rv = "on" if rv == b'\x01' else "off"
     elif s == "on":
-        init()
+        init(sen)
+        rv = "on"
     elif s == "off":
         # TODO: How would I tell the servo to turn off?? Send a 0? Make 
         # consistent on rover side
         b = struct.pack("<I", 0)
-        tx_mesg(Message.command, Subsys.servo, ServoCommand.state, b)
-        rx_mesg(Message.command, Subsys.servo, ServoCommand.state, False)
+        sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, b)
+        sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, False)
+        rv = "off"
     else:
-        raise ValueError("Argument `s` must be `None`, \"on\", or \"off\".");
+        raise ValueError('Argument `s` must be `None`, "on", or "off".');
+
+    sen.start_watch()
+
+    return rv
 
 
 
 
 
-
-def angle(angle, wait = True):
+def angle(sen, angle, wait = True):
     """
     Expects `angle` to be an integer in the range [0..180]. The servo will be
     moved to this angle. If `wait` is `True`, then the following will happen:
@@ -83,21 +89,25 @@ def angle(angle, wait = True):
     this "finished" signal.
     """
     
-    if not (0 <= p and p  <= 180):
-        raise ValueError("Argument `p` must be in the closed interval [0, 180].")
+    if not (0 <= angle and angle  <= 180):
+        raise ValueError("Argument `angle` must be an integer in [0..180].")
     
-    b = struct.pack("<I", p)
-    tx_mesg(Message.command, Subsys.servo, ServoCommand.angle, b)
+    start_watch()
+
+    b = struct.pack("<I", angle)
+    tx_mesg(MesgID.command, Subsys.servo, ServoCommand.angle, b)
     
     # TODO: wait for "finished" signal from rover. 
     # Is the finished signal in the data sent back? Make consistent with rover
-    #while rx_mesg(Message.command, Subsys.servo, ServoCommand.angle, True) != ServoSignal.finished:
+    #while rx_mesg(MesgID.command, Subsys.servo, ServoCommand.angle, True) != ServoSignal.finished:
         #pass
-    rx_mesg(Message.command, Subsys.servo, ServoCommand.angle, False)
+    rx_mesg(MesgID.command, Subsys.servo, ServoCommand.angle, False)
+
+    sen.start_watch()
 
 
 
-def pulse(p):
+def pulse(sen, p):
     """
     Sets `p` as the proportion of the servo's PWM cycle which is logical-high.
 
@@ -109,8 +119,12 @@ def pulse(p):
     """
 
     if not (0.0 < p and p < 1.0):
-        raise ValueError("Argument `p` must be in the open interval (0, 1).")
+        raise ValueError("Argument `p` must be a float in the interval (0, 1).")
+
+    sen.stop_watch()
 
     b = struct.pack("<f", p)
-    tx_mesg(Message.command, Subsys.servo, ServoCommand.pulse, b)
-    rx_mesg(Message.command, Subsys.servo, ServoCommand.pulse, False)
+    sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.pulse, b)
+    sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.pulse, False)
+
+    sen.start_watch()

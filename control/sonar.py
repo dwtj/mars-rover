@@ -1,38 +1,34 @@
 # sonar.py
 
-import comm
-from enum import IntEnum
+from codes import MesgID, SubsysID, SonarCommand
 
 
-class SonarCommand(IntEnum):
-    init = 0
-    calibrate = 1
-    readings = 2
-
-
-
-def init():
+def init(sen):
     """
     Initializes the sonar subsystem for use. Also activates the sonar, i.e.,
     the sonar state is made to be "on".
     """
 
-    tx_mesg(Message.command, Subsys.sonar, SonarCommand.init, None)
-    rx_mesg(Message.command, Subsys.sonar, SonarCommand.init, False)
+    sen.stop_watch()
+    sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.init, None)
+    sen.rx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.init, False)
+    sen.start_watch()
 
 
 
-
-def calibrate():
+def calibrate(sen):
     """
     Initiates the `control`-operated calibration routine of the sonar subsystem.
     """
 
     raise NotImplementedError()
+    sen.stop_watch()
+    # TODO
+    sen.start_watch()
 
 
 
-def readings(n, raw = True, rand = False, timestamps = False):
+def readings(sen, n, raw = True, rand = False, timestamps = False):
     """
     Gets an `ndarray` of sonar readings from the `rover`.
 
@@ -56,3 +52,6 @@ def readings(n, raw = True, rand = False, timestamps = False):
     """
 
     raise NotImplementedError()
+    sen.stop_watch()
+    # TODO
+    sen.start_watch()
