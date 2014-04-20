@@ -234,17 +234,18 @@ static void mesg_handler()
 void control_mode()
 {
     uint8_t byte;
-    char mesg[60];  // Size is somewhat arbitrary, but should be big enough.
 
-	lcd_init();
-	lcd_puts("Control Mode");
+   	lcd_init();
+    init_push_buttons();
+
 	usart_init();
+    usart_drain_rx();
+    txq_init();
+
+	lcd_puts("Control Mode");
 	wait_ms(1000);
 	lcd_clear();
 
-    txq_init();
-
-    usart_drain_rx();
 
 	// Receive and handle messages from `control` indefinitely:
 	while (true)
@@ -252,8 +253,8 @@ void control_mode()
         // Check for start byte indefinitely:
         byte = usart_rx();
 	    if (byte != signal_start) {
-            sprintf(mesg, "Received %u instead of expected start byte.", byte);
-            r_error(error_txq, mesg);
+            sprintf(r_error_buf, "Received %u instead of expected start byte.", byte);
+            r_error(error_txq, r_error_buf);
 	    }
         lcd_putc('(');  // DEBUG: found start byte
 
@@ -262,10 +263,61 @@ void control_mode()
         // Check for stop byte indefinitely:
         byte = usart_rx();
         if (byte != signal_stop) {
-            sprintf(mesg, "Recieved %u instead of expected stop byte.", byte);
-		    r_error(error_txq, mesg);
+            sprintf(r_error_buf, "Recieved %u instead of expected stop byte.", byte);
+		    r_error(error_txq, r_error_buf);
 	    }
         txq_drain();
         lcd_putc(')');  // DEBUG: found stop byte
 	}
+}
+
+
+
+void send_mesg_test_mode()
+{
+   	lcd_init();
+    init_push_buttons();
+
+	usart_init();
+    txq_init();
+    usart_drain_rx();
+
+	lcd_puts("Send Mesg Test Mode");
+	wait_ms(1000);
+	lcd_clear();
+
+    char echo_mesg[] = "foobar";  // Assumed to be less than DATA_FRAME_MAX_LEN.
+ 
+    while (true)
+    {
+        switch (wait_button("Select Message")) {
+        case mesg_ping:
+
+            txq_enqueue(signal_start);
+            ping_handler();  // Just sends a ping message.
+            txq_enqueue(signal_stop);
+            txq_drain();
+            break;
+
+        case mesg_echo:
+
+            txq_enqueue(signal_start);
+            txq_enqueue(mesg_echo);
+
+            // Copy the echo message into the `control`:
+            strcpy(control.data, echo_mesg);
+            control.data_len = strlen(echo_mesg);
+
+            // Enqueue the frame. No more frames coming.
+            tx_frame(false);
+
+            txq_enqueue(signal_start);
+            txq_drain();
+            break;
+
+        default:
+            wait_button("Invalid selection.");
+            break;
+        }
+    }
 }
