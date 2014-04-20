@@ -16,10 +16,10 @@ It should be the purpose of `comm.c` (the communications module of `rover`) to f
 			Start
 		</td>
 		<td>
-			Message
+			MesgID
 		</td>
 		<td>
-			Subsys
+			SubsysID
 		</td>
 		<td>
 			Data Length, n
@@ -51,11 +51,14 @@ It should be the purpose of `comm.c` (the communications module of `rover`) to f
 	</tr>
 </table>
 
-Start, Message and Stop are essential in every message. Subsys and the data frame (Data Length, Data Byte, and "Keep Going") may be necessary, depending on Message and Subsys. 
+Start, MesgID and Stop are essential in every message. SubsysID and the data frame (Data Length, Data Byte, and "Another Data Frame?") may be necessary, depending on MesgID and SubsysID. 
+
+
 
 ## Design Assumptions ##
 
-`control` can only ever send one command at a time, and the `rover` can only be executing this one command at any time. The `rover`
+`control` can only ever send one command at a time, and the `rover` can only be executing this one command at any time.
+
 
 
 ## Subsystem Initialization ##
@@ -68,6 +71,7 @@ Start, Message and Stop are essential in every message. Subsys and the data fram
 - Servo
 - IR
 - RNG
+
 
 
 ## Subsystem Calibration ##
@@ -94,57 +98,53 @@ Until a `rover` subsystem completes the given command, the subsystem will be del
 
 
 
-
-
 ### LCD commands ###
 
 `control` need only be able to perform two commands on the lcd display: clear it and write a string to it. The response stream could just be signaling that when it is finally complete.
 
-- `lcd_init()`
-- `lcd_puts()`
-- `lcd_clear()`
+- `init(sen)`
+- `puts(sen)`
+- `clear(sen)`
 
 
 
 ### Open Interface Commands ###
 
-- `oi_init()`
-
-**TODO**
+- `init(sen)`
+- `move(sen, speed = 500, distance = 3000, stream = False)`
+- `rotate(sen, angle)`
+- `play_song(sen)`
 
 
 
 ### Sonar Commands ###
 
-- `sonar_init()`
-- `sonar_calibrate()`
-- `sonar_readings(n, raw = True, rand = False, timestamps = False)`
-
+- `init(sen)`
+- `calibrate(sen)`
+- `readings(n, raw = True, rand = False, timestamps = False)`
 
 
 
 ### Servo Commands ###
 
-- `servo_init()`
-- `servo_calibrate()`
-- `servo_state(s = None)`
-- `servo_angle(angle, wait = true)`
-- `servo_pulse_width(pw)`
-
-
-
+- `init(sen)`
+- `calibrate(sen)`
+- `state(sen, s = None)`
+- `angle(sen, angle, wait = true)`
+- `pulse(sen, p)`
 
 
 
 ### IR commands ###
 
-- `ir_init()`
-- `ir_calibrate()`
-- `ir_readings(n, raw = True, rand = False, timestamps = False)`
-
+- `init(sen)`
+- `calibrate(sen)`
+- `readings(sen, n, raw = True, rand = False, timestamps = False)`
 
 
 
 ## GUI ##
 
 The GUI would ideally include a python interpreter at which we can invoke individual commands. An issued command/query should return a list of data. It should also display a plot of the data from the robot.
+
+

@@ -25,7 +25,7 @@ def puts(sen, string):
 
 
 
-def clear(s):
+def clear(sen):
     """ Clears the rover's LCD display. """
     sen.stop_watch()
     sen.tx_mesg(MesgID.command, SubsysID.lcd, LCDCommand.clear, None)
