@@ -24,14 +24,20 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     if provided, is in millimeters and is an integer in range [-3000, 3000]. 
     Negative `distance` values command the robot to move backwards.
    
-    Data frame sent: 2 bytes for `speed`, 2 bytes for `distance`, and 1 byte for `stream`.
+    Returns a list where [0] is the encoding for the reason for stopping
+    and [1] is the actual distance traveled.
 
-    Data frame received: 1 byte containing one of the following values corresponding to why `rover` stopped:
+    Data frame sent: 2 bytes for `speed`, 2 bytes for `distance`, and 1 byte
+    for `stream`.
 
-    moved full distance = 0
-    left = 1
-    right = 2
-    left and right = 3
+    Data frame received: 1 byte containing one of the following values
+    corresponding to why `rover` stopped and 2 bytes containing the actual
+    distance traveled.
+
+    traveled full distance = 0
+    left bumper = 1
+    right bumper = 2
+    left and right bumper = 3
     drop off = 4
     white tape = 5
     left wheel = 6
@@ -54,12 +60,11 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     b = pack("<Hh?", speed, distance, stream)
     sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.move, b)
     data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, True)
-    
-    reason = unpack("<b", data)
+    unpacked_data = struct.unpack("<bh", data)
 
     sen.start_watch()
 
-    return reason
+    return unpacked_data
 
 
 def rotate(sen, angle):
