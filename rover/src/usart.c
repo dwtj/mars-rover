@@ -17,6 +17,16 @@ static bool _has_data_overrun() {
 }
 
 
+static bool _has_parity_error() {
+    return UCSR0A & (1 << UPE0);
+}
+
+
+static bool _has_frame_error() {
+    return UCSR0A & (1 << FE0);
+}
+
+
 
 void usart_init(uint8_t type)
 {
@@ -48,6 +58,18 @@ void usart_init(uint8_t type)
 
 uint8_t usart_rx(void)
 {
+    if (_has_data_overrun()) {
+        r_error(error_data_overrun, "A data overrun error was discovered when attempting to read another byte.");
+    }
+
+    if (_has_parity_error()) {
+        r_error(error_parity, "A parity error was discovered when attempting to read another byte.");
+    }
+
+    if (_has_frame_error()) {
+        r_error(error_frame, "A frame error was discovered when attempting to read another byte.");
+    }
+
 	/* Wait for data to be received */
 	while (!(UCSR0A & (1<<RXC0))) {
 	    ;
@@ -72,10 +94,6 @@ void usart_drain_rx()
 
 void usart_tx(uint8_t data)
 {
-    if (_has_data_overrun()) {
-        r_error(error_data_overrun, "Data from `control` was lost by data overrun.");
-    }
-
 	/* Wait for empty transmit buffer */
 	while ( !( UCSR0A & (1<<UDRE)) )
 		;

@@ -18,6 +18,8 @@ typedef enum {
 	error_bad_message = 2,  // A malformed message was received from `control`.
     error_from_control = 3, // An error message was received from `control`.
     error_data_overrun = 4, // Data from `control` was lost by data overrun.
+    error_parity = 5,
+    error_frame = 6,
 } error;
 
 
