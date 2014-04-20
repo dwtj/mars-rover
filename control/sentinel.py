@@ -3,6 +3,7 @@
 import threading
 import queue
 import logging
+import time
 
 import serial
 
@@ -170,10 +171,10 @@ class Sentinel():
         if self.read_int() != mesg_id:
             raise Exception("Did not receive the expected Message ID.")
 
-        if (subsys_id != None) and (self.ser.read_int() != subsys_id):
+        if (subsys_id != None) and (self.read_int() != subsys_id):
             raise Exception("Did not receive the expected Subsystem ID.")
 
-        if (command_id != None) and (self.ser.read_int() != command_id):
+        if (command_id != None) and (self.read_int() != command_id):
             raise Exception("Did not receive the expected Command ID.")
 
         if has_data:
@@ -252,6 +253,8 @@ class Sentinel():
         The `write_timeout` is hard-coded to be 3 seconds.
         """
 
+        time.sleep(0.05)  # DEBUG
+
         if self.is_watching:
             raise Exception("You cannot write when the sentinel is watching.")
 
@@ -282,7 +285,7 @@ class Sentinel():
 
         b = bytearray(1)
         b[0] = i
-        self.ser.write(b)
+        self.write(b)
 
 
 
@@ -308,17 +311,17 @@ class Sentinel():
         # until there are no more data frames to be read.
         more_frames = True
         while more_frames:
-            frame_length = self.ser.read_int()
+            frame_length = self.read_int()
             frame = bytearray(frame_length)
-            if self.ser.readinto(frame) != frame_length:
+            if self.readinto(frame) != frame_length:
                 raise Exception("Did not receive enough data bytes.")
             
             # Add only the good bytes to de-framed data:
-            num_good_bytes = self.ser.read_int()
+            num_good_bytes = self.read_int()
             frames.append(frame[0 : num_good_bytes])
             
             # Check to see if we should keep going:
-            more_frames = False if self.ser.read() == b'\x00' else True
+            more_frames = False if self.read() == b'\x00' else True
             
         return b''.join(frames)
 
