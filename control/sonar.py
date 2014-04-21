@@ -32,26 +32,33 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     """
     Gets an `ndarray` of sonar readings from the `rover`.
 
-    Expects `n` to be an unsiged integer. Expects both `rand` and `timestamps`
+    Expects `n` to be an unsigned integer. Expects both `rand` and `timestamps`
     to be booleans.
 
-    If `n` is a positive integer, then `rover` should stream `n` independent
-    sonar readings back to `control`. If `n` is zero, then independent IR
-    readings should be streamed back to `control` until `control` sends a
-    command to stop.
+    `rover` should stream `n` independent sonar readings back to `control`. 
 
-    If `raw` is `True`, then the raw ADC output is streamed back to `control`
+    If `raw` is `true`, then the raw ADC output is streamed back to `control`
     rather than the approximated distance as calculated by `rover`.
 
-    If `rand` is `True`, then readings will not be taken as often as possible.
-    Rather, each reading should delayed by a random amount of time before it
-    is started.
+    If `rand` is `true`, then readings will not be taken as often as possible.
+    Rather, one each reading should delayed by a random amount of time before
+    being taken.
 
-    If `timestamps` is `True`, then timestamps indicating when a reading was
+    If `timestamps` is `true`, then timestamps indicating when a reading was
     taken are streamed back to `control` along with the readings themselves.
+    
+    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter (`raw`, `rand`, and `timestamps`).
+    
+    Data frame received: list each reading (with the corresponding timestamp before each, if requested). 
     """
 
-    raise NotImplementedError()
     sen.stop_watch()
-    # TODO
+
+    tx_d = struct.pack("<h???", n, raw, rand, timestamps)
+    sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, tx_d)
+    rx_d = sen.rx_mesg(MessageID.command, SubsysID.sonar, SonarCommand.readings, True)
+
     sen.start_watch()
+
+    return rx_d
+
