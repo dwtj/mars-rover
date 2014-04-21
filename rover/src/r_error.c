@@ -24,6 +24,12 @@ void abort_command() {
 }
 
 
+void error_handler() {
+	#warning "TODO: Figure out what to do in `error_handler()`."
+	r_error(error_from_control, "Received an error message from `control`.");
+}
+
+
 /**
  * Transmits an error to control, prints an error code on LCD, then halts
  * execution on the rover (i.e. enters an infinite loop).

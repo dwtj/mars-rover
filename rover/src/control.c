@@ -5,28 +5,6 @@
  *  Author: asr
  */
 
-#warning "TODO: URGENT: ISR x 2: 1 on TX_COMPLETE [or something similar], the other is when the queue stops being empty, ie when num_elements goes from 0 to one, or shortly after. check every few ms?"
-#warning "TODO: CONTINUTED: Copy items from txq to hardware buffer (when the hardware buffer is ready to take input. There exists an interript for when the hardware buffer is ready to recieive (txq buffer read perhaps?). We want to shift into the hardware buffer from TXQ. But maybe we don't want two, because interference. (?)"
-
-/************************************************************************/
-/* put this in TXQ.C
-	ISR_TXBUFF{														
- 	usart_tx(txq_dequeue())		
-	 if !(txq_num_elements)
-	 {
-		 ENABLE NUMBER 2, YO
-	 }
- 	}
- 	
- 	ISR_TIMER/OCR{
- 		//ONLY ACTIVE WHEN THERE ARE ZERO ELEMENTS
- 		//constantly polling txq. 
-		 if(txq.num_elements)
-		 {//this disables itself
-			 usart_tx(txq.dequueue)
-		 }
- 		}                                                                     */
-/************************************************************************/
 
 
 #include <stdbool.h>
@@ -110,13 +88,6 @@ void tx_frame(bool another_frame)
     }
     txq_enqueue(control.data_len);
     txq_enqueue(another_frame);
-}
-
-
-
-static void error_handler() {
-    #warning "TODO: Figure out what to do in `error_handler()`."
-	r_error(error_from_control, "Received an error message from `control`.");
 }
 
 

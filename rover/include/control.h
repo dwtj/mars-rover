@@ -15,7 +15,7 @@
 #include "lcd.h"
 #include "util.h"
 #include "r_error.h"
-
+#include "open_interface.h"
 
 
 #ifndef CONTROL_H_
@@ -70,6 +70,7 @@ typedef struct {
 	bool running;  // Checked by handlers to see if they should stop.
 	uint8_t data[DATA_FRAME_MAX_LEN];
 	uint8_t data_len;
+	oi_t oi_state;
 } control_t;  // To be used to hold the state as messages are being interpreted.
 
 
