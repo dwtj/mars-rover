@@ -218,7 +218,7 @@ void sonar_system()
 			uint8_t raw = usart_rx();
 			uint8_t rando = usart_rx();
 			uint8_t timestamps = usart_rx();
-			for(i =0; i<n i++)
+			for(i =0; i<n; i++)
 			{
 				if(raw)
 				{

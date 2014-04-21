@@ -30,7 +30,7 @@ static void part2()
 {
     while (1) {
 		lcd_clear();
-		lprintf("%f", sonar_reading());
+		lprintf("%f", sonar_reading(true));
 		wait_ms(1000);
     }
 }

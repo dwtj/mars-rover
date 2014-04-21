@@ -130,7 +130,7 @@ void oi_system()
 		break;
 	//Move
 	case 1:
-		while()
+	//	while()
 		usart_rx();//read and disregard length.
 		uint8_t speed = usart_rx();
 		uint8_t dist = usart_rx();
@@ -150,12 +150,35 @@ void oi_system()
 		break;
 	//Sing me a song.
 	case 3:
+		;//First thing after a case must be a statement
 		//we only have the one song....
-		char song[] = {96, 96, 96, 96 92, 94, 96, 94, 96};
+		char song[] = {96, 96, 96, 96, 92, 94, 96, 94, 96};
 		char duration[] = {8, 8, 8, 8, 12, 12, 8, 8, 8}; //These probably need to be edited.
 		oi_load_song(0,9, song[0], duration[0]);//??
 		oi_play_song(0);
 		break;
+	//DUMP EVERYTHING
+	case 4:
+	//Sends all of the data that is updated with OI_UPDATE in the order in which it is updated.
+	oi_update(&(control.oi_state));
+	txq_enqueue(control.oi_state.distance);
+	txq_enqueue(control.oi_state.angle);
+	txq_enqueue(control.oi_state.voltage);
+	txq_enqueue(control.oi_state.current);
+	txq_enqueue(control.oi_state.charge);
+	txq_enqueue(control.oi_state.capacity);
+	txq_enqueue(control.oi_state.wall_signal);
+	txq_enqueue(control.oi_state.cliff_left_signal);
+	txq_enqueue(control.oi_state.cliff_frontleft_signal);
+	txq_enqueue(control.oi_state.cliff_frontright_signal);
+	txq_enqueue(control.oi_state.cliff_right_signal);
+	txq_enqueue(control.oi_state.cargo_bay_voltage);
+	txq_enqueue(control.oi_state.requested_velocity);
+	txq_enqueue(control.oi_state.requested_radius);
+	txq_enqueue(control.oi_state.requested_right_velocity);
+	txq_enqueue(control.oi_state.requested_left_velocity);
+	txq_drain();
+	break;
 	default:
 		r_error(error_bad_message, "Bad OI Command");
 		break;

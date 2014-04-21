@@ -111,7 +111,7 @@ static bool is_object_there(readings *rs)
 
 static void transA(scan_FSM *fsm)
 {
-	readings rs = {.ir = IR_reading(), .sonar = sonar_reading()};
+	readings rs = {.ir = IR_reading(), .sonar = sonar_reading(true)};
 	if (is_object_there(&rs)) {
 		// A *potential* new object was found.
 		// TODO: bail-out because of too-many objects found!
@@ -126,7 +126,7 @@ static void transA(scan_FSM *fsm)
 
 static void transB(scan_FSM *fsm)
 {
-	readings rs = {.ir = IR_reading(), .sonar = sonar_reading()};
+	readings rs = {.ir = IR_reading(), .sonar = sonar_reading(true)};
 	if (is_object_there(&rs)) {
 		// Now convinced that the potential object is an actual object.
 		// Add another reading to the data structure.
@@ -146,7 +146,7 @@ static void transC(scan_FSM *fsm)
 	// if (fsm->cur_object_width == MAX_OBJECT_WIDTH - 1)
 	//     do something
 	
-	readings rs = {.ir = IR_reading(), .sonar = sonar_reading()};
+	readings rs = {.ir = IR_reading(), .sonar = sonar_reading(true)};
 	if (is_object_there(&rs))
 	{
 		// Still looking at an actual object and waiting for the end of it.
@@ -172,7 +172,7 @@ static void transC(scan_FSM *fsm)
 
 static void transD(scan_FSM *fsm)
 {
-	readings rs = {.ir = IR_reading(), .sonar = sonar_reading()};
+	readings rs = {.ir = IR_reading(), .sonar = sonar_reading(true)};
 	if (is_object_there(&rs))
 	{
 		// TODO: bail out if the width is too wide for the available buffer:
