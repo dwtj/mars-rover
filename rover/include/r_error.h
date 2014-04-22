@@ -23,6 +23,10 @@ typedef enum {
 } error;
 
 
+//Error handler moved during refactoring.
+void error_handler();
+
+
 // Custom error handling function.
 void r_error(error err_num, char* mesg);
 

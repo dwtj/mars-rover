@@ -49,6 +49,7 @@ void IR_start() {
 	ADCSRA |= 0x40;
 }
 
+//returns a converted version
 float IR_reading() {
 	IR_start();
 	return(IR_conv(IR_read()));
@@ -58,6 +59,7 @@ float IR_reading() {
 
 /**
  * Assumes that IR reading has been initiated via `IR_start()`.
+ * returns raw data
  */
 uint16_t IR_read()
 {
@@ -181,7 +183,26 @@ void ir_system(){
 		//IR_calibrate();
 		break;
 	case 2:
-		IR_reading();
+		usart_rx();//read and ignore data length
+		uint8_t n = usart_rx();
+		uint8_t raw = usart_rx();
+		uint8_t rando = usart_rx();
+		uint8_t timestampes = usart_rx();
+		usart_rx(); //read and ignore real data length
+		#warning "More data not implemented here. Would this be used for multiple calls with different parameteres, or would an entirely new call be made?"
+		usart_rx(); //read and ignore more data 
+		int i;
+		for(i =0; i<n; i++)
+		{
+			if(raw)
+			{
+				txq_enqueue(IR_read());
+			}
+			else
+			{
+				txq_enqueue(IR_reading());
+			}
+		}
 		break;
 	default:
 		r_error(error_bad_message, "Bad IR Command");

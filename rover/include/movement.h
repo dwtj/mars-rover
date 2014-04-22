@@ -25,7 +25,7 @@ typedef struct {
 // until it has moved  forward `dist` millimeters. If `dist` is negative, then it
 // moves backwards at full speed until it has moved `dist` millimeters backwards.
 // If `dist` is zero, it does not move.
-int move_dist(oi_t *sensor_data, int dist);
+int move_dist(oi_t *sensor_data, int dist, int spd);
 
 
 // Similar to `move_dist`, if `angle` is positive, then the robot rotates in-place

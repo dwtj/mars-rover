@@ -35,7 +35,7 @@ move_t course_correction(oi_t *sensor_data)
 	int lateral_dist= 250;
 	oi_set_wheels(0, 0);  // stop
 	
-	move.y = move_dist(sensor_data, -backup_dist);
+	move.y = move_dist(sensor_data, -backup_dist, 300);
 
 	// DEBUG:
 	lprintf("left: %i, right: %i", sensor_data->bumper_left, sensor_data->bumper_right);
@@ -46,7 +46,7 @@ move_t course_correction(oi_t *sensor_data)
 	int angle = (bumper_flag == left || bumper_flag == both) ? -90 : 90;
 	
 	turn(sensor_data, angle);	
-	move_dist(sensor_data, lateral_dist);
+	move_dist(sensor_data, lateral_dist,300);
 	move.x = angle > 0 ? lateral_dist : -lateral_dist;
 	turn(sensor_data, -angle);  // turn back to the original direction, so move.angle should be 0
 	move.success = 1;
@@ -69,7 +69,7 @@ int navigate_dist(oi_t *sensor_data, int dist) {
 			}
 		}
 		dist_traveled += move.y;  // adds a negative number
-		dist_traveled += move_dist(sensor_data, dist - dist_traveled);
+		dist_traveled += move_dist(sensor_data, dist - dist_traveled,300);
 		count_moves++;
 	}
 	
@@ -80,10 +80,10 @@ int navigate_dist(oi_t *sensor_data, int dist) {
 
 // distance accumulated will be zeroed before return.
 // Only while attempting to move forward should it stop for the bumper sensors.
-int move_dist(oi_t *sensor_data, int dist) {
+int move_dist(oi_t *sensor_data, int dist, int spd) {
 	oi_update(sensor_data);
 	int sum = 0;
-	int velocity = (dist < 0) ? -300 : 300;  // move at full speed
+	int velocity = (dist < 0) ? -spd: spd;  // move at indicated speed
 	oi_set_wheels(velocity, velocity);
 	
 	//If attempting to go forward

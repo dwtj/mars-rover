@@ -18,6 +18,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
+#include <stdbool.h>
 
 #include "util.h"
 #include "lcd.h"
@@ -202,23 +203,37 @@ char *sonar_get_state() {
 	return sonar_state_labels[sonar_state];
 }
 
-
+///handler for the sonar. n-> number of readings that we have to be performed, raw-> whether we should return the raw value from 
+///ADC, rand-> ignoring this for now, timestamps-> whether we have to send back the time difference in between every taken reading 
 void sonar_system()
 {
 	switch(usart_rx()) {
-	case 0:
-		sonar_init();
-		break;
-	case 1:
-		#warning "TODO: There doesn't seem to be such a function:"
-		//sonar_calibrate();//TODO
-		break;
-	case 2:
-		sonar_reading();
-		break;
-	default:
-		r_error(error_bad_message, "Bad sonar Command");
-		break;
+		case 0:
+			sonar_init();
+			break;
+		case 1:
+			usart_rx(); //Read and ignore data length.
+			uint8_t n = usart_rx(); 
+			int i =0;
+			uint8_t raw = usart_rx();
+			uint8_t rando = usart_rx();
+			uint8_t timestamps = usart_rx();
+			for(i =0; i<n; i++)
+			{
+				if(raw)
+				{
+					txq_enqueue(sonar_reading(true));
+				}
+				else
+				{
+					txq_enqueue(sonar_reading(false));
+				}
+			
+			}
+			break;
+		default:
+			r_error(error_bad_message, "Bad sonar Command");
+			break;
 	}
 }
 
@@ -231,7 +246,7 @@ void sonar_system()
  * A value of `0.0` will be returned if the sonar reading process failed.
  * A value of `inf`
  */
-float sonar_reading()
+float sonar_reading(bool raw)
 {
 	float d;
 	
@@ -257,7 +272,13 @@ float sonar_reading()
 	
 	sonar_event_enable(false);
 
-	d = time_to_dist(ticks_to_time(sonar_echo_fall - sonar_echo_rise));
+	if (raw){
+		d = time_to_dist(ticks_to_time(sonar_echo_fall - sonar_echo_rise));
+	}
+	
+	else{
+		d = ticks_to_time(sonar_echo_fall - sonar_echo_rise);
+	}
 
 	
 	sonar_state = NOT_READY;
@@ -266,6 +287,7 @@ float sonar_reading()
 	
     return d;
 }
+
 
 
 

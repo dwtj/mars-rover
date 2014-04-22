@@ -1,7 +1,9 @@
 #include <stdlib.h>
+#include <stdbool.h>
 #include "util.h"
 #include "open_interface.h"
 #include "r_error.h"
+#include "control.h"
 
 /// Allocate memory for a the sensor data
 oi_t* oi_alloc() {
@@ -121,11 +123,62 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 //Handler for OI, moved from control.
 void oi_system()
 {
+
 	switch (usart_rx()) {
 	case 0:
-		#warning "TODO: add parameters:"
-		//oi_init();
+		oi_init(&(control.oi_state));
 		break;
+	//Move
+	case 1:
+	//	while()
+		usart_rx();//read and disregard length.
+		uint8_t speed = usart_rx();
+		uint8_t dist = usart_rx();
+		bool stream = usart_rx();
+		#warning "Stream functionality to be implemented later"
+		move_dist(&(control.oi_state), dist, speed);
+		usart_rx(); //read and ignore data length
+		usart_rx(); //Read and ignore more byte
+		break;
+	//Turn
+	case 2:
+		usart_rx(); //read and ignore length
+		uint8_t angle = usart_rx();
+		turn(&(control.oi_state), angle);
+		usart_rx(); //Read and ignore real length
+		usart_rx(); //read and ignore more  byte
+		break;
+	//Sing me a song.
+	case 3:
+		;//First thing after a case must be a statement
+		//we only have the one song....
+		char song[] = {96, 96, 96, 96, 92, 94, 96, 94, 96};
+		char duration[] = {8, 8, 8, 8, 12, 12, 8, 8, 8}; //These probably need to be edited.
+		oi_load_song(0,9, song[0], duration[0]);//??
+		oi_play_song(0);
+		break;
+	//DUMP EVERYTHING
+	case 4:
+	//Sends all of the data that is updated with OI_UPDATE in the order in which it is updated.
+	oi_update(&(control.oi_state));
+	txq_enqueue(control.oi_state.distance);
+	txq_enqueue(control.oi_state.angle);
+	txq_enqueue(control.oi_state.voltage);
+	txq_enqueue(control.oi_state.current);
+	txq_enqueue(control.oi_state.charge);
+	txq_enqueue(control.oi_state.capacity);
+	txq_enqueue(control.oi_state.wall_signal);
+	txq_enqueue(control.oi_state.cliff_left_signal);
+	txq_enqueue(control.oi_state.cliff_frontleft_signal);
+	txq_enqueue(control.oi_state.cliff_frontright_signal);
+	txq_enqueue(control.oi_state.cliff_right_signal);
+	txq_enqueue(control.oi_state.cargo_bay_voltage);
+	txq_enqueue(control.oi_state.requested_velocity);
+	txq_enqueue(control.oi_state.requested_radius);
+	txq_enqueue(control.oi_state.requested_right_velocity);
+	txq_enqueue(control.oi_state.requested_left_velocity);
+	txq_drain();
+	break;
 	default:
 		r_error(error_bad_message, "Bad OI Command");
 		break;
