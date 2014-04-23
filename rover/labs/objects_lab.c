@@ -45,8 +45,6 @@ static void part1()
 
 
 
-
-
 static void part2()
 {
 	#define MY_RX_BUFSIZE 200

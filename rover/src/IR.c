@@ -174,6 +174,8 @@ void IR_calibrate(bool bam_send, bool save_means)
 
 
 void ir_system(){
+	#define NUM_DATA_IR 4
+	#warning "4 may not be correct number"
 	switch(usart_rx()) {
 	case 0:
 		IR_init();
@@ -182,19 +184,28 @@ void ir_system(){
 		#warning "Add parameter"
 		//IR_calibrate();
 		break;
+	//Read IR
 	case 2:
-		usart_rx();//read and ignore data length
-		uint8_t n = usart_rx();
-		uint8_t raw = usart_rx();
-		uint8_t rando = usart_rx();
-		uint8_t timestampes = usart_rx();
-		usart_rx(); //read and ignore real data length
-		#warning "More data not implemented here. Would this be used for multiple calls with different parameteres, or would an entirely new call be made?"
-		usart_rx(); //read and ignore more data 
-		int i;
-		for(i =0; i<n; i++)
+		if(rx_frame())
 		{
-			if(raw)
+			r_error(error_frame,"IR Reading should not have multiple frames.");
+		}
+		if(control.data_len !=NUM_DATA_IR)
+		{
+			r_error(error_frame, "IR did not receive anticapted number of bytes");
+		}
+		
+		struct {
+			uint8_t n;
+			bool raw;
+			uint8_t rando;
+			uint8_t timestamps;
+		} *IR_data = (void *) &control.data;
+		
+		int i;
+		for(i =0; i<IR_data->n; i++)
+		{
+			if(IR_data->raw)
 			{
 				txq_enqueue(IR_read());
 			}

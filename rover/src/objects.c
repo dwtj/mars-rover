@@ -196,8 +196,6 @@ static void transD(scan_FSM *fsm)
 }
 
 
-
-
 /**
  * Prints the contents of the given object into the given string buffer.
  * Returns the total number of characters printed.
@@ -211,8 +209,6 @@ uint16_t snprint_object(char *buf, uint16_t bufsize, object *obj)
 	
 	return snprintf(buf, bufsize, format, obj->theta1, obj->theta2, obj->dist, obj->width);
 }
-
-
 
 
 

@@ -25,6 +25,7 @@
 #include "r_error.h"
 #include "sonar.h"
 #include "usart.h"
+#include "control.h"
 
 
 /**
@@ -207,20 +208,35 @@ char *sonar_get_state() {
 ///ADC, rand-> ignoring this for now, timestamps-> whether we have to send back the time difference in between every taken reading 
 void sonar_system()
 {
+	#define LEN_DATA_SOANR 4
+	#warning "Is 4 the correct len?"
+	
 	switch(usart_rx()) {
 		case 0:
 			sonar_init();
 			break;
 		case 1:
-			usart_rx(); //Read and ignore data length.
-			uint8_t n = usart_rx(); 
-			int i =0;
-			uint8_t raw = usart_rx();
-			uint8_t rando = usart_rx();
-			uint8_t timestamps = usart_rx();
-			for(i =0; i<n; i++)
+			;//first line of a case cannot be a declaration.
+			int i;
+			if(rx_frame())
 			{
-				if(raw)
+				r_error(error_frame, "Sonar Reading should not have multiple frames.");
+			}	
+			if(control.data_len != LEN_DATA_SOANR) 
+			{
+				r_error(error_frame, "Sonar did not receive the anticipated number of bytes.");
+			}
+			
+			struct {
+				uint8_t n;
+				bool raw;
+				uint8_t rando;
+				uint8_t timestamps;
+			} *sonar_data = (void *) &control.data;
+
+			for(i = 0; i < sonar_data->n; i++)
+			{
+				if(sonar_data->raw)
 				{
 					txq_enqueue(sonar_reading(true));
 				}
