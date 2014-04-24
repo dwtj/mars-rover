@@ -49,6 +49,7 @@ void IR_start() {
 	ADCSRA |= 0x40;
 }
 
+//returns a converted version
 float IR_reading() {
 	IR_start();
 	return(IR_conv(IR_read()));
@@ -58,6 +59,7 @@ float IR_reading() {
 
 /**
  * Assumes that IR reading has been initiated via `IR_start()`.
+ * returns raw data
  */
 uint16_t IR_read()
 {
@@ -172,6 +174,8 @@ void IR_calibrate(bool bam_send, bool save_means)
 
 
 void ir_system(){
+	#define NUM_DATA_IR 4
+	#warning "4 may not be correct number"
 	switch(usart_rx()) {
 	case 0:
 		IR_init();
@@ -180,8 +184,36 @@ void ir_system(){
 		#warning "Add parameter"
 		//IR_calibrate();
 		break;
+	//Read IR
 	case 2:
-		IR_reading();
+		if(rx_frame())
+		{
+			r_error(error_frame,"IR Reading should not have multiple frames.");
+		}
+		if(control.data_len !=NUM_DATA_IR)
+		{
+			r_error(error_frame, "IR did not receive anticapted number of bytes");
+		}
+		
+		struct {
+			uint8_t n;
+			bool raw;
+			uint8_t rando;
+			uint8_t timestamps;
+		} *IR_data = (void *) &control.data;
+		
+		int i;
+		for(i =0; i<IR_data->n; i++)
+		{
+			if(IR_data->raw)
+			{
+				txq_enqueue(IR_read());
+			}
+			else
+			{
+				txq_enqueue(IR_reading());
+			}
+		}
 		break;
 	default:
 		r_error(error_bad_message, "Bad IR Command");
