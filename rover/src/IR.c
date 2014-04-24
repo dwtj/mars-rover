@@ -49,20 +49,24 @@ void IR_start() {
 	ADCSRA |= 0x40;
 }
 
-//returns a converted version
+
+
+/**
+ * Returns the distance measured by the IR sensor; conversion by `IR_conv()`.
+ */
 float IR_reading() {
-	IR_start();
-	return(IR_conv(IR_read()));
+	return IR_conv(IR_raw_reading());
 }
 
 
 
 /**
- * Assumes that IR reading has been initiated via `IR_start()`.
- * returns raw data
+ * Returns the raw data from the sonar as estimated by the ADC.
  */
-uint16_t IR_read()
+uint16_t IR_raw_reading()
 {
+    IR_start();
+
 	while (ADCSRA & 0x40) {
 		;  // wait while ADSC is high -> conversion is still in process
 	}
@@ -220,7 +224,7 @@ void ir_reading_handler()
         {
             // Place as many raw readings into `control.data` as will fit.
             while (i < IR_RAW_PER_FRAME && readings_sent < request->n) {
-                response.raw[i] = sonar_raw_reading();
+                response.raw[i] = ir_raw_reading();
                 readings_sent++;
                 i++;
             }
@@ -229,7 +233,7 @@ void ir_reading_handler()
         {
             // Place as many converted readings into `control.data` as will fit.
             while (i < IR_CONV_PER_FRAME && readings_sent < request->n) {
-                response.conv[i] = sonar_reading();
+                response.conv[i] = ir_reading();
                 readings_sent++;
                 i++;
             }
