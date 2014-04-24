@@ -27,18 +27,6 @@ def calibrate(sen):
 
 
 
-def rover_calibrate(sen):
-    """
-    Initiates the `rover`-operated calibration routine of the IR subsystem.
-    """
-
-    sen.tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
-    rx_d = sen.rx_mesg(Message.command, Subsys.ir, IRCommand.init, True)
-
-    raise NotImplementedError()
-
-
-
 def _use_calibration_data(sen, calib_data):
     """
     TODO:
