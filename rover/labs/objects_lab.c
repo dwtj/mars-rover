@@ -35,7 +35,7 @@ static void part1()
 	{
 		lcd_puts(".");
 		servo_angle(deg, true);
-		snprintf(buf, RX_BUFSIZE, "%3d, %3.1f, %3.1f, ", deg, (double) IR_reading(), (double) sonar_reading(true));
+		snprintf(buf, RX_BUFSIZE, "%3d, %3.1f, %3.1f, ", deg, (double) ir_reading(), (double) sonar_reading(true));
 		usart_tx_buf(buf);
 		usart_tx_buf("\r\n");
 		
@@ -93,7 +93,7 @@ static void part2()
 void objects_lab()
 {
 	init_push_buttons();
-	IR_init();
+	ir_init();
 	sonar_init();
 	lcd_init();
 	servo_init();

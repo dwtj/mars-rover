@@ -92,6 +92,109 @@ void tx_frame(bool another_frame)
 
 
 
+
+
+/**
+ * A function to handle requests messages for readings from either sonar or IR.
+ */
+void dist_reading_handler(subsys_t subsys)
+{
+    // The interface used to access the request parameters encoded in the
+    // data frame of the received message:
+
+    struct {
+        uint8_t n;         // The number of readings to be performed.
+        bool raw;          // Whether the data should be raw or converted.
+        bool random;       // Ignore this for now.
+        bool timestamps;   // Whether the data should include timestamps.
+    } *request = (void *) &control.data;
+
+
+    // Point the function pointers to the subsystem indicated by `subsys`:
+
+    int (*raw_reading)();
+    int (*conv_reading)();
+
+    if (subsys == subsys_ir)
+    {
+        raw_reading = ir_raw_reading;
+        conv_reading = ir_reading;
+    }
+    else if (subsys == subsys_sonar)
+    {
+        raw_reading = ir_raw_reading;
+        conv_reading = ir_reading;
+    }
+    else
+    {
+        r_error(error_unknown, "`dist_reading_handler()` was called with a "
+                                          "subsystem other than IR or sonar.");
+    }
+
+    // Check whether the data frame of the request message was valid:
+    if (rx_frame() == true)
+    {
+        r_error(error_frame, "A distance reading request message should not "
+                                                 "have multiple data frames.");
+    }
+    if (control.data_len != sizeof(*request)) 
+    {
+        r_error(error_frame, "Did not receive the anticipated number of data "
+                             "bytes in the distance reading request message.");
+    }
+    
+    // Number of raw readings to be put into a response data frame:
+    #define RAW_READINGS_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
+
+    // Number of converted data readings to be put into a response data frame:
+    #define CONV_READINGS_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(float))
+
+    // The interface for interpreting `control.data` as an array into which
+    // we put either raw data or converted data:
+    union {
+        uint16_t raw[RAW_READINGS_PER_FRAME];
+        float conv[CONV_READINGS_PER_FRAME];
+    } *response = (void *) &control.data;
+
+    // An index into a an array of `response`:
+    uint8_t i;
+
+    // The number of readings which have been either:
+    uint16_t readings_sent = 0;
+
+    // Each iteration generates a response frame of readings.
+    while (readings_sent < request->n)
+    {
+        if (request->raw)
+        {
+            // Place as many raw readings into `control.data` as will fit.
+            while (i < RAW_READINGS_PER_FRAME && readings_sent < request->n) {
+                response->raw[i] = raw_reading();
+                readings_sent++;
+                i++;
+            }
+        }
+        else
+        {
+            // Place as many converted readings into `control.data` as will fit.
+            while (i < CONV_READINGS_PER_FRAME && readings_sent < request->n) {
+                response->conv[i] = conv_reading();
+                readings_sent++;
+                i++;
+            }
+        }
+
+        // Frame and send the contents of `control.data` to `control`, and
+        // indicate whether a subsequent frame must still be sent as well:
+        control.data_len = i;
+        tx_frame(readings_sent < request->n);
+        txq_drain();
+    }
+}
+
+
+
+
 /**
  * A `ping` message has been received, so this function transmits an
  * equivalent `ping` message in response.

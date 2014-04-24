@@ -22,7 +22,7 @@
 
 uint16_t calib_data[MAX_DIST + 1] = {0};
 
-void IR_init()
+void ir_init()
 {
 	uint8_t mask = 0;
 	
@@ -45,17 +45,17 @@ void IR_init()
 }
 
 
-void IR_start() {
+void ir_start() {
 	ADCSRA |= 0x40;
 }
 
 
 
 /**
- * Returns the distance measured by the IR sensor; conversion by `IR_conv()`.
+ * Returns the distance measured by the IR sensor; conversion by `ir_conv()`.
  */
-float IR_reading() {
-	return IR_conv(IR_raw_reading());
+float ir_reading() {
+	return ir_conv(ir_raw_reading());
 }
 
 
@@ -63,9 +63,9 @@ float IR_reading() {
 /**
  * Returns the raw data from the sonar as estimated by the ADC.
  */
-uint16_t IR_raw_reading()
+uint16_t ir_raw_reading()
 {
-    IR_start();
+    ir_start();
 
 	while (ADCSRA & 0x40) {
 		;  // wait while ADSC is high -> conversion is still in process
@@ -77,7 +77,7 @@ uint16_t IR_raw_reading()
 
 // Converts the given quantized voltage measurement `d` to the analytical approximation of the distance,
 // as derived from datasheet information. This does not use any form of calibration.
-float IR_analytical_conv(uint16_t d) {
+float ir_analytical_conv(uint16_t d) {
 	static const float vRef = 2.56;
 	static const float slope = 0.042977;
 	static const float intercept = -0.009167;
@@ -105,7 +105,7 @@ void send_dist_reading(uint8_t dist, uint16_t reading)
  * Implments the third-order polynomial conversion from IR ADC readings, `d`,
  * to distances (in cm) as described in `sensors/ir/calibration_data.md`.
  */
-float IR_conv(uint16_t d)
+float ir_conv(uint16_t d)
 {
     // The intercept and the first, second, and third-order coefficients:
     const static float coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
@@ -113,13 +113,6 @@ float IR_conv(uint16_t d)
 }
 
 
-
-
-uint16_t IR_run() {
-	#warning "`IR_run()` is deprecated. Use `IR_reading()` instead."
-	IR_start();
-	return(IR_read());
-}
 
 
 /*
@@ -130,7 +123,7 @@ uint16_t IR_run() {
  * measured distance, 9cm - 50cm, the mean of the samples taken at this
  * distance will be saved to `calib_data[]`.
  */
-void IR_calibrate(bool bam_send, bool save_means)
+void ir_calibrate(bool bam_send, bool save_means)
 {
 	lcd_init();
 	init_push_buttons();
@@ -159,7 +152,7 @@ void IR_calibrate(bool bam_send, bool save_means)
 		
 		for (int i = 0; i < NUM_CALIB_SAMPLES; i++) {
 			// running average:
-			sample = IR_run();
+			sample = ir_raw_reading();
 			if (bam_send) {
 				send_dist_reading(dist, sample);
 			}
@@ -177,92 +170,15 @@ void IR_calibrate(bool bam_send, bool save_means)
 
 
 
-void ir_reading_handler()
+
+void ir_system()
 {
-    // The interface used to access the request parameters encoded in the
-    // data frame of the received message:
-    struct {
-        uint8_t n;
-        bool raw;
-        bool random;
-        bool timestamps;
-    } *request = (void *) &control.data;
-
-    if(rx_frame() == true)
-    {
-        r_error(error_frame, "An IR reading request message should not have multiple data frames.");
-    }	
-    if(control.data_len != sizeof(*request)) 
-    {
-        r_error(error_frame, "Did not receive the anticipated number of data bytes in IR reading request message.");
-    }
-    
-    // Number of raw readings to be put into a response data frame:
-    #define IR_RAW_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
-
-    // Number of converted data readings to be put into a response data frame:
-    #define IR_CONV_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(float))
-
-    // The interface for interpreting `control.data` as an array into which
-    // we put either raw data or converted data:
-    union {
-        uint16_t raw[IR_RAW_PER_FRAME];
-        float conv[IR_CONV_PER_FRAME];
-    } *response = (void *) &control.data;
-
-    // An index into a an array of `response`:
-    uint8_t i;
-
-    // The number of readings which have been either:
-    uint16_t readings_sent = 0;
-
-    while (readings_sent < request->n)
-    {
-        // Start generating a new response frame.
-
-        if (sonar_request->raw)
-        {
-            // Place as many raw readings into `control.data` as will fit.
-            while (i < IR_RAW_PER_FRAME && readings_sent < request->n) {
-                response.raw[i] = ir_raw_reading();
-                readings_sent++;
-                i++;
-            }
-        }
-        else
-        {
-            // Place as many converted readings into `control.data` as will fit.
-            while (i < IR_CONV_PER_FRAME && readings_sent < request->n) {
-                response.conv[i] = ir_reading();
-                readings_sent++;
-                i++;
-            }
-        }
-
-        // Frame and send the contents of `control.data` to `control`, and
-        // indicate whether a subsequent frame must still be sent as well:
-        control.data_len = i;
-        tx_frame(readings < request->n);
-        txq_drain();
-    }
-}
-
-
-
-
-void ir_system(){
-	#define NUM_DATA_IR 4
-	#warning "4 may not be correct number"
 	switch(usart_rx()) {
 	case 0:
-		IR_init();
-		break;
-	case 1:
-		#warning "Add parameter"
-		//IR_calibrate();
+		ir_init();
 		break;
 	case 2:
-        ir_reading_handler()
+        dist_reading_handler(subsys_ir);
         break;
 	default:
 		r_error(error_bad_message, "Bad IR Command");

@@ -55,14 +55,13 @@ typedef enum {
  * Codes to distinguish between different subsystems:
  */
 typedef enum {
-	lcd = 0,
-	oi = 1,
-	sonar = 2,
-	servo = 3,
-	ir = 4,
-	rng = 5,
-} subsystems;
-#define NUM_SUBSYS_CODES 6
+	subsys_lcd = 0,
+	subsys_oi = 1,
+	subsys_sonar = 2,
+	subsys_servo = 3,
+	subsys_ir = 4,
+} subsys_t;
+#define NUM_SUBSYS_CODES 5
 
 
 
@@ -80,6 +79,9 @@ typedef struct {
 
 
 extern control_t control;
+
+
+void dist_reading_handler(subsys_t);
 
 
 void read_frame();

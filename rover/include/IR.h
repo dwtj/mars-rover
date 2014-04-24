@@ -13,22 +13,19 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-void IR_init(); 
+void ir_init(); 
 
-void IR_start();  // returns immediately
+void ir_start();  // returns immediately
  
-// Warning: This is deprecated. Use IR_reading() instead.
-uint16_t IR_run();  // starts conversion and polls until conversion is complete, returning the converted value
+uint16_t ir_raw_reading();  // Returns unconverted (i.e. raw) IR data.
 
-float IR_reading();//returns converted data
+float ir_reading();  // Returns converted IR data.
 
-uint16_t IR_read();  // polls until conversion is complete, returns raw data
+float ir_analytical_conv(uint16_t v);  // no calibration approximation
 
-float IR_analytical_conv(uint16_t v);  // no calibration approximation
+float ir_conv(uint16_t d);
 
-float IR_conv(uint16_t d);
-
-void IR_calibrate(bool bam_send, bool save_means);
+void ir_calibrate(bool bam_send, bool save_means);
 
 //Handler for IR system
 void ir_system();
