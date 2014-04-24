@@ -235,24 +235,24 @@ void sonar_reading_handler()
 
     if(rx_frame() == true)
     {
-        r_error(error_frame, "Sonar Reading should not have multiple frames.");
+        r_error(error_frame, "A sonar reading request message should not have multiple data frames.");
     }	
     if(control.data_len != sizeof(*request)) 
     {
-        r_error(error_frame, "Sonar did not receive the anticipated number of bytes.");
+        r_error(error_frame, "Did not receive the anticipated number of data bytes in sonar reading request message.");
     }
     
     // Number of raw readings to be put into a response data frame:
-    #define NUM_RAW_ELEM (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
+    #define SONAR_RAW_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
 
     // Number of converted data readings to be put into a response data frame:
-    #define NUM_CONV_ELEM (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
+    #define SONAR_CONV_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(float))
 
     // The interface for interpreting `control.data` as an array into which
     // we put either raw data or converted data:
     union {
-        uint16_t raw[NUM_RAW_ELEM];
-        float conv[NUM_CONV_ELEM];
+        uint16_t raw[SONAR_RAW_PER_FRAME];
+        float conv[SONAR_CONV_PER_FRAME];
     } *response = (void *) &control.data;
 
     // An index into a an array of `response`:
@@ -268,7 +268,7 @@ void sonar_reading_handler()
         if (sonar_request->raw)
         {
             // Place as many raw readings into `control.data` as will fit.
-            while (i < NUM_RAW_ELEM && readings_sent < request->n) {
+            while (i < SONAR_RAW_PER_FRAME && readings_sent < request->n) {
                 response.raw[i] = sonar_raw_reading();
                 readings_sent++;
                 i++;
@@ -277,7 +277,7 @@ void sonar_reading_handler()
         else
         {
             // Place as many converted readings into `control.data` as will fit.
-            while (i < NUM_CONV_ELEM && readings_sent < request->n) {
+            while (i < SONAR_CONV_PER_FRAME && readings_sent < request->n) {
                 response.conv[i] = sonar_reading();
                 readings_sent++;
                 i++;

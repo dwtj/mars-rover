@@ -173,6 +173,79 @@ void IR_calibrate(bool bam_send, bool save_means)
 
 
 
+void ir_reading_handler()
+{
+    // The interface used to access the request parameters encoded in the
+    // data frame of the received message:
+    struct {
+        uint8_t n;
+        bool raw;
+        bool random;
+        bool timestamps;
+    } *request = (void *) &control.data;
+
+    if(rx_frame() == true)
+    {
+        r_error(error_frame, "An IR reading request message should not have multiple data frames.");
+    }	
+    if(control.data_len != sizeof(*request)) 
+    {
+        r_error(error_frame, "Did not receive the anticipated number of data bytes in IR reading request message.");
+    }
+    
+    // Number of raw readings to be put into a response data frame:
+    #define IR_RAW_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
+
+    // Number of converted data readings to be put into a response data frame:
+    #define IR_CONV_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(float))
+
+    // The interface for interpreting `control.data` as an array into which
+    // we put either raw data or converted data:
+    union {
+        uint16_t raw[IR_RAW_PER_FRAME];
+        float conv[IR_CONV_PER_FRAME];
+    } *response = (void *) &control.data;
+
+    // An index into a an array of `response`:
+    uint8_t i;
+
+    // The number of readings which have been either:
+    uint16_t readings_sent = 0;
+
+    while (readings_sent < request->n)
+    {
+        // Start generating a new response frame.
+
+        if (sonar_request->raw)
+        {
+            // Place as many raw readings into `control.data` as will fit.
+            while (i < IR_RAW_PER_FRAME && readings_sent < request->n) {
+                response.raw[i] = sonar_raw_reading();
+                readings_sent++;
+                i++;
+            }
+        }
+        else
+        {
+            // Place as many converted readings into `control.data` as will fit.
+            while (i < IR_CONV_PER_FRAME && readings_sent < request->n) {
+                response.conv[i] = sonar_reading();
+                readings_sent++;
+                i++;
+            }
+        }
+
+        // Frame and send the contents of `control.data` to `control`, and
+        // indicate whether a subsequent frame must still be sent as well:
+        control.data_len = i;
+        tx_frame(readings < request->n);
+        txq_drain();
+    }
+}
+
+
+
+
 void ir_system(){
 	#define NUM_DATA_IR 4
 	#warning "4 may not be correct number"
@@ -184,37 +257,9 @@ void ir_system(){
 		#warning "Add parameter"
 		//IR_calibrate();
 		break;
-	//Read IR
 	case 2:
-		if(rx_frame())
-		{
-			r_error(error_frame,"IR Reading should not have multiple frames.");
-		}
-		if(control.data_len !=NUM_DATA_IR)
-		{
-			r_error(error_frame, "IR did not receive anticapted number of bytes");
-		}
-		
-		struct {
-			uint8_t n;
-			bool raw;
-			uint8_t rando;
-			uint8_t timestamps;
-		} *IR_data = (void *) &control.data;
-		
-		int i;
-		for(i =0; i<IR_data->n; i++)
-		{
-			if(IR_data->raw)
-			{
-				txq_enqueue(IR_read());
-			}
-			else
-			{
-				txq_enqueue(IR_reading());
-			}
-		}
-		break;
+        ir_reading_handler()
+        break;
 	default:
 		r_error(error_bad_message, "Bad IR Command");
 		break;
