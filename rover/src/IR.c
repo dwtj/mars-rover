@@ -22,7 +22,7 @@
 
 uint16_t calib_data[MAX_DIST + 1] = {0};
 
-void IR_init()
+void ir_init()
 {
 	uint8_t mask = 0;
 	
@@ -45,24 +45,28 @@ void IR_init()
 }
 
 
-void IR_start() {
+void ir_start() {
 	ADCSRA |= 0x40;
-}
-
-//returns a converted version
-float IR_reading() {
-	IR_start();
-	return(IR_conv(IR_read()));
 }
 
 
 
 /**
- * Assumes that IR reading has been initiated via `IR_start()`.
- * returns raw data
+ * Returns the distance measured by the IR sensor; conversion by `ir_conv()`.
  */
-uint16_t IR_read()
+float ir_reading() {
+	return ir_conv(ir_raw_reading());
+}
+
+
+
+/**
+ * Returns the raw data from the sonar as estimated by the ADC.
+ */
+uint16_t ir_raw_reading()
 {
+    ir_start();
+
 	while (ADCSRA & 0x40) {
 		;  // wait while ADSC is high -> conversion is still in process
 	}
@@ -73,7 +77,7 @@ uint16_t IR_read()
 
 // Converts the given quantized voltage measurement `d` to the analytical approximation of the distance,
 // as derived from datasheet information. This does not use any form of calibration.
-float IR_analytical_conv(uint16_t d) {
+float ir_analytical_conv(uint16_t d) {
 	static const float vRef = 2.56;
 	static const float slope = 0.042977;
 	static const float intercept = -0.009167;
@@ -101,7 +105,7 @@ void send_dist_reading(uint8_t dist, uint16_t reading)
  * Implments the third-order polynomial conversion from IR ADC readings, `d`,
  * to distances (in cm) as described in `sensors/ir/calibration_data.md`.
  */
-float IR_conv(uint16_t d)
+float ir_conv(uint16_t d)
 {
     // The intercept and the first, second, and third-order coefficients:
     const static float coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
@@ -109,13 +113,6 @@ float IR_conv(uint16_t d)
 }
 
 
-
-
-uint16_t IR_run() {
-	#warning "`IR_run()` is deprecated. Use `IR_reading()` instead."
-	IR_start();
-	return(IR_read());
-}
 
 
 /*
@@ -126,7 +123,7 @@ uint16_t IR_run() {
  * measured distance, 9cm - 50cm, the mean of the samples taken at this
  * distance will be saved to `calib_data[]`.
  */
-void IR_calibrate(bool bam_send, bool save_means)
+void ir_calibrate(bool bam_send, bool save_means)
 {
 	lcd_init();
 	init_push_buttons();
@@ -155,7 +152,7 @@ void IR_calibrate(bool bam_send, bool save_means)
 		
 		for (int i = 0; i < NUM_CALIB_SAMPLES; i++) {
 			// running average:
-			sample = IR_run();
+			sample = ir_raw_reading();
 			if (bam_send) {
 				send_dist_reading(dist, sample);
 			}
@@ -173,48 +170,16 @@ void IR_calibrate(bool bam_send, bool save_means)
 
 
 
-void ir_system(){
-	#define NUM_DATA_IR 4
-	#warning "4 may not be correct number"
+
+void ir_system()
+{
 	switch(usart_rx()) {
 	case 0:
-		IR_init();
+		ir_init();
 		break;
-	case 1:
-		#warning "Add parameter"
-		//IR_calibrate();
-		break;
-	//Read IR
 	case 2:
-		if(rx_frame())
-		{
-			r_error(error_frame,"IR Reading should not have multiple frames.");
-		}
-		if(control.data_len !=NUM_DATA_IR)
-		{
-			r_error(error_frame, "IR did not receive anticapted number of bytes");
-		}
-		
-		struct {
-			uint8_t n;
-			bool raw;
-			uint8_t rando;
-			uint8_t timestamps;
-		} *IR_data = (void *) &control.data;
-		
-		int i;
-		for(i =0; i<IR_data->n; i++)
-		{
-			if(IR_data->raw)
-			{
-				txq_enqueue(IR_read());
-			}
-			else
-			{
-				txq_enqueue(IR_reading());
-			}
-		}
-		break;
+        dist_reading_handler(subsys_ir);
+        break;
 	default:
 		r_error(error_bad_message, "Bad IR Command");
 		break;

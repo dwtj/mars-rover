@@ -1,5 +1,6 @@
 # sentinel.py - Defines the sentinel class.
 
+import sys
 import threading
 import queue
 import logging
@@ -55,7 +56,7 @@ class Sentinel():
         self.aux_queue = queue.Queue()
 
         self.logger = logging.getLogger("sentinel")
-        self.logger.setLevel("INFO")
+        self.logger.setLevel("DEBUG")
 
 
         # Clear whatever data might have already been in the serial buffer:
@@ -339,10 +340,14 @@ class Sentinel():
         from `aux` that the watch is actually started.
         """
 
+        self.logger.info("Watch has been disabled!")  # DEBUG
+
+        """
         self.logger.debug("Sending a message to start watching the connection.")
         e = threading.Event()
         self.aux_queue.put((self._start, e))
         e.wait()
+        """
 
 
 
@@ -474,7 +479,12 @@ class Sentinel():
 
             # Look for unexpected messages from `rover`, if currently watching:
             if self.is_watching:
-                self._look()
+                try:
+                    self._look()
+                except Exception as e:
+                    # TODO: make error handling better.
+                    sys.stderr.write(str(e) + '\n');
+                    sys.stderr.flush();
 
 
 
@@ -535,7 +545,7 @@ class Sentinel():
         two cases, an appropriate response message is sent to the `rover`.
         """
 
-        self.ser.timeout = 0.2
+        self.ser.timeout = 0.5
 
         # Any start and stop control bytes are read into here:
         sig = bytearray(1)  

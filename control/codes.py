@@ -43,9 +43,8 @@ class OICommand(IntEnum):
     init = 0
     move = 1
     rotate = 2
-    stop = 3
-    play_song = 4
-
+    play_song = 3
+    dump = 4
 
 
 class SonarCommand(IntEnum):

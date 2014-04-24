@@ -55,26 +55,33 @@ typedef enum {
  * Codes to distinguish between different subsystems:
  */
 typedef enum {
-	lcd = 0,
-	oi = 1,
-	sonar = 2,
-	servo = 3,
-	ir = 4,
-	rng = 5,
-} subsystems;
-#define NUM_SUBSYS_CODES 6
+	subsys_lcd = 0,
+	subsys_oi = 1,
+	subsys_sonar = 2,
+	subsys_servo = 3,
+	subsys_ir = 4,
+} subsys_t;
+#define NUM_SUBSYS_CODES 5
 
 
+
+// The maximum amount of data that can be put into a single data frame as
+// specified by the message protocol. (Should be between 50 and 255.)
 #define DATA_FRAME_MAX_LEN 100
+
+// To be used as a buffer for messages that are being sent and recieved.
 typedef struct {
 	bool running;  // Checked by handlers to see if they should stop.
 	uint8_t data[DATA_FRAME_MAX_LEN];
 	uint8_t data_len;
 	oi_t oi_state;
-} control_t;  // To be used to hold the state as messages are being interpreted.
+} control_t;
 
 
 extern control_t control;
+
+
+void dist_reading_handler(subsys_t);
 
 
 void read_frame();

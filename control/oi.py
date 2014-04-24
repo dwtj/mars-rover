@@ -18,14 +18,34 @@ def init(sen):
 
 
 
-def move(sen, speed = 500, distance = None):
+def move(sen, speed = 500, distance = 3000, stream = False):
     """
     Moves the rover. `speed` is an integer in the range (0, 500]. `distance`, 
     if provided, is in millimeters and is an integer in range [-3000, 3000]. 
-    Negative `distance` values command the robot to move backwards. If
-    distance is not provided, the rover will move until stop() is called.
-    """
+    Negative `distance` values command the robot to move backwards.
+   
+    Returns a list where [0] is the encoding for the reason for stopping
+    and [1] is the actual distance traveled.
+
+    Data frame sent: 2 bytes for `speed`, 2 bytes for `distance`, and 1 byte
+    for `stream`.
+
+    Data frame received: 1 byte containing one of the following values
+    corresponding to why `rover` stopped and 2 bytes containing the actual
+    distance traveled.
+
+    traveled full distance = 0
+    left bumper = 1
+    right bumper = 2
+    left and right bumper = 3
+    drop off = 4
+    white tape = 5
+    left wheel = 6
+    right wheel = 7
+    middle wheel = 8
     
+    """
+
     sen.stop_watch()
 
     if not 0 < speed and speed <= 500:
@@ -34,20 +54,17 @@ def move(sen, speed = 500, distance = None):
     if not (0 < distance and distance <= 300) and distance != None:
         raise ValueError("Argument `distance` must be in the closed interval [-3000, 3000].")
 
-    if distance != None:
-        # TODO: Pack just speed. Don't block?
-        pass
-    else:
-        # TODO: Pack together speed and distance. Indicate somehow that there 
-        # is a specific distance to move. Block until "finished" signal?
-        b = pack("<Ii", speed, distance)
-        sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.move, b)
-        sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, False)
-    
-    # TODO: Something with collision detection
+    if stream != False:
+        raise NotImplementedError()
+
+    b = pack("<Hh?", speed, distance, stream)
+    sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.move, b)
+    data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, True)
+    unpacked_data = struct.unpack("<bh", data)
 
     sen.start_watch()
 
+    return unpacked_data
 
 
 def rotate(sen, angle):
@@ -63,25 +80,30 @@ def rotate(sen, angle):
 
 
 
-def stop(sen):
-    """
-    If the rover is currently moving, this function stops it.
-    """
-    
-    raise NotImplementedError()
-    sen.stop_watch()
-    # TODO
-    sen.start_watch()
-
-
-
 def play_song(sen):
     """
     Plays a song on the rover.
     """
-	
-	raise NotImplementedError()
+    
+    raise NotImplementedError()
 
     sen.stop_watch()
     # TODO
     sen.start_watch()
+
+
+
+def dump(sen):
+    """
+    Dumps all OI data. This function should unpack these bytes and place
+    them into a python version of the OI struct.
+    """
+    
+    raise NotImplementedError()
+    
+    sen.stop_watch()
+    # TODO
+    sen.start_watch()
+
+
+

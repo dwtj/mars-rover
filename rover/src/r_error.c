@@ -14,7 +14,7 @@
 
 
 bool has_errored = false;
-
+char r_error_buf[R_ERROR_BUF_SIZE];
 
 
 // Stop the currently executing command.
