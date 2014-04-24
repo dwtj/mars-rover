@@ -9,10 +9,8 @@ def init(sen):
     the sonar state is made to be "on".
     """
 
-    sen.stop_watch()
     sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.init, None)
     sen.rx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.init, False)
-    sen.start_watch()
 
 
 
@@ -22,9 +20,7 @@ def calibrate(sen):
     """
 
     raise NotImplementedError()
-    sen.stop_watch()
     # TODO
-    sen.start_watch()
 
 
 
@@ -52,13 +48,9 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     Data frame received: list each reading (with the corresponding timestamp before each, if requested). 
     """
 
-    sen.stop_watch()
-
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, tx_d)
     rx_d = sen.rx_mesg(MessageID.command, SubsysID.sonar, SonarCommand.readings, True)
-
-    sen.start_watch()
 
     return rx_d
 

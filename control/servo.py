@@ -21,10 +21,8 @@ def rover_calibrate(sen):
     """
     Initiates the `rover`-operated calibration routine of the servo subsystem.
     """
-    sen.stop_watch()
     sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.calibrate, None)
     sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.calibrate, False)
-    sen.stop_watch()
 
 
 
@@ -34,9 +32,7 @@ def calibrate(sen):
     """
 
     raise NotImplementedError()
-    sen.stop_watch()
     # TODO
-    sen.start_watch()
 
 
 
@@ -48,8 +44,6 @@ def state(sen, s = None):
     then the servo will be turned on, and if it is passed "off", then the
     servo will be turned off.
     """
-    
-    sen.stop_watch()
 
     if s == None:
         sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, False)
@@ -67,8 +61,6 @@ def state(sen, s = None):
         rv = "off"
     else:
         raise ValueError('Argument `s` must be `None`, "on", or "off".');
-
-    sen.start_watch()
 
     return rv
 
@@ -92,8 +84,6 @@ def angle(sen, angle, wait = True):
     if not (0 <= angle and angle  <= 180):
         raise ValueError("Argument `angle` must be an integer in [0..180].")
     
-    start_watch()
-
     b = struct.pack("<I", angle)
     tx_mesg(MesgID.command, Subsys.servo, ServoCommand.angle, b)
     
@@ -103,7 +93,6 @@ def angle(sen, angle, wait = True):
         #pass
     rx_mesg(MesgID.command, Subsys.servo, ServoCommand.angle, False)
 
-    sen.start_watch()
 
 
 
@@ -121,10 +110,6 @@ def pulse(sen, p):
     if not (0.0 < p and p < 1.0):
         raise ValueError("Argument `p` must be a float in the interval (0, 1).")
 
-    sen.stop_watch()
-
     b = struct.pack("<f", p)
     sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.pulse, b)
     sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.pulse, False)
-
-    sen.start_watch()

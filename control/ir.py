@@ -9,10 +9,8 @@ from codes import MesgID, SubsysID, IRCommand
 
 def init(sen):
     """ Initializes the IR subsystem for use. """
-    sen.stop_watch()
     sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.init, None)
     sen.rx_mesg(MesgID.command, SubsysID.ir, IRCommand.init, False)
-    sen.start_watch()
 
 
 
@@ -23,9 +21,7 @@ def calibrate(sen):
     Initiates the `control`-operated calibration routine of the IR subsystem.
     """
 
-    sen.start_watch()
     # TODO
-    sen.stop_watch()
     raise NotImplementedError()
 
 
@@ -36,10 +32,8 @@ def rover_calibrate(sen):
     Initiates the `rover`-operated calibration routine of the IR subsystem.
     """
 
-    sen.start_watch()
     sen.tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
     rx_d = sen.rx_mesg(Message.command, Subsys.ir, IRCommand.init, True)
-    sen.stop_watch()
 
     raise NotImplementedError()
 
@@ -84,13 +78,8 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     Data frame received: list each reading (with the corresponding timestamp before each, if requested). 
     """
 
-    sen.stop_watch()
-
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, tx_d)
     rx_d = sen.rx_mesg(MessageID.command, SubsysID.ir, IRCommand.readings, True)
 
-    sen.start_watch()
-
     return rx_d
-
