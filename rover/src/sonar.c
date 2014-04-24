@@ -208,44 +208,12 @@ char *sonar_get_state() {
 ///ADC, rand-> ignoring this for now, timestamps-> whether we have to send back the time difference in between every taken reading 
 void sonar_system()
 {
-	#define LEN_DATA_SOANR 4
-	#warning "Is 4 the correct len?"
-	
 	switch(usart_rx()) {
 		case 0:
 			sonar_init();
 			break;
 		case 1:
-			;//first line of a case cannot be a declaration.
-			int i;
-			if(rx_frame())
-			{
-				r_error(error_frame, "Sonar Reading should not have multiple frames.");
-			}	
-			if(control.data_len != LEN_DATA_SOANR) 
-			{
-				r_error(error_frame, "Sonar did not receive the anticipated number of bytes.");
-			}
-			
-			struct {
-				uint8_t n;
-				bool raw;
-				uint8_t rando;
-				uint8_t timestamps;
-			} *sonar_data = (void *) &control.data;
-
-			for(i = 0; i < sonar_data->n; i++)
-			{
-				if(sonar_data->raw)
-				{
-					txq_enqueue(sonar_reading(true));
-				}
-				else
-				{
-					txq_enqueue(sonar_reading(false));
-				}
-			
-			}
+            sonar_reading_handler();
 			break;
 		default:
 			r_error(error_bad_message, "Bad sonar Command");
@@ -254,17 +222,102 @@ void sonar_system()
 }
 
 
+void sonar_reading_handler()
+{
+    // The interface used to access the request parameters encoded in the
+    // data frame of the received message:
+    struct {
+        uint8_t n;
+        bool raw;
+        bool random;
+        bool timestamps;
+    } *request = (void *) &control.data;
+
+    if(rx_frame() == true)
+    {
+        r_error(error_frame, "Sonar Reading should not have multiple frames.");
+    }	
+    if(control.data_len != sizeof(*request)) 
+    {
+        r_error(error_frame, "Sonar did not receive the anticipated number of bytes.");
+    }
+    
+    // Number of raw readings to be put into a response data frame:
+    #define NUM_RAW_ELEM (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
+
+    // Number of converted data readings to be put into a response data frame:
+    #define NUM_CONV_ELEM (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
+
+    // The interface for interpreting `control.data` as an array into which
+    // we put either raw data or converted data:
+    union {
+        uint16_t raw[NUM_RAW_ELEM];
+        float conv[NUM_CONV_ELEM];
+    } *response = (void *) &control.data;
+
+    // An index into a an array of `response`:
+    uint8_t i;
+
+    // The number of readings which have been either:
+    uint16_t readings_sent = 0;
+
+    while (readings_sent < request->n)
+    {
+        // Start generating a new response frame.
+
+        if (sonar_request->raw)
+        {
+            // Place as many raw readings into `control.data` as will fit.
+            while (i < NUM_RAW_ELEM && readings_sent < request->n) {
+                response.raw[i] = sonar_raw_reading();
+                readings_sent++;
+                i++;
+            }
+        }
+        else
+        {
+            // Place as many converted readings into `control.data` as will fit.
+            while (i < NUM_CONV_ELEM && readings_sent < request->n) {
+                response.conv[i] = sonar_reading();
+                readings_sent++;
+                i++;
+            }
+        }
+
+        // Frame and send the contents of `control.data` to `control`, and
+        // indicate whether a subsequent frame must still be sent as well:
+        control.data_len = i;
+        tx_frame(readings < request->n);
+        txq_drain();
+    }
+}
+
+
+
+
 /**
  * Performs a single sonar reading, returning a measure of the distance to the
- * nearest object. The function will wait after the reading has been performed
- * for long enough that it is safe to immediately start another reading.
- *
- * A value of `0.0` will be returned if the sonar reading process failed.
- * A value of `inf`
+ * nearest object in centimeters. The function will wait after the reading has
+ * been performed for long enough that it is safe to immediately start another
+ * reading.
  */
-float sonar_reading(bool raw)
+float sonar_reading()
 {
-	float d;
+    return time_to_dist(ticks_to_time(sonar_raw_reading()));
+}
+
+
+
+/**
+ * Performs a single sonar reading, returning the number of clock ticks that
+ * transpired while the echo pulse was high. This is an unconverted measure
+ * of the distance between the robot and the nearest object detected by the
+ * sonar. The function will wait after the reading has been performed
+ * for long enough that it is safe to immediately start another reading.
+ */
+uint16_t sonar_raw_reading()
+{
+	uint16_t rv;
 	
 	if (sonar_state != READY) {
 		return 0;
@@ -288,20 +341,13 @@ float sonar_reading(bool raw)
 	
 	sonar_event_enable(false);
 
-	if (raw){
-		d = time_to_dist(ticks_to_time(sonar_echo_fall - sonar_echo_rise));
-	}
-	
-	else{
-		d = ticks_to_time(sonar_echo_fall - sonar_echo_rise);
-	}
-
+	rv = ticks_to_time(sonar_echo_fall - sonar_echo_rise);
 	
 	sonar_state = NOT_READY;
 	wait_ms(1);  // TODO: Make this smaller.
 	sonar_state = READY;
 	
-    return d;
+    return rv;
 }
 
 
