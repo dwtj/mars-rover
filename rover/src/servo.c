@@ -82,29 +82,37 @@ void servo_system()
 		break;
 	//servo move angle
 	case 2:
-		if(rx_frame())
-		{
-			r_error(error_frame, "Servo expected single data frame.");
-		}
+		; //Can't start a case statement with a declaration
 		struct {
 			uint8_t angle;
 			bool wait;
 		} *servo_data = (void *) &control.data;
+	
+		if(rx_frame())
+		{
+			r_error(error_frame, "Servo expected single data frame.");
+		}
+
+		if (control.data_len != sizeof(*servo_data)) {
+			r_error(error_frame, "The expected data length is different from the action.");  
+		}
 		
 		servo_angle(servo_data->angle, servo_data->wait);
 		break;
+		
 	//servo pulse width
-    	case 3:
+    case 3:
 		if(rx_frame()){
 			r_error(error_frame,"Pulse Width expected but one frame.");
 		}
+		if (control.data_len != sizeof(float)) {
+			r_error (error_frame, "The expected data length is different from the action.");  
+		}
 		
-		struct {
-			float p;
-		} *servo_data2 = (void *) &control.data;
-			
-		set_pulse_proportion(servo_data2->p);
+		float *p = (void *) &control.data;
+		set_pulse_proportion(*p);
 		break;
+		
 	default:
         	r_error(error_bad_message, "Bad servo Command");
         	break;
