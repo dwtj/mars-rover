@@ -38,35 +38,33 @@ void lcd_home_anyloc(unsigned char location);
 //Handler for the LCD system
 void lcd_system()
 {
-	switch(usart_rx()) {
-	case 0:
+    enum {
+        lcd_command_init = 0,
+        lcd_command_puts = 1,
+        lcd_command_clear = 2,
+    } lcd_command = usart_rx();
+
+    txq_enqueue(lcd_command);
+    
+	switch(lcd_command) {
+	case lcd_command_init:
 		lcd_init();
 		break;
-	case 1:
-		; //Cannot make a variable declaration in the first line of a case. 
-		bool another_frame = true;
-		while (another_frame)
-		{
-			uint8_t len = usart_rx();
-			int i = 0;
-			//populate the array with date to *possibly* transmit
-			for(i =0; i<len; i++)
-			{
-				control.data[i] = usart_rx();
-			}
-			//Now len is equal to the REAL data length
-			len = usart_rx();
-			//Display the actual data received.
-			for(i=0; i<len; i++)
-			{
-				lcd_puts(control.data[i]);
-			}
-			another_frame = usart_rx();
-		}
+
+	case lcd_command_puts:
+        if (rx_frame() == true) {
+            r_error(error_bad_message, "String to put on the LCD is too long.");
+        } else {
+            // Add a null terminator. Note that `data` is big enough.
+            control.data[control.data_len] = '\0';
+            lcd_puts(control.data);
+        }
 		break;
-	case 2:
+
+	case lcd_command_clear:
 		lcd_clear();
 		break;
+
 	default:
 		r_error(error_bad_message, "Bad LCD Command");
 		break;

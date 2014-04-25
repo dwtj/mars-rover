@@ -1,10 +1,8 @@
 # ir.py
 
-import sentinel
-from enum import IntEnum
+import struct
+
 from codes import MesgID, SubsysID, IRCommand
-
-
 
 
 def init(sen):
@@ -13,20 +11,6 @@ def init(sen):
     sen.rx_mesg(MesgID.command, SubsysID.ir, IRCommand.init, False)
 
 
-
-
-def _use_calibration_data(sen, calib_data):
-    """
-    TODO:
-    Another function communicates with the rover to generate calibration data
-    for the infrared (IR) sensor. The results passed to this function as a
-    two-column ndarray where the first column is the (human-measured) distance
-    from an object and the second column is the integer output from the
-    ATmega's ADC connected to the IR sensor. This data is used to modify the
-    method by which raw ADC readings are interpreted.
-    """
-
-    raise NotImplementedError()
 
 
 
@@ -58,9 +42,9 @@ def readings(sen, n = 50, raw = True, rand = False, timestamps = False):
 
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, tx_d)
-    rx_d = sen.rx_mesg(MessageID.command, SubsysID.ir, IRCommand.readings, True)
+    rx_d = sen.rx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, True)
 
-    if raw = True and timestamps = False:
+    if raw == True and timestamps == False:
         pack_format = "<" + "H" * n
         readings = struct.unpack(pack_format, rx_d)
     else:

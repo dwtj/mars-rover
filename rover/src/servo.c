@@ -58,23 +58,24 @@ void servo_manual_calib()
 
 
 #warning "TODO: fix the servo handlers"
-void servo_system(){
-	switch (usart_rx()) {
+void servo_system()
+{
+    uint8_t command_id = usart_rx();
+    txq_enqueue(command_id);
+
+	switch (command_id) {
     case 0:
         servo_init();
         break;
     case 1:
-        //servo_calibrate();//TODO
-        break;
-    case 2:
         //servo_state();//TODO
         break;
-    case 3:
+    case 2:
         #warning "This is wrong, because data has not been loaded yet."
         // Read from data[0], then wait to finish moving.
         servo_angle(control.data[0], true);
         break;
-    case 4:
+    case 3:
         //servo_pulse_width();//TODO
         break;
     default:

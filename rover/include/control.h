@@ -72,7 +72,7 @@ typedef enum {
 // To be used as a buffer for messages that are being sent and recieved.
 typedef struct {
 	bool running;  // Checked by handlers to see if they should stop.
-	uint8_t data[DATA_FRAME_MAX_LEN];
+	uint8_t data[DATA_FRAME_MAX_LEN + 1];  // Last byte is to hold null term.
 	uint8_t data_len;
 	oi_t oi_state;
 } control_t;

@@ -49,21 +49,18 @@ class OICommand(IntEnum):
 
 class SonarCommand(IntEnum):
     init = 0
-    calibrate = 1
-    readings = 2
+    readings = 1
 
 
 
 class ServoCommand(IntEnum):
     init = 0
-    calibrate = 1
-    state = 2
-    angle = 3
-    pulse = 4
+    state = 1
+    angle = 2
+    pulse = 3
 
 
 
 class IRCommand(IntEnum):
     init = 0
-    calibrate = 1
-    readings = 2
+    readings = 1
