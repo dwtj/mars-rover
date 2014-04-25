@@ -74,7 +74,7 @@ class Sentinel():
 
         self.aux = threading.Thread(target = self._watchman)
         self.aux.daemon = True
-        self.aux.start()
+        #self.aux.start()  # Disabled
         self.is_watching = False  # The `aux` thread is not initially watching.
 
 

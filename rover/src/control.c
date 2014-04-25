@@ -104,12 +104,11 @@ void dist_reading_handler(subsys_t subsys)
     // data frame of the received message:
 
     struct {
-        uint16_t n;         // The number of readings to be performed.
+        uint16_t n;        // The number of readings to be performed.
         bool raw;          // Whether the data should be raw or converted.
         bool random;       // Ignore this for now.
         bool timestamps;   // Whether the data should include timestamps.
-    } *request = (void *) &control.data;
-
+    } request;
 
     // Point the function pointers to the subsystem indicated by `subsys`:
 
@@ -139,13 +138,19 @@ void dist_reading_handler(subsys_t subsys)
         r_error(error_frame, "A distance reading request message should not "
                                                  "have multiple data frames.");
     }
-    if (control.data_len != sizeof(*request)) 
+    if (control.data_len != sizeof(request)) 
     {
         //lprintf("%d", control.data_len);  // DEBUG
         //wait_button("");  // DEBUG
         r_error(error_frame, "Did not receive the anticipated number of data "
                              "bytes in the distance reading request message.");
     }
+
+
+    // The request that is in `control.data` has been validated. Start
+    // response. First, make a copy of the request so it doesn't get clobbered.
+    memcpy(&request, control.data, sizeof(request));
+
     
     // Number of raw readings to be put into a response data frame:
     #define RAW_READINGS_PER_FRAME (DATA_FRAME_MAX_LEN / sizeof(uint16_t))
@@ -167,12 +172,12 @@ void dist_reading_handler(subsys_t subsys)
     uint16_t readings_sent = 0;
 
     // Each iteration generates a response frame of readings.
-    while (readings_sent < request->n)
+    while (readings_sent < request.n)
     {
-        if (request->raw)
+        if (request.raw)
         {
             // Place as many raw readings into `control.data` as will fit.
-            while (i < RAW_READINGS_PER_FRAME && readings_sent < request->n) {
+            while (i < RAW_READINGS_PER_FRAME && readings_sent < request.n) {
                 response->raw[i] = raw_reading();
                 readings_sent++;
                 i++;
@@ -181,7 +186,7 @@ void dist_reading_handler(subsys_t subsys)
         else
         {
             // Place as many converted readings into `control.data` as will fit.
-            while (i < CONV_READINGS_PER_FRAME && readings_sent < request->n) {
+            while (i < CONV_READINGS_PER_FRAME && readings_sent < request.n) {
                 response->conv[i] = conv_reading();
                 readings_sent++;
                 i++;
@@ -190,13 +195,10 @@ void dist_reading_handler(subsys_t subsys)
 
         // Frame and send the contents of `control.data` to `control`, and
         // indicate whether a subsequent frame must still be sent as well:
-        control.data_len = i;
-        tx_frame(readings_sent < request->n);
+        control.data_len = i * (request.raw ? sizeof(uint16_t) : sizeof(float));
+        tx_frame(readings_sent < request.n);
         txq_drain();
     }
-
-    txq_enqueue(signal_stop);
-    txq_drain();
 }
 
 
@@ -291,6 +293,7 @@ static void mesg_handler()
         txq_enqueue(signal_start);
         txq_enqueue(mesg_id);
         mesg_handlers[mesg_id]();
+        lcd_putc('!');  // DEBUG
         txq_enqueue(signal_stop);
         txq_drain();
     }
@@ -342,7 +345,6 @@ void control_mode()
             sprintf(r_error_buf, "Recieved %u instead of expected stop byte.", byte);
 		    r_error(error_txq, r_error_buf);
 	    }
-        txq_drain();
         lcd_putc(')');  // DEBUG: found stop byte
 	}
 }
