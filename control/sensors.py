@@ -3,6 +3,62 @@
 
 
 import numpy as np
+import ir
+import csv
+
+
+def calibrate_servo(sen, csv_file):
+
+
+
+
+def calibrate_dist(sen, ir_csv, sonar_csv, inc = 1.0, start = 5.0, end = 100.0):
+    """ Interacts with the rover over the given `Sentinel` object, to generate
+    both sonar and IR calibration data to be appended to the `.csv` files
+    indicated by the given `String` objects, `ir_csv` and `sonar_csv`.
+
+    The routine prompts the user to place the rover different distances from an
+    object. The first and smallest distance is `start`. The distance is
+    incrementally increased by the given `inc`. The largest possible distance
+    to be prompted is `end`.
+
+    Any distance measurements which are outside of the supported range of the
+    IR sensor (i.e. 9cm to 80cm) will be ignored. This means that no readings 
+    from IR will not be requested from the rover for distances outside of the
+    supported range. Behavior is similar for the sonar, whose valid range is
+    2cm to 3m.
+
+    If a distance is within IR's supported range, then 50 IR readings are
+    recorded. The behavior is similar for sonar.
+    """
+
+    # TODO: Guard against bad arguments.
+
+    # Open the `csv` writers in append mode:
+    sonar_csv = csv.writer(open(sonar_csv, 'a'))
+    ir_csv = csv.writer(open(ir_csv, 'a'))
+
+    dist = start
+
+    while dist < end:
+
+        # Report current distance to the user and wait for the enter key:
+        input("dist: {:.2f}".format(dist))
+
+        # For both IR and sonar at each distance and for each of the 50
+        # readings: add the current distance along with the reading as a row
+        # in the `.csv` file.
+
+        if 3.0 <= dist && dist <= 300.0
+            sonar_csv.writerows([(dist, r) for r in sonar.readings(sen, n=50)])
+
+        if 9.0 <= dist && dist <= 80.0:
+            ir_csv.writerows([(dist, r) for r in .readings(sen, n=50)])
+
+        dist += inc
+
+
+
 
 def get_servo_converter(csv_file):
     """ Uses the given `.csv` file to generate a callable object that converts
