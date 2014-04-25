@@ -30,8 +30,8 @@ def calibrate(sen):
 def _use_calibration_data(sen, calib_data):
     """
     TODO:
-    Another funciton communicates with the rover to generate calibration data
-    for the infared (IR) sensor. The results passed to this function as a
+    Another function communicates with the rover to generate calibration data
+    for the infrared (IR) sensor. The results passed to this function as a
     two-column ndarray where the first column is the (human-measured) distance
     from an object and the second column is the integer output from the
     ATmega's ADC connected to the IR sensor. This data is used to modify the
@@ -61,9 +61,11 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     If `timestamps` is `true`, then timestamps indicating when a reading was
     taken are streamed back to `control` along with the readings themselves.
     
-    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter (`raw`, `rand`, and `timestamps`).
+    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter 
+    (`raw`, `rand`, and `timestamps`).
     
-    Data frame received: list each reading (with the corresponding timestamp before each, if requested). 
+    Data frame received: list each reading (with the corresponding timestamp
+    before each, if requested). 
     """
 
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
