@@ -3,8 +3,11 @@
 
 
 import numpy as np
-import ir
 import csv
+
+
+import ir
+import sonar
 
 
 def calibrate_servo(sen, csv_file):
@@ -54,11 +57,11 @@ def calibrate_dist(sen, ir_csv, sonar_csv, inc = 1.0, start = 5.0, end = 100.0):
         # readings: add the current distance along with the reading as a row
         # in the `.csv` file.
 
-        if 3.0 <= dist && dist <= 300.0
+        if 3.0 <= dist and dist <= 300.0:
             sonar_csv.writerows([(dist, r) for r in sonar.readings(sen, n=50)])
 
-        if 9.0 <= dist && dist <= 80.0:
-            ir_csv.writerows([(dist, r) for r in .readings(sen, n=50)])
+        if 9.0 <= dist and dist <= 80.0:
+            ir_csv.writerows([(dist, r) for r in ir.readings(sen, n=50)])
 
         dist += inc
 

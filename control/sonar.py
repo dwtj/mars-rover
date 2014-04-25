@@ -1,5 +1,7 @@
 # sonar.py
 
+import struct
+
 from codes import MesgID, SubsysID, SonarCommand
 
 
@@ -41,9 +43,9 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
 
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, tx_d)
-    rx_d = sen.rx_mesg(MessageID.command, SubsysID.sonar, SonarCommand.readings, True)
+    rx_d = sen.rx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, True)
 
-    if raw = True and timestamps = False:
+    if raw == True and timestamps == False:
         pack_format = "<" + "H" * n
         readings = struct.unpack(pack_format, rx_d)
     else:

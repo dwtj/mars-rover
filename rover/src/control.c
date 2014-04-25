@@ -96,6 +96,7 @@ void tx_frame(bool another_frame)
 
 /**
  * A function to handle requests messages for readings from either sonar or IR.
+ * This assumes that none of the response message has been sent to the queue.
  */
 void dist_reading_handler(subsys_t subsys)
 {
@@ -103,7 +104,7 @@ void dist_reading_handler(subsys_t subsys)
     // data frame of the received message:
 
     struct {
-        uint8_t n;         // The number of readings to be performed.
+        uint16_t n;         // The number of readings to be performed.
         bool raw;          // Whether the data should be raw or converted.
         bool random;       // Ignore this for now.
         bool timestamps;   // Whether the data should include timestamps.
@@ -131,6 +132,7 @@ void dist_reading_handler(subsys_t subsys)
                                           "subsystem other than IR or sonar.");
     }
 
+
     // Check whether the data frame of the request message was valid:
     if (rx_frame() == true)
     {
@@ -139,6 +141,8 @@ void dist_reading_handler(subsys_t subsys)
     }
     if (control.data_len != sizeof(*request)) 
     {
+        //lprintf("%d", control.data_len);  // DEBUG
+        //wait_button("");  // DEBUG
         r_error(error_frame, "Did not receive the anticipated number of data "
                              "bytes in the distance reading request message.");
     }
@@ -190,6 +194,9 @@ void dist_reading_handler(subsys_t subsys)
         tx_frame(readings_sent < request->n);
         txq_drain();
     }
+
+    txq_enqueue(signal_stop);
+    txq_drain();
 }
 
 
@@ -201,11 +208,7 @@ void dist_reading_handler(subsys_t subsys)
  */
 static void ping_handler() 
 {
-	lcd_putc('p');  // DEBUG: the ping handler has started
-	txq_enqueue(signal_start);
-	txq_enqueue(mesg_ping);
-	txq_enqueue(signal_stop);
-	txq_drain();
+    ; // Do nothing, since the response message has already been generated.
 }
 
 
@@ -217,26 +220,14 @@ static void ping_handler()
  */
 static void echo_handler()
 {
-	lcd_putc('e');  // DEBUG: the echo handler has started
-
-    // Start of the response message:
-	txq_enqueue(signal_start);
-	txq_enqueue(mesg_echo);
-
     // In each iteration, a data frame is de-framed
     bool another_frame = true;
     while (another_frame)
     {
         another_frame = rx_frame();
         tx_frame(another_frame);
-        #warning "txq_drain() is a temporary measure until asynchronous drainage is implemented."
 	    txq_drain();
     }
-
-
-    // End of the response message:
-	txq_enqueue(signal_stop);
-	txq_drain();
 }
 
 
@@ -248,7 +239,9 @@ static void echo_handler()
  */
 static void command_handler()
 {
-    // Choices for functions to be called next.
+    // Choices for functions to be called next. Notice that by the time that
+    // any of these functions is called, a response message should have already
+    // been started.
     static void (*subsystem_handlers[NUM_SUBSYS_CODES])() = {
         lcd_system,   // 0
         oi_system,    // 1
@@ -257,9 +250,10 @@ static void command_handler()
         ir_system,    // 4
     };
 
-    // Use the supplied `subsys` code to choose which handler to use.
+    // Use the `subsys` code of the recieved message to choose the handler.
 	uint8_t subsys = usart_rx();
 	if (0 <= subsys && subsys < NUM_SUBSYS_CODES) {
+        txq_enqueue(subsys);
 		subsystem_handlers[subsys]();
 	} else {
 		r_error(error_bad_message, "Invalid subsystem ID.");
@@ -289,11 +283,19 @@ static void mesg_handler()
         seed_rng_handler,  // 4
     };
 
-    // Use the supplied `mesg_id` to choose which handler to use.
-	uint8_t mesg_id = usart_rx();  // the message type.
-    if (0 <= mesg_id && mesg_id < NUM_MESG_CODES) {
+	uint8_t mesg_id = usart_rx();
+    if (0 <= mesg_id && mesg_id < NUM_MESG_CODES)
+    {
+        // Use the message type of the received message to choose the handler.
+        // Also start a response message of the same message type.
+        txq_enqueue(signal_start);
+        txq_enqueue(mesg_id);
         mesg_handlers[mesg_id]();
-    } else {
+        txq_enqueue(signal_stop);
+        txq_drain();
+    }
+    else
+    {
 		r_error(error_bad_message, "Received an invalid Message ID byte.");
     }
 }

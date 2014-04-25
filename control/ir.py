@@ -1,10 +1,8 @@
 # ir.py
 
-import sentinel
-from enum import IntEnum
+import struct
+
 from codes import MesgID, SubsysID, IRCommand
-
-
 
 
 def init(sen):
@@ -44,9 +42,9 @@ def readings(sen, n = 50, raw = True, rand = False, timestamps = False):
 
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, tx_d)
-    rx_d = sen.rx_mesg(MessageID.command, SubsysID.ir, IRCommand.readings, True)
+    rx_d = sen.rx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, True)
 
-    if raw = True and timestamps = False:
+    if raw == True and timestamps == False:
         pack_format = "<" + "H" * n
         readings = struct.unpack(pack_format, rx_d)
     else:
