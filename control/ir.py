@@ -15,20 +15,6 @@ def init(sen):
 
 
 
-def _use_calibration_data(sen, calib_data):
-    """
-    TODO:
-    Another function communicates with the rover to generate calibration data
-    for the infrared (IR) sensor. The results passed to this function as a
-    two-column ndarray where the first column is the (human-measured) distance
-    from an object and the second column is the integer output from the
-    ATmega's ADC connected to the IR sensor. This data is used to modify the
-    method by which raw ADC readings are interpreted.
-    """
-
-    raise NotImplementedError()
-
-
 
 def readings(sen, n = 50, raw = True, rand = False, timestamps = False):
     """
