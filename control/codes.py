@@ -48,7 +48,8 @@ class OICommand(IntEnum):
 
 
 
-class OIStopCommand(IntEnum):
+class OIStopID(IntEnum):
+    """ Identifies reason the robot stopped in `oi.move()`. """
     full_distance = 0
     
     left_bumper = 1
