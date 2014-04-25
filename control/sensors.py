@@ -10,6 +10,27 @@ import ir
 import sonar
 
 
+def calibrate_cliff(sen, csv_file):
+    """ Interacts with the rover over the given `Sentinel` object to generate
+    calibration data for each of the four cliff sensor LEDs of the `rover`.
+    This data is then appended to the indicated `.csv` file.
+
+    The rows appended to the `.csv` file will contains four columns, one for
+    each of the LEDs. In particular:
+
+    - first column: left sensor
+    - second colunn: front left sensor
+    - third column: front right sensor
+    - fourth column: right sensor
+
+    There will be 100 samples are measured over at least 5 seconds.
+    """
+
+    raise NotImplementedError
+
+    
+
+
 def calibrate_servo(sen, csv_file):
     raise NotImplementedError
 
@@ -23,7 +44,6 @@ def calibrate_dist(sen, ir_csv, sonar_csv, inc = 1.0, start = 5.0, end = 100.0):
     This function generates `.csv` files in the format expected by
     `gen_ir_converter()` and `gen_sonar_converter()`. See those functions for
     file format specifications.
-
 
     The routine prompts the user to place the rover different distances from an
     object. The first and smallest distance is `start`. The distance is
@@ -121,8 +141,8 @@ def gen_sonar_converter(csv_file):
     """
 
     data = np.genfromtxt(csv_file, delimiter=',')
+    dist = data[:, 0]
     raw = data[:, 1]
-    dist = data[:, 2]
 
     # Third order least-squares polynomial regression:
     return np.poly1d(polyfit(raw, dist, 3))
@@ -155,7 +175,7 @@ def gen_ir_converter(csv_file):
     """
 
     data = np.genfromtxt(csv_file, delimiter=',')
+    dist = data[:, 0]
     raw = data[:, 1]
-    dist = data[:, 2]
 
     return np.poly1d(polyfit(raw, dist, 3))
