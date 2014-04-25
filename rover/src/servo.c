@@ -67,21 +67,21 @@ static void set_pulse_proportion(float p){
 
 
 #warning "TODO: fix the servo handlers"
-void servo_system(){
-	switch (usart_rx()) {
-    case 0:
-        servo_init();
-        break;
-	//calibrate
-    case 1:
-		//calibrate not handled on this end
-        break;
-	//servo state
-    case 2:
-        //servo_state();//TODO
-        break;
+void servo_system()
+{
+    uint8_t command_id = usart_rx();
+    txq_enqueue(command_id);
+
+	switch (command_id) {
+	case 0:
+		servo_init();
+		break;
+	//servo_state()
+	case 1:
+		#warning "Servo state not yet implemented."
+		break;
 	//servo move angle
-    case 3:
+	case 2:
 		if(rx_frame())
 		{
 			r_error(error_frame, "Servo expected single data frame.");
@@ -91,10 +91,10 @@ void servo_system(){
 			bool wait;
 		} *servo_data = (void *) &control.data;
 		
-        servo_angle(servo_data->angle, servo_data->wait);
-        break;
+		servo_angle(servo_data->angle, servo_data->wait);
+		break;
 	//servo pulse width
-    case 4:
+    	case 3:
 		if(rx_frame()){
 			r_error(error_frame,"Pulse Width expected but one frame.");
 		}
@@ -102,12 +102,12 @@ void servo_system(){
 		struct {
 			float p;
 		} *servo_data2 = (void *) &control.data;
-		
+			
 		set_pulse_proportion(servo_data2->p);
-        break;
-    default:
-        r_error(error_bad_message, "Bad servo Command");
-        break;
+		break;
+	default:
+        	r_error(error_bad_message, "Bad servo Command");
+        	break;
 	}
 }
 

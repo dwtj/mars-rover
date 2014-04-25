@@ -1,5 +1,7 @@
 # sonar.py
 
+import struct
+
 from codes import MesgID, SubsysID, SonarCommand
 
 
@@ -9,28 +11,13 @@ def init(sen):
     the sonar state is made to be "on".
     """
 
-    sen.stop_watch()
     sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.init, None)
     sen.rx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.init, False)
-    sen.start_watch()
-
-
-
-def calibrate(sen):
-    """
-    Initiates the `control`-operated calibration routine of the sonar subsystem.
-    """
-
-    raise NotImplementedError()
-    sen.stop_watch()
-    # TODO
-    sen.start_watch()
-
 
 
 def readings(sen, n, raw = True, rand = False, timestamps = False):
     """
-    Gets an `ndarray` of sonar readings from the `rover`.
+    Returns a `tuple` of length `n` of sonar readings from the `rover`.
 
     Expects `n` to be an unsigned integer. Expects both `rand` and `timestamps`
     to be booleans.
@@ -47,18 +34,23 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     If `timestamps` is `true`, then timestamps indicating when a reading was
     taken are streamed back to `control` along with the readings themselves.
     
-    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter (`raw`, `rand`, and `timestamps`).
+    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter 
+    (`raw`, `rand`, and `timestamps`).
     
-    Data frame received: list each reading (with the corresponding timestamp before each, if requested). 
+    Data frame received: list each reading (with the corresponding timestamp 
+    before each, if requested). 
     """
-
-    sen.stop_watch()
 
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, tx_d)
-    rx_d = sen.rx_mesg(MessageID.command, SubsysID.sonar, SonarCommand.readings, True)
+    rx_d = sen.rx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, True)
 
-    sen.start_watch()
+    if raw == True and timestamps == False:
+        pack_format = "<" + "H" * n
+        readings = struct.unpack(pack_format, rx_d)
+    else:
+        raise NotImplementedError("raw = False and timestamps = False are not implemented.")
+    
 
-    return rx_d
+    return readings
 

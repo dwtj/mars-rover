@@ -11,10 +11,8 @@ def init(sen):
     iRobot create.
     """
 
-    sen.stop_watch()
     sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.init, None)
     sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.init, False)
-    sen.start_watch()
 
 
 
@@ -46,8 +44,6 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     
     """
 
-    sen.stop_watch()
-
     if not 0 < speed and speed <= 500:
         raise ValueError("Argument `speed` must be in the interval (0, 500].")
     
@@ -62,8 +58,6 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, True)
     unpacked_data = struct.unpack("<bh", data)
 
-    sen.start_watch()
-
     return unpacked_data
 
 
@@ -74,9 +68,7 @@ def rotate(sen, angle):
     """
 
     raise NotImplementedError()
-    sen.stop_watch()
     # TODO
-    sen.start_watch()
 
 
 
@@ -87,9 +79,7 @@ def play_song(sen):
     
     raise NotImplementedError()
 
-    sen.stop_watch()
     # TODO
-    sen.start_watch()
 
 
 
@@ -101,9 +91,4 @@ def dump(sen):
     
     raise NotImplementedError()
     
-    sen.stop_watch()
     # TODO
-    sen.start_watch()
-
-
-

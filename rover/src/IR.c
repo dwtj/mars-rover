@@ -173,11 +173,14 @@ void ir_calibrate(bool bam_send, bool save_means)
 
 void ir_system()
 {
-	switch(usart_rx()) {
+    uint8_t command_id = usart_rx();
+    txq_enqueue(command_id);
+
+	switch(command_id) {
 	case 0:
 		ir_init();
 		break;
-	case 2:
+	case 1:
         dist_reading_handler(subsys_ir);
         break;
 	default:

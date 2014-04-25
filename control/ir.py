@@ -1,68 +1,22 @@
 # ir.py
 
-import sentinel
-from enum import IntEnum
+import struct
+
 from codes import MesgID, SubsysID, IRCommand
-
-
 
 
 def init(sen):
     """ Initializes the IR subsystem for use. """
-    sen.stop_watch()
     sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.init, None)
     sen.rx_mesg(MesgID.command, SubsysID.ir, IRCommand.init, False)
-    sen.start_watch()
 
 
 
 
 
-def calibrate(sen):
+def readings(sen, n = 50, raw = True, rand = False, timestamps = False):
     """
-    Initiates the `control`-operated calibration routine of the IR subsystem.
-    """
-
-    sen.start_watch()
-    # TODO
-    sen.stop_watch()
-    raise NotImplementedError()
-
-
-
-
-def rover_calibrate(sen):
-    """
-    Initiates the `rover`-operated calibration routine of the IR subsystem.
-    """
-
-    sen.start_watch()
-    sen.tx_mesg(Message.command, Subsys.ir, IRCommand.init, None)
-    rx_d = sen.rx_mesg(Message.command, Subsys.ir, IRCommand.init, True)
-    sen.stop_watch()
-
-    raise NotImplementedError()
-
-
-
-def _use_calibration_data(sen, calib_data):
-    """
-    TODO:
-    Another funciton communicates with the rover to generate calibration data
-    for the infared (IR) sensor. The results passed to this function as a
-    two-column ndarray where the first column is the (human-measured) distance
-    from an object and the second column is the integer output from the
-    ATmega's ADC connected to the IR sensor. This data is used to modify the
-    method by which raw ADC readings are interpreted.
-    """
-
-    raise NotImplementedError()
-
-
-
-def readings(sen, n, raw = True, rand = False, timestamps = False):
-    """
-    Gets an `ndarray` of IR readings from the `rover`.
+    Returns a `tuple` of length `n` of IR readings from the `rover`.
 
     Expects `n` to be an unsigned integer. Expects both `rand` and `timestamps`
     to be booleans.
@@ -79,18 +33,23 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     If `timestamps` is `true`, then timestamps indicating when a reading was
     taken are streamed back to `control` along with the readings themselves.
     
-    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter (`raw`, `rand`, and `timestamps`).
+    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter 
+    (`raw`, `rand`, and `timestamps`).
     
-    Data frame received: list each reading (with the corresponding timestamp before each, if requested). 
+    Data frame received: list each reading (with the corresponding timestamp
+    before each, if requested). 
     """
-
-    sen.stop_watch()
 
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, tx_d)
-    rx_d = sen.rx_mesg(MessageID.command, SubsysID.ir, IRCommand.readings, True)
+    rx_d = sen.rx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, True)
 
-    sen.start_watch()
+    if raw == True and timestamps == False:
+        pack_format = "<" + "H" * n
+        readings = struct.unpack(pack_format, rx_d)
+    else:
+        raise NotImplementedError("raw = False and timestamps = False are not implemented.")
+    
 
-    return rx_d
+    return readings
 

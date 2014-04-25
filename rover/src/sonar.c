@@ -208,7 +208,10 @@ char *sonar_get_state() {
 
 void sonar_system()
 {
-	switch(usart_rx()) {
+    uint8_t command_id = usart_rx();
+    txq_enqueue(command_id);
+
+	switch(command_id) {
 		case 0:
 			sonar_init();
 			break;
