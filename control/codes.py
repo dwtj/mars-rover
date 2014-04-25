@@ -47,6 +47,26 @@ class OICommand(IntEnum):
     dump = 4
 
 
+
+class OIStopCommand(IntEnum):
+    full_distance = 0
+    
+    left_bumper = 1
+    right_bumper = 2
+    left_and_right_bumper = 3
+    
+    front_left_cliff = 4
+    front_right_cliff = 5
+    left_cliff = 6
+    right_cliff = 7
+
+    white_tape = 8
+    left_wheel = 9
+    right_wheel = 10
+    middle_wheel = 11
+
+
+
 class SonarCommand(IntEnum):
     init = 0
     readings = 1
