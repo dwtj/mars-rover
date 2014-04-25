@@ -32,7 +32,7 @@ def _use_calibration_data(sen, calib_data):
 
 def readings(sen, n = 50, raw = True, rand = False, timestamps = False):
     """
-    Gets an `ndarray` of IR readings from the `rover`.
+    Returns a `tuple` of length `n` of IR readings from the `rover`.
 
     Expects `n` to be an unsigned integer. Expects both `rand` and `timestamps`
     to be booleans.

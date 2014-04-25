@@ -15,7 +15,7 @@ def init(sen):
 
 def readings(sen, n, raw = True, rand = False, timestamps = False):
     """
-    Gets an `ndarray` of sonar readings from the `rover`.
+    Returns a `tuple` of length `n` of sonar readings from the `rover`.
 
     Expects `n` to be an unsigned integer. Expects both `rand` and `timestamps`
     to be booleans.
