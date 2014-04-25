@@ -3,7 +3,6 @@
 from codes import MesgID, SubsysID, OICommand
 
 
-
 def init(sen):
     """
     Initializes the rover's open interface subsystem, that is, the open-
@@ -37,7 +36,8 @@ def move(sen, speed = 500, distance = 3000, stream = False):
         raise ValueError("Argument `speed` must be in the interval (0, 500].")
     
     if not (0 < distance and distance <= 300) and distance != None:
-        raise ValueError("Argument `distance` must be in the closed interval [-3000, 3000].")
+        raise ValueError("Argument `distance` must be in the closed interval"
+                                                              "[-3000, 3000].")
 
     if stream != False:
         raise NotImplementedError()
@@ -77,7 +77,59 @@ def dump(sen):
     Dumps all OI data. This function should unpack these bytes and place
     them into a python version of the OI struct.
     """
+
+    # This mirrors the `oi_t` struct defined in `open_interface.h`.
+    # Use this format string to unpack the copy of `oi_t` from the rover.
+
+    format = "B"  # bumper_right, bumper_left,
+                  # wheeldrop_right, wheeldrop_left, wheeldrop_caster
+    "B"  # wall
+    "B"  # cliff_left
+    "B"  # cliff_frontleft
+    "B"  # cliff_frontright
+    "B"  # cliff_right
+    "B"  # virtual_wall
+
+    "B"  # overcurrent_{ld1, ld0, ld2, driveright, driveleft}
+
+    "H"  # unused_bytes
+
+    "B"  # infared_byte
+    "B"  # button_{play, advance}
+
+    "H"  # distance
+    "H"  # angle
+
+    "B"  # charging_state
+    "H"  # voltage
+    "h"  # current
+    "b"  # temperature
+    "H"  # charge
+    "H"  # capacity
     
-    raise NotImplementedError()
-    
-    # TODO
+    "H"  # wall_signal
+    "H"  # cliff_left_signal
+    "H"  # cliff_frontleft_signal
+    "H"  # cliff_frontright_signal
+    "H"  # cliff_right_signal
+
+    "B"  # cargo_bay_{io0, io1, io2, io3, baud}
+    "H"  # cargo_bay_voltage
+
+    "B"  # {internal_charger_on, home_base_charger_on}
+
+    "B"  # oi_mode
+
+    "B"  # song_number
+    "B"  # song_playing
+
+    "B"  # number_packets
+    "h"  # requested_velocity
+    "h"  # requested_radius
+    "h"  # requested_right_velocity
+    "h"  # requested_left_velocity
+
+    sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.dump, None)
+    data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.dump, True)
+
+    return struct.unpack(format, data)
