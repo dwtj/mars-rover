@@ -100,6 +100,7 @@ void tx_frame(bool another_frame)
  */
 void dist_reading_handler(subsys_t subsys)
 {
+    lcd_putc('A');  // DEBUG: I AM HERE
     // The interface used to access the request parameters encoded in the
     // data frame of the received message:
 
@@ -146,6 +147,7 @@ void dist_reading_handler(subsys_t subsys)
                              "bytes in the distance reading request message.");
     }
 
+    lcd_putc('B');  // DEBUG: I AM HERE
 
     // The request that is in `control.data` has been validated. Start
     // response. First, make a copy of the request so it doesn't get clobbered.
@@ -174,6 +176,8 @@ void dist_reading_handler(subsys_t subsys)
     // Each iteration generates a response frame of readings.
     while (readings_sent < request.n)
     {
+        i = 0;  // Index into a frame of data via our `response` pointer.
+
         if (request.raw)
         {
             // Place as many raw readings into `control.data` as will fit.
@@ -198,6 +202,7 @@ void dist_reading_handler(subsys_t subsys)
         control.data_len = i * (request.raw ? sizeof(uint16_t) : sizeof(float));
         tx_frame(readings_sent < request.n);
         txq_drain();
+        lcd_putc('C');  // DEBUG: I AM HERE
     }
 }
 
@@ -293,7 +298,6 @@ static void mesg_handler()
         txq_enqueue(signal_start);
         txq_enqueue(mesg_id);
         mesg_handlers[mesg_id]();
-        lcd_putc('!');  // DEBUG
         txq_enqueue(signal_stop);
         txq_drain();
     }

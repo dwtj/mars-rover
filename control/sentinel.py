@@ -359,10 +359,14 @@ class Sentinel():
         from `aux` that the watch is actually stopped.
         """
 
+        self.logger.info("Watch has been disabled!")  # DEBUG
+
+        """
         self.logger.debug("Sending a message to stop watching the connection.")
         e = threading.Event()
         self.aux_queue.put((self._stop, e))
         e.wait()
+        """
 
 
 
