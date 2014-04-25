@@ -123,8 +123,8 @@ void dist_reading_handler(subsys_t subsys)
     }
     else if (subsys == subsys_sonar)
     {
-        raw_reading = ir_raw_reading;
-        conv_reading = ir_reading;
+        raw_reading = sonar_raw_reading;
+        conv_reading = sonar_reading;
     }
     else
     {
@@ -320,6 +320,10 @@ void control_mode()
 
    	lcd_init();
     init_push_buttons();
+
+    sonar_init();
+    ir_init();
+    servo_init();
 
 	usart_init();
     usart_drain_rx();
