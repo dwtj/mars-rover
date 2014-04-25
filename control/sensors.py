@@ -24,7 +24,12 @@ def get_servo_converter(csv_file):
       converted values will be returned.
     """
 
-    raise NotImplementedError
+    data = np.genfromtxt(csv_file, delimiter=',')
+    raw = data[:, 1]
+    dist = data[:, 2]
+
+    # Linear least squares regression:
+    return np.poly1d(polyfit(raw, dist, 1))
 
 
 
@@ -52,7 +57,11 @@ def gen_sonar_converter(csv_file):
     """
 
     data = np.genfromtxt(csv_file, delimiter=',')
-    raise NotImplementedError
+    raw = data[:, 1]
+    dist = data[:, 2]
+
+    # Third order least-squares polynomial regression:
+    return np.poly1d(polyfit(raw, dist, 3))
 
 
 
@@ -79,4 +88,8 @@ def get_ir_converter(csv_file):
     raw IR data, and the second represents converted distance measurements.
     """
 
-    raise NotImplementedError
+    data = np.genfromtxt(csv_file, delimiter=',')
+    raw = data[:, 1]
+    dist = data[:, 2]
+
+    return np.poly1d(polyfit(raw, dist, 3))
