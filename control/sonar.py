@@ -13,17 +13,6 @@ def init(sen):
     sen.rx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.init, False)
 
 
-
-def calibrate(sen):
-    """
-    Initiates the `control`-operated calibration routine of the sonar subsystem.
-    """
-
-    raise NotImplementedError()
-    # TODO
-
-
-
 def readings(sen, n, raw = True, rand = False, timestamps = False):
     """
     Gets an `ndarray` of sonar readings from the `rover`.
@@ -43,14 +32,23 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     If `timestamps` is `true`, then timestamps indicating when a reading was
     taken are streamed back to `control` along with the readings themselves.
     
-    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter (`raw`, `rand`, and `timestamps`).
+    Data frame sent: 2 bytes for `n` then 1 byte for each boolean parameter 
+    (`raw`, `rand`, and `timestamps`).
     
-    Data frame received: list each reading (with the corresponding timestamp before each, if requested). 
+    Data frame received: list each reading (with the corresponding timestamp 
+    before each, if requested). 
     """
 
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, tx_d)
     rx_d = sen.rx_mesg(MessageID.command, SubsysID.sonar, SonarCommand.readings, True)
 
-    return rx_d
+    if raw = True and timestamps = False:
+        pack_format = "<" + "H" * n
+        readings = struct.unpack(pack_format, rx_d)
+    else:
+        raise NotImplementedError("raw = False and timestamps = False are not implemented.")
+    
+
+    return readings
 

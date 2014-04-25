@@ -15,18 +15,6 @@ def init(sen):
 
 
 
-
-def calibrate(sen):
-    """
-    Initiates the `control`-operated calibration routine of the IR subsystem.
-    """
-
-    # TODO
-    raise NotImplementedError()
-
-
-
-
 def _use_calibration_data(sen, calib_data):
     """
     TODO:
@@ -42,7 +30,7 @@ def _use_calibration_data(sen, calib_data):
 
 
 
-def readings(sen, n, raw = True, rand = False, timestamps = False):
+def readings(sen, n = 50, raw = True, rand = False, timestamps = False):
     """
     Gets an `ndarray` of IR readings from the `rover`.
 
@@ -72,4 +60,12 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     sen.tx_mesg(MesgID.command, SubsysID.ir, IRCommand.readings, tx_d)
     rx_d = sen.rx_mesg(MessageID.command, SubsysID.ir, IRCommand.readings, True)
 
-    return rx_d
+    if raw = True and timestamps = False:
+        pack_format = "<" + "H" * n
+        readings = struct.unpack(pack_format, rx_d)
+    else:
+        raise NotImplementedError("raw = False and timestamps = False are not implemented.")
+    
+
+    return readings
+
