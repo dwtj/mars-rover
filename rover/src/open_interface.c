@@ -123,30 +123,40 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 //Handler for OI, moved from control.
 void oi_system()
 {
-
 	switch (usart_rx()) {
 	case 0:
 		oi_init(&(control.oi_state));
 		break;
 	//Move
 	case 1:
-	//	while()
-		usart_rx();//read and disregard length.
-		uint8_t speed = usart_rx();
-		uint8_t dist = usart_rx();
-		bool stream = usart_rx();
-		#warning "Stream functionality to be implemented later"
-		move_dist(&(control.oi_state), dist, speed);
-		usart_rx(); //read and ignore data length
-		usart_rx(); //Read and ignore more byte
+	//	Assuming Move only has one frame
+		if(rx_frame())
+			{
+				r_error(error_frame,"Move should not have multiple frames.");
+			}
+			
+			struct {
+				uint8_t speed;
+				uint8_t dist;
+				bool stream;
+			} *move_data = (void *) &control.data;
+			
+		#warning "Stream functionality to be implemented later."//Stream returns the distance traveled
+		move_dist(&(control.oi_state), move_data->dist, move_data->speed);
 		break;
 	//Turn
 	case 2:
-		usart_rx(); //read and ignore length
-		uint8_t angle = usart_rx();
-		turn(&(control.oi_state), angle);
-		usart_rx(); //Read and ignore real length
-		usart_rx(); //read and ignore more  byte
+		//	Assuming turn only has one frame
+		if(rx_frame())
+		{
+			r_error(error_frame,"Rotate should not have multiple frames.");
+		}
+		
+		struct {
+			uint8_t angle;
+		} *turn_data = (void *) &control.data;	
+	
+		turn(&(control.oi_state), turn_data->angle);
 		break;
 	//Sing me a song.
 	case 3:
@@ -162,7 +172,8 @@ void oi_system()
 	//copies all of the data from OI_UPDATE and transmits to Control.
 	oi_update(&(control.oi_state));
 	memcpy(&control.data, &control.oi_state, sizeof(control.oi_state));
-	tx_frame(0);
+	control.data_len = sizeof(control.oi_state);
+	tx_frame(false);
 	
 	break;
 	default:

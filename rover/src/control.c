@@ -320,7 +320,7 @@ void control_mode()
 	wait_ms(1000);
 	lcd_clear();
 
-
+                                      
 	// Receive and handle messages from `control` indefinitely:
 	while (true)
     {

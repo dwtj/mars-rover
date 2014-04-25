@@ -56,34 +56,6 @@ void servo_manual_calib()
 	}
 }
 
-
-#warning "TODO: fix the servo handlers"
-void servo_system(){
-	switch (usart_rx()) {
-    case 0:
-        servo_init();
-        break;
-    case 1:
-        //servo_calibrate();//TODO
-        break;
-    case 2:
-        //servo_state();//TODO
-        break;
-    case 3:
-        #warning "This is wrong, because data has not been loaded yet."
-        // Read from data[0], then wait to finish moving.
-        servo_angle(control.data[0], true);
-        break;
-    case 4:
-        //servo_pulse_width();//TODO
-        break;
-    default:
-        r_error(error_bad_message, "Bad servo Command");
-        break;
-	}
-}
-
-
 /**
  * Expects a floating point value (strictly) between 0.0 and 1.0.
  */
@@ -92,6 +64,53 @@ static void set_pulse_proportion(float p){
 	OCR3B = (uint16_t) roundf(TOP * p);
 	lprintf("%u", OCR3B);
 }
+
+
+#warning "TODO: fix the servo handlers"
+void servo_system(){
+	switch (usart_rx()) {
+    case 0:
+        servo_init();
+        break;
+	//calibrate
+    case 1:
+		//calibrate not handled on this end
+        break;
+	//servo state
+    case 2:
+        //servo_state();//TODO
+        break;
+	//servo move angle
+    case 3:
+		if(rx_frame())
+		{
+			r_error(error_frame, "Servo expected single data frame.");
+		}
+		struct {
+			uint8_t angle;
+			bool wait;
+		} *servo_data = (void *) &control.data;
+		
+        servo_angle(servo_data->angle, servo_data->wait);
+        break;
+	//servo pulse width
+    case 4:
+		if(rx_frame()){
+			r_error(error_frame,"Pulse Width expected but one frame.");
+		}
+		
+		struct {
+			float p;
+		} *servo_data2 = (void *) &control.data;
+		
+		set_pulse_proportion(servo_data2->p);
+        break;
+    default:
+        r_error(error_bad_message, "Bad servo Command");
+        break;
+	}
+}
+
 
 void servo_init()
 {
