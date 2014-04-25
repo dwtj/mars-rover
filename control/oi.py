@@ -28,20 +28,9 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     Data frame sent: 2 bytes for `speed`, 2 bytes for `distance`, and 1 byte
     for `stream`.
 
-    Data frame received: 1 byte containing one of the following values
-    corresponding to why `rover` stopped and 2 bytes containing the actual
-    distance traveled.
+    Data frame received: 1 byte containing why `rover` stopped (as encoded 
+    in `OIStopCommand`) and 2 bytes containing the actual distance traveled.
 
-    traveled full distance = 0
-    left bumper = 1
-    right bumper = 2
-    left and right bumper = 3
-    drop off = 4
-    white tape = 5
-    left wheel = 6
-    right wheel = 7
-    middle wheel = 8
-    
     """
 
     if not 0 < speed and speed <= 500:
