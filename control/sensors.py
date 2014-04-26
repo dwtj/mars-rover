@@ -30,10 +30,9 @@ def calibrate_cliff(sen, cliff_csv):
     cliff_csv = csv.writer(open(cliff_csv, 'a'))
 
     for i in range(10):
-        for j in range(10):
-            dump = oi.dump(sen)
-            csv_file.writerow([dump[x] for x in range[20, 24]])
-        time.sleep(1)
+        dump = oi.dump(sen)
+        cliff_csv.writerow([dump[x] for x in range(20, 24)])
+        time.sleep(0.05)
 
 
 

@@ -1,5 +1,7 @@
 # oi.py
 
+import struct
+
 from codes import MesgID, SubsysID, OICommand
 
 
@@ -72,8 +74,11 @@ def play_song(sen):
 
 
 
+
 def dump(sen):
     """
+    TODO: description.
+
     Dumps all OI data. This function should unpack these bytes and place
     them into a python version of the OI struct.
     """
@@ -81,53 +86,57 @@ def dump(sen):
     # This mirrors the `oi_t` struct defined in `open_interface.h`.
     # Use this format string to unpack the copy of `oi_t` from the rover.
 
-    format = "B"  # bumper_right, bumper_left,
-                  # wheeldrop_right, wheeldrop_left, wheeldrop_caster
-    "B"  # wall
-    "B"  # cliff_left
-    "B"  # cliff_frontleft
-    "B"  # cliff_frontright
-    "B"  # cliff_right
-    "B"  # virtual_wall
+    format = "<"   # little endian
 
-    "B"  # overcurrent_{ld1, ld0, ld2, driveright, driveleft}
+    format += "B"  # bumper_right, bumper_left,
+                   # wheeldrop_right, wheeldrop_left, wheeldrop_caster
 
-    "H"  # unused_bytes
+    format += "B"  # wall
+    format += "B"  # cliff_left
+    format += "B"  # cliff_frontleft
+    format += "B"  # cliff_frontright
+    format += "B"  # cliff_right
+    format += "B"  # virtual_wall
 
-    "B"  # infared_byte
-    "B"  # button_{play, advance}
+    format += "B"  # overcurrent_{ld1, ld0, ld2, driveright, driveleft}
 
-    "H"  # distance
-    "H"  # angle
+    format += "H"  # unused_bytes
 
-    "B"  # charging_state
-    "H"  # voltage
-    "h"  # current
-    "b"  # temperature
-    "H"  # charge
-    "H"  # capacity
+    format += "B"  # infared_byte
+    format += "B"  # button_{play, advance}
+
+    format += "H"  # distance
+    format += "H"  # angle
+
+    format += "B"  # charging_state
+    format += "H"  # voltage
+    format += "h"  # current
+    format += "b"  # temperature
+    format += "H"  # charge
+    format += "H"  # capacity
     
-    "H"  # wall_signal
-    "H"  # cliff_left_signal
-    "H"  # cliff_frontleft_signal
-    "H"  # cliff_frontright_signal
-    "H"  # cliff_right_signal
+    format += "H"  # wall_signal
+    format += "H"  # cliff_left_signal
+    format += "H"  # cliff_frontleft_signal
+    format += "H"  # cliff_frontright_signal
+    format += "H"  # cliff_right_signal
 
-    "B"  # cargo_bay_{io0, io1, io2, io3, baud}
-    "H"  # cargo_bay_voltage
+    format += "B"  # cargo_bay_{io0, io1, io2, io3, baud}
+    format += "H"  # cargo_bay_voltage
 
-    "B"  # {internal_charger_on, home_base_charger_on}
+    format += "B"  # {internal_charger_on, home_base_charger_on}
 
-    "B"  # oi_mode
+    format += "B"  # oi_mode
 
-    "B"  # song_number
-    "B"  # song_playing
+    format += "B"  # song_number
+    format += "B"  # song_playing
 
-    "B"  # number_packets
-    "h"  # requested_velocity
-    "h"  # requested_radius
-    "h"  # requested_right_velocity
-    "h"  # requested_left_velocity
+    format += "B"  # number_packets
+    format += "h"  # requested_velocity
+    format += "h"  # requested_radius
+    format += "h"  # requested_right_velocity
+    format += "h"  # requested_left_velocity
+
 
     sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.dump, None)
     data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.dump, True)

@@ -123,7 +123,6 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 //Handler for OI, moved from control.
 void oi_system()
 {
-    lcd_putc('C');  // DEBUG
     enum {
         oi_command_init = 0,
         oi_command_move = 1,
@@ -131,6 +130,8 @@ void oi_system()
         oi_command_play_song = 3,
         oi_command_dump = 4,
     } oi_command = usart_rx();
+
+    txq_enqueue(oi_command);
 
 	switch (oi_command) {
 	case oi_command_init:
