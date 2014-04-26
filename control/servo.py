@@ -17,15 +17,6 @@ def init(sen):
 
 
 
-def rover_calibrate(sen):
-    """
-    Initiates the `rover`-operated calibration routine of the servo subsystem.
-    """
-    sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.calibrate, None)
-    sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.calibrate, False)
-
-
-
 def calibrate(sen):
     """
     Initiates the `control`-operated calibration routine of the servo subsystem.

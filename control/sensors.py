@@ -112,19 +112,37 @@ def gen_servo_converter(csv_file):
     - A 1-dimensional `numpy.ndarray` of floating point values to be converted.
       As in the last case, a 1-dimensional `numpy.ndarray` containing the
       converted values will be returned.
+
+    Note that the converter object will raise an exception if its angle is not
+    within 0 and 180.
     """
 
     data = np.genfromtxt(csv_file, delimiter=',')
-    raw = data[:, 1]
-    dist = data[:, 2]
+    angles_calib = data[:, 0]
+    pulse_widths_calib = data[:, 1]
 
     # Linear least squares regression:
-    return np.poly1d(polyfit(raw, dist, 1))
+    conv = np.poly1d(np.polyfit(angles_calib, pulse_widths_calib, 1))
+
+    # Pass this angles to be converted to pulse widths:
+    def guarded_conv(angles):
+        if type(angles) is np.ndarray:
+            if angles[angles < 0.0].any() or angles[angles > 180.0].any():
+                raise ValueError("Can't convert angles outside of [0, 180].")
+        else:
+            # `angles` is actually just a single int or floating point value:
+            if angles < 0.0 or angles > 180.0:
+                raise ValueError("Can't convert angles outside of [0, 180].")
+
+        # Otherwise, use the polynomial fit to convert to pulse widths:
+        return conv(angles)
+
+    return guarded_conv
 
 
 
 
-def gen_sonar_converter(csv_file):
+def gen_sonar_converter(sonar_csv):
     """ Uses the given `.csv` file to generate a callable object that converts
     raw sonar readings to an approximate distance measurement.
 
@@ -146,17 +164,12 @@ def gen_sonar_converter(csv_file):
     raw sonar data, and the second represents converted distance measurements.
     """
 
-    data = np.genfromtxt(csv_file, delimiter=',')
-    dist = data[:, 0]
-    raw = data[:, 1]
-
-    # Third order least-squares polynomial regression:
-    return np.poly1d(polyfit(raw, dist, 3))
+    return _gen_dist_converter(sonar_csv, 1)
 
 
 
 
-def gen_ir_converter(csv_file):
+def gen_ir_converter(ir_csv):
     """ Uses the given `.csv` file to generate a callable object that converts
     raw IR readings to an approximate distance measurement.
 
@@ -180,8 +193,38 @@ def gen_ir_converter(csv_file):
     distance measurements measured in centimeters.
     """
 
-    data = np.genfromtxt(csv_file, delimiter=',')
-    dist = data[:, 0]
-    raw = data[:, 1]
+    return _gen_dist_converter(ir_csv, 3)
 
-    return np.poly1d(polyfit(raw, dist, 3))
+
+
+
+def _gen_dist_converter(csv_file, order):
+
+    data = np.genfromtxt(csv_file, delimiter=',')
+    dist_calib = data[:, 0]
+    raw_calib = data[:, 1]
+
+    max_dist = max(dist_calib)
+    min_dist = min(dist_calib)
+
+    # Perform a polynomial least squares regression of the given order:
+    converter = np.poly1d(np.polyfit(raw_calib, dist_calib, order))
+
+    # This is bounded in the sense that it returns whatever `converter` came up
+    # with, unless a computed distance is greater than the maximum distance or
+    # less than the minimum distance found in the calibration data:
+    def bounded_converter(raw):
+
+        dists = converter(raw)
+
+        if type(dists) is np.ndarray:
+            dists[dists < min_dist] = 0
+            dists[dists > max_dist] = np.inf
+        else:
+            # `dists` is actually just a single int or floating point value.
+            dists = 0 if dists < min_dists else dists
+            dists = np.inf if dists > max_dists else dists
+        
+        return dists
+
+    return bounded_converter
