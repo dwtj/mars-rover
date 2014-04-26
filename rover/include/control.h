@@ -15,7 +15,7 @@
 #include "lcd.h"
 #include "util.h"
 #include "r_error.h"
-#include "open_interface.h"
+#include "oi.h"
 
 
 #ifndef CONTROL_H_
