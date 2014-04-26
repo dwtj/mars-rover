@@ -324,6 +324,7 @@ void control_mode()
     sonar_init();
     ir_init();
     servo_init();
+    io_init(&control.oi_state);
 
 	usart_init();
     usart_drain_rx();

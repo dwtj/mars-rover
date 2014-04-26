@@ -1,16 +1,17 @@
 # sensors.py - A class that fascilitates conversion from raw sensor data to
 # usable measurements using dynamic calibration data.
 
-
 import numpy as np
 import csv
-
+import time
 
 import ir
 import sonar
+import oi
 
 
-def calibrate_cliff(sen, csv_file):
+
+def calibrate_cliff(sen, cliff_csv):
     """ Interacts with the rover over the given `Sentinel` object to generate
     calibration data for each of the four cliff sensor LEDs of the `rover`.
     This data is then appended to the indicated `.csv` file.
@@ -26,12 +27,18 @@ def calibrate_cliff(sen, csv_file):
     There will be 100 samples are measured over at least 5 seconds.
     """
 
-    raise NotImplementedError
+    cliff_csv = csv.writer(open(cliff_csv, 'a'))
 
-    
+    for i in range(10):
+        for j in range(10):
+            dump = oi.dump(sen)
+            csv_file.writerow([dump[x] for x in range[20, 24]])
+        time.sleep(1)
 
 
-def calibrate_servo(sen, csv_file):
+
+
+def calibrate_servo(sen, servo_csv):
     raise NotImplementedError
 
 
