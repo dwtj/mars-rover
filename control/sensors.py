@@ -12,6 +12,8 @@ import sonar
 import oi
 
 
+DEFAULT_CALIBRATION_DATA_DIR = 'calibrate/data/default'
+
 
 def calibrate_cliff(sen, cliff_csv):
     """ Interacts with the rover over the given `Sentinel` object to generate
