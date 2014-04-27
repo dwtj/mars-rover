@@ -161,6 +161,31 @@ void oi_system()
 		break;
 	//Sing me a song.
 	case 3:
+	;
+	//assuming that we get two data frames, the first containing the notes and the second containing the durations.
+	int j;
+		struct {
+			uint8_t n; //The number of notes present in the song
+			//char data[n];
+			uint8_t index;
+		} *song_data = (void *) &control.data;
+		
+	//	int j;
+		 
+		while(rx_frame())//this should happen twice please
+		{
+			char tmp_notes[song_data->n];
+			char tmp_durs[song_data->n];
+			
+				for(j =0; j<song_data->n; j++)
+				{
+					//tmp_notes[n];
+				}
+
+		}
+		
+	
+	
 		;//First thing after a case must be a statement
 		//we only have the one song....
 		char song[] = {96, 96, 96, 96, 92, 94, 96, 94, 96};
