@@ -73,8 +73,9 @@ void load_song5() {
 }
 
 
-void playSong(char choice){
-	switch(choice){
+void playSong(void){
+	
+	switch(wait_button("Select song")){
 		
 		case 1:
 			load_song1(); //plays Rick Roll song
@@ -123,7 +124,7 @@ int main()
 		break;
 
 	case 4:
-		playSong(5);
+		playSong();
 		break;
 
 	default:
