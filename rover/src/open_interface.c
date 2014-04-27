@@ -16,7 +16,11 @@ void oi_free(oi_t *self) {
 }
 
 /// Initialize the Create
-void oi_init(oi_t *self) {
+void oi_init(oi_t *self)
+{
+	lcd_clear();
+	lcd_puts("Starting OI...");
+
 	// Setup USART1 to communicate to the iRobot Create using serial (baud = 57600)
 	UBRR1L = 16; // UBRR = (FOSC/16/BAUD-1);
 	UCSR1B = (1 << RXEN) | (1 << TXEN);
@@ -38,6 +42,8 @@ void oi_init(oi_t *self) {
 	
 	oi_update(self);
 	oi_update(self); // call twice to clear distance/angle
+
+	lcd_clear();
 }
 
 
