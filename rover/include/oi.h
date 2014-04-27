@@ -15,8 +15,8 @@
  * @date 06/26/2012
  */
 
-#ifndef OPEN_INTERFACE_H
-#define OPEN_INTERFACE_H
+#ifndef _OI_H
+#define _OI_H
 
 #define FOSC 16000000
 
@@ -204,4 +204,4 @@ void go_charge(void);
 //Handler for OI (moved from control), used for Control-Rover communication
 void oi_system();
 
-#endif  /* OPEN_INTERFACE_H */
+#endif  /* _OI_H */
