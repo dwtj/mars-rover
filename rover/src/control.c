@@ -15,7 +15,7 @@
 #include "util.h"
 #include "usart.h"
 #include "IR.h"
-#include "oi.h"
+#include "open_interface.h"
 #include "sonar.h"
 #include "servo.h"
 #include "txq.h"

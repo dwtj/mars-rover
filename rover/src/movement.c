@@ -23,7 +23,7 @@ enum {
 	right_cliff
 } cliff_flag;
 
-#include "oi.h"
+#include "open_interface.h"
 #include "movement.h"
 #include "lcd.h"
 #include "util.h"
