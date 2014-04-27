@@ -22,14 +22,14 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     if provided, is in millimeters and is an integer in range [-3000, 3000]. 
     Negative `distance` values command the robot to move backwards.
    
-    Returns a list where [0] is the encoding for the reason for stopping
-    and [1] is the actual distance traveled.
+    Returns a tuple where [0] is the reason for stopping and [1] is the 
+    actual distance traveled.
 
     Data frame sent: 2 bytes for `speed`, 2 bytes for `distance`, and 1 byte
     for `stream`.
 
     Data frame received: 1 byte containing why `rover` stopped (as encoded 
-    in `OIStopCommand`) and 2 bytes containing the actual distance traveled.
+    in `OIStopID`) and 2 bytes containing the actual distance traveled.
 
     """
 
