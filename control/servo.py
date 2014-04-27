@@ -11,8 +11,8 @@ def init(sen):
     the servo state is made to be "on".
     """
 
-    sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.init, None)
-    sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.init, False)
+    sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.init, None)
+    sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.init, False)
 
 
 
@@ -37,8 +37,8 @@ def state(sen, s = None):
     """
 
     if s == None:
-        sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, False)
-        rv = sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, True)
+        sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.state, False)
+        rv = sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.state, True)
         rv = "on" if rv == b'\x01' else "off"
     elif s == "on":
         init(sen)
@@ -47,8 +47,8 @@ def state(sen, s = None):
         # TODO: How would I tell the servo to turn off?? Send a 0? Make 
         # consistent on rover side
         b = struct.pack("<I", 0)
-        sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, b)
-        sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.state, False)
+        sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.state, b)
+        sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.state, False)
         rv = "off"
     else:
         raise ValueError('Argument `s` must be `None`, "on", or "off".');
@@ -76,13 +76,13 @@ def angle(sen, angle, wait = True):
         raise ValueError("Argument `angle` must be an integer in [0..180].")
     
     b = struct.pack("<I", angle)
-    tx_mesg(MesgID.command, Subsys.servo, ServoCommand.angle, b)
+    tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, b)
     
     # TODO: wait for "finished" signal from rover. 
     # Is the finished signal in the data sent back? Make consistent with rover
-    #while rx_mesg(MesgID.command, Subsys.servo, ServoCommand.angle, True) != ServoSignal.finished:
+    #while rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, True) != ServoSignal.finished:
         #pass
-    rx_mesg(MesgID.command, Subsys.servo, ServoCommand.angle, False)
+    rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, False)
 
 
 
@@ -102,5 +102,5 @@ def pulse(sen, p):
         raise ValueError("Argument `p` must be a float in the interval (0, 1).")
 
     b = struct.pack("<f", p)
-    sen.tx_mesg(MesgID.command, Subsys.servo, ServoCommand.pulse, b)
-    sen.rx_mesg(MesgID.command, Subsys.servo, ServoCommand.pulse, False)
+    sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse, b)
+    sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse, False)

@@ -135,11 +135,10 @@ void oi_system()
 	txq_enqueue(oi_command);
 
 	switch (oi_command) {
-		case oi_command_init:
 
+		case oi_command_init:
 			oi_init(&(control.oi_state));
 			break;
-
 
 		case oi_command_move:
 	

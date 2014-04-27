@@ -69,8 +69,8 @@ static void set_pulse_proportion(float p){
 #warning "TODO: fix the servo handlers"
 void servo_system()
 {
-    uint8_t command_id = usart_rx();
-    txq_enqueue(command_id);
+	uint8_t command_id = usart_rx();
+	txq_enqueue(command_id);
 
 	switch (command_id) {
 	case 0:
@@ -101,7 +101,7 @@ void servo_system()
 		break;
 		
 	//servo pulse width
-    case 3:
+	case 3:
 		if(rx_frame()){
 			r_error(error_frame,"Pulse Width expected but one frame.");
 		}
@@ -114,8 +114,8 @@ void servo_system()
 		break;
 		
 	default:
-        	r_error(error_bad_message, "Bad servo Command");
-        	break;
+			r_error(error_bad_message, "Bad servo Command");
+			break;
 	}
 }
 
@@ -124,9 +124,9 @@ void servo_init()
 {
 	TCCR3A = 0b00100011; // WGM 15, output compare from channel B
 	TCCR3B = 0b00011010; // 1/8 prescaler
-	TCCR3C = 0;          // Not using force output compares
-	ETIMSK = 0;          // Not using interrupts
-	OCR3A = TOP;	     // set top
+	TCCR3C = 0;		  // Not using force output compares
+	ETIMSK = 0;		  // Not using interrupts
+	OCR3A = TOP;		 // set top
 	
 	DDRE = 0b00010000;   // Set data direction on Pin 4 of Port E to output.
 	

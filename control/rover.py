@@ -25,7 +25,7 @@ class Rover():
         self.sen = sen
 
         if calib_dir == None:
-            calib_dir = DEFAULT_CALIBRATION_DATA_DIR
+            calib_dir = sensors.DEFAULT_CALIBRATION_DATA_DIR
 
         self.scan_data = None
 
@@ -88,7 +88,7 @@ class Rover():
 
         for (idx, angle) in enumerate(angles):
 
-            servo.pulse(self.sen, self.conv_servo(angle))
+            servo.pulse(self.sen, self.servo_conv(angle))
             rows = [r for r in range(idx * n, (idx+1) * n)]
 
             ir_data[rows, 0] = angle
