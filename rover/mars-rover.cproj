@@ -196,6 +196,9 @@
     <Compile Include="include\sonar.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\tests.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\txq.h">
       <SubType>compile</SubType>
     </Compile>
@@ -239,6 +242,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\sonar.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\timer.c">

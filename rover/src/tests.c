@@ -1,4 +1,8 @@
 #include "tests.h"
+#include "control.h"
+#include "usart.h"
+#include "txq.h"
+#include "util.h"
 
 
 void send_mesg_test_mode()
@@ -22,7 +26,7 @@ void send_mesg_test_mode()
 		case mesg_ping:
 
 			txq_enqueue(signal_start);
-			ping_handler();  // Just sends a ping message.
+			txq_enqueue(mesg_ping);
 			txq_enqueue(signal_stop);
 			txq_drain();
 			break;
