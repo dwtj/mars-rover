@@ -200,13 +200,9 @@ void dist_reading_handler(subsys_t subsys)
 
 
 
-/**
- * A `ping` message has been received, so this function transmits an
- * equivalent `ping` message in response.
- */
 static void ping_handler() 
 {
-	; // Do nothing, since the response message has already been generated.
+	; // Do nothing, since there is nothing else to be added to the response.
 }
 
 
