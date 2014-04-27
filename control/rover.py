@@ -94,10 +94,14 @@ class Rover():
             ir_data[rows, 0] = angle
             ir_data[rows, 1] = ir.readings(self.sen, n)
 
-            servo_data[rows, 0] = angle
-            servo_data[rows, 1] = sonar.readings(self.sen, n)
+            sonar_data[rows, 0] = angle
+            sonar_data[rows, 1] = sonar.readings(self.sen, n)
 
-        return (ir_data, servo_data)
+        # Perform the conversion from raw readings to distances.
+        ir_data[:, 1] = self.ir_conv(ir_data[:, 1])
+        sonar_data[:, 1] = self.sonar_conv(sonar_data[:, 1])
+
+        return (ir_data, sonar_data)
 
 
 
