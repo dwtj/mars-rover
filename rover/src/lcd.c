@@ -38,14 +38,14 @@ void lcd_home_anyloc(unsigned char location);
 //Handler for the LCD system
 void lcd_system()
 {
-    enum {
-        lcd_command_init = 0,
-        lcd_command_puts = 1,
-        lcd_command_clear = 2,
-    } lcd_command = usart_rx();
+	enum {
+		lcd_command_init = 0,
+		lcd_command_puts = 1,
+		lcd_command_clear = 2,
+	} lcd_command = usart_rx();
 
-    txq_enqueue(lcd_command);
-    
+	txq_enqueue(lcd_command);
+	
 	switch(lcd_command) {
 	case lcd_command_init:
 		lcd_init();
@@ -53,11 +53,11 @@ void lcd_system()
 
 	case lcd_command_puts:
 		if (rx_frame() == true) {
-		    r_error(error_bad_message, "String to put on the LCD is too long.");
+			r_error(error_bad_message, "String to put on the LCD is too long.");
 		} else {
-		    // Add a null terminator. Note that `data` is big enough.
-		    control.data[control.data_len] = '\0';
-		    lcd_puts(control.data);
+			// Add a null terminator. Note that `data` is big enough.
+			control.data[control.data_len] = '\0';
+			lcd_puts(control.data);
 		}
 		break;
 

@@ -3,12 +3,12 @@
  * Documentation: http://www.irobot.com/filelibrary/pdfs/hrd/create/create%20open%20interface_v2.pdf
  *
  * void main() {
- *    oi_sensors_t *robot = oi_alloc();
- *    oi_init(robot);
+ *	oi_sensors_t *robot = oi_alloc();
+ *	oi_init(robot);
  *
- *    // ... your code ...
+ *	// ... your code ...
  *
- *    free(robot);
+ *	free(robot);
  * }
  * 
  * @author See "Robotics Primer Workbook" project hosted on SourceForge.Net; Edited for clarity by Chad Nelson
@@ -112,7 +112,7 @@ typedef struct {
 	uint8_t button_advance : 1;
 
 	int16_t distance; // in millimeters
-	int16_t angle;    // in degrees; counterclockwise is positive; clockwise is negative
+	int16_t angle;	// in degrees; counterclockwise is positive; clockwise is negative
 
 	// Battery information
 	uint8_t charging_state;

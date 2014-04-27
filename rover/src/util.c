@@ -44,12 +44,12 @@ void wait_ms(unsigned int time_val) {
 void timer2_start(char unit) {
 	timer2_tick=0;
 	if ( unit == 0 ) { 		//unit = 0 is for slow 
-        TCCR2=0b00001011;	//WGM:CTC, COM:OC2 disconnected,pre_scaler = 64
-        TIMSK|=0b10000000;	//Enabling O.C. Interrupt for Timer2
+		TCCR2=0b00001011;	//WGM:CTC, COM:OC2 disconnected,pre_scaler = 64
+		TIMSK|=0b10000000;	//Enabling O.C. Interrupt for Timer2
 	}
 	if (unit == 1) { 		//unit = 1 is for fast
-        TCCR2=0b00001001;	//WGM:CTC, COM:OC2 disconnected,pre_scaler = 1
-        TIMSK|=0b10000000;	//Enabling O.C. Interrupt for Timer2
+		TCCR2=0b00001001;	//WGM:CTC, COM:OC2 disconnected,pre_scaler = 1
+		TIMSK|=0b10000000;	//Enabling O.C. Interrupt for Timer2
 	}
 	sei();
 }
@@ -199,7 +199,7 @@ void  move_stepper_motor_by_step(int num_steps, int direction) {
 	// ...
 	// To turn counter clockwise, simply reverse the order.
 	//
-    // Remember to wait a short amount of time between each step so that the motor has time to turn.
+	// Remember to wait a short amount of time between each step so that the motor has time to turn.
 
 	// INSERT CODE HERE
 

@@ -132,13 +132,13 @@ void sonar_pulse()
 {
 	uint8_t mask = 0b00010000;
 	DDRD |= mask;  // make pin 4 output; 0 means input, 1 means output
-    PORTD |= mask; // set pin 4
+	PORTD |= mask; // set pin 4
 	
 	wait_ms(1);  // TODO: make this smaller.
 	
 	mask = ~mask;
-    PORTD &= mask; // clear pin 4
-    DDRD &= mask;  // make pin 4 an input again.
+	PORTD &= mask; // clear pin 4
+	DDRD &= mask;  // make pin 4 an input again.
 }
 
 
@@ -177,7 +177,7 @@ static uint16_t get_sonar_signal_width()
  * in microseconds, according to the prescaler being used. Results round down.
  */
 static uint16_t ticks_to_time(uint16_t n) {
-    return n / 2;
+	return n / 2;
 }
 
 
@@ -188,7 +188,7 @@ static uint16_t ticks_to_time(uint16_t n) {
  * before the echo returned to the SONAR sensor.
  */
 static float time_to_dist(float t) {
-    return 0.017 * t; //divide distance conversion by two to account for the journey to and from the object
+	return 0.017 * t; //divide distance conversion by two to account for the journey to and from the object
 }
 
 
@@ -208,15 +208,15 @@ char *sonar_get_state() {
 
 void sonar_system()
 {
-    uint8_t command_id = usart_rx();
-    txq_enqueue(command_id);
+	uint8_t command_id = usart_rx();
+	txq_enqueue(command_id);
 
 	switch(command_id) {
 		case 0:
 			sonar_init();
 			break;
 		case 1:
-            dist_reading_handler(subsys_sonar);
+			dist_reading_handler(subsys_sonar);
 			break;
 		default:
 			r_error(error_bad_message, "Bad sonar Command");
@@ -234,7 +234,7 @@ void sonar_system()
  */
 float sonar_reading()
 {
-    return time_to_dist(ticks_to_time(sonar_raw_reading()));
+	return time_to_dist(ticks_to_time(sonar_raw_reading()));
 }
 
 
@@ -278,7 +278,7 @@ uint16_t sonar_raw_reading()
 	wait_ms(1);  // TODO: Make this smaller.
 	sonar_state = READY;
 	
-    return rv;
+	return rv;
 }
 
 

@@ -20,7 +20,7 @@
 
 
 /************************************************************************/
-/* Definitions for the object scan finite state machine.                */
+/* Definitions for the object scan finite state machine.				*/
 /************************************************************************/
 
 
@@ -38,7 +38,7 @@ void (*scan_FSM_trans[NUM_STATES]) (scan_FSM *state) = {transA, transB, transC, 
 
 
 /************************************************************************/
-/* Helper functions for the object scan finite state machine.           */
+/* Helper functions for the object scan finite state machine.		   */
 /************************************************************************/
 
 void FSM_init(scan_FSM *fsm, uint8_t init_angle) {
@@ -106,7 +106,7 @@ static bool is_object_there(readings *rs)
 
 
 /************************************************************************/
-/* Transition functions for the object scan finite state machine.       */
+/* Transition functions for the object scan finite state machine.	   */
 /************************************************************************/
 
 static void transA(scan_FSM *fsm)
@@ -144,7 +144,7 @@ static void transC(scan_FSM *fsm)
 {
 	// TODO: bail out if the width is too wide for the available buffer:
 	// if (fsm->cur_object_width == MAX_OBJECT_WIDTH - 1)
-	//     do something
+	//	 do something
 	
 	readings rs = {.ir = ir_reading(), .sonar = sonar_reading(true)};
 	if (is_object_there(&rs))
@@ -177,7 +177,7 @@ static void transD(scan_FSM *fsm)
 	{
 		// TODO: bail out if the width is too wide for the available buffer:
 		// if (fsm->cur_object_width == MAX_OBJECT_WIDTH - 1)
-		//     do something
+		//	 do something
 		
 		// The last reading was erroneous. Still looking at an actual object and waiting for the end of it.
 		fsm->cur_object_readings[fsm->cur_object_width] = rs;
@@ -203,9 +203,9 @@ static void transD(scan_FSM *fsm)
 uint16_t snprint_object(char *buf, uint16_t bufsize, object *obj)
 {	
 	static const char *format = "theta1: %3d\n"
-					            "theta2: %3d\n"
-					            "dist:   %2.1f\n"
-					            "width:  %2.1f\n";
+								"theta2: %3d\n"
+								"dist:   %2.1f\n"
+								"width:  %2.1f\n";
 	
 	return snprintf(buf, bufsize, format, obj->theta1, obj->theta2, obj->dist, obj->width);
 }
@@ -214,7 +214,7 @@ uint16_t snprint_object(char *buf, uint16_t bufsize, object *obj)
 
 
 /************************************************************************/
-/* Initiates the object scan finite state machine.                      */
+/* Initiates the object scan finite state machine.					  */
 /************************************************************************/
 
 void objects_scan(scan_results *results)
@@ -226,11 +226,11 @@ void objects_scan(scan_results *results)
 	{
 		servo_angle(deg, true);
 		fsm.cur_angle = deg;
-        if (A <= fsm.state && fsm.state <= D) {
-		    scan_FSM_trans[fsm.state](&fsm);
-        } else {
-		    wait_button("ERROR");
-        }
+		if (A <= fsm.state && fsm.state <= D) {
+			scan_FSM_trans[fsm.state](&fsm);
+		} else {
+			wait_button("ERROR");
+		}
 	}
 	
 	// Copy results generated in `fsm` into `*results`:
