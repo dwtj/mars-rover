@@ -15,8 +15,15 @@ enum {
 	both
 } bumper_flag;
 
+enum {
+	nothing,
+	front_left_cliff,
+	front_right_cliff,
+	left_cliff,
+	right_cliff
+} cliff_flag;
 
-#include "open_interface.h"
+#include "oi.h"
 #include "movement.h"
 #include "lcd.h"
 #include "util.h"
@@ -77,7 +84,6 @@ int navigate_dist(oi_t *sensor_data, int dist) {
 }
 
 
-
 // distance accumulated will be zeroed before return.
 // Only while attempting to move forward should it stop for the bumper sensors.
 int move_dist(oi_t *sensor_data, int dist, int spd) {
@@ -92,16 +98,42 @@ int move_dist(oi_t *sensor_data, int dist, int spd) {
 			oi_update(sensor_data);
 			sum += sensor_data->distance; //adds a positive value
 			if (sensor_data->bumper_left || sensor_data->bumper_right) {
+				
+				//Bumper detection
 				if (sensor_data->bumper_left && sensor_data->bumper_right) {
 					bumper_flag = both;
 				} else if (sensor_data->bumper_left) {
 					bumper_flag = left;
-				} else {
+				} else if (sensor_data->bumper_right) {
 					bumper_flag = right;
+				}
+				
+				//cliff detection
+				else if (sensor_data->cliff_left_signal){
+					cliff_flag = left_cliff;
+				}
+				else if (sensor_data->cliff_right_signal){
+					cliff_flag = right_cliff;
+				}
+				else if (sensor_data->cliff_frontleft_signal){
+					cliff_flag = front_left_cliff;
+				}
+				else if (sensor_data->cliff_frontright_signal){
+					cliff_flag = front_right_cliff;
 				}
 				break;
 			}
+			
+			if (bumper_flag != none){ //if one of the bumpers was activated, stop moving
+				#warning "Still needs to send back a signal that specifies that a bumper was activated"
+				return sum; //return the distance traveled before hitting the object
+			}
+			if (cliff_flag != nothing){ //if one of the cliffs was activated, stop moving
+				#warning "Still needs to send back a signal that specifies that one of the cliff detectors was activated"
+				return sum; //return the distance traveled before detecting a cliff
+			}
 		}
+
 	//If attempting to go backwards
 	} else if(dist < 0) {
 		while (sum > dist) {

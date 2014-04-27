@@ -226,7 +226,6 @@ void sonar_system()
 
 
 
-
 /**
  * Performs a single sonar reading, returning a measure of the distance to the
  * nearest object in centimeters. The function will wait after the reading has

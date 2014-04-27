@@ -52,13 +52,13 @@ void lcd_system()
 		break;
 
 	case lcd_command_puts:
-        if (rx_frame() == true) {
-            r_error(error_bad_message, "String to put on the LCD is too long.");
-        } else {
-            // Add a null terminator. Note that `data` is big enough.
-            control.data[control.data_len] = '\0';
-            lcd_puts(control.data);
-        }
+		if (rx_frame() == true) {
+		    r_error(error_bad_message, "String to put on the LCD is too long.");
+		} else {
+		    // Add a null terminator. Note that `data` is big enough.
+		    control.data[control.data_len] = '\0';
+		    lcd_puts(control.data);
+		}
 		break;
 
 	case lcd_command_clear:
