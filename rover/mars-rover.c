@@ -61,16 +61,14 @@ void load_song4() {
 
 void load_song5() {
 	
-	unsigned char victoryNumFanfare = 9;
-	char victoryFanfareNotes[9] = {96, 96, 96, 96, 92, 94, 94, 96, 94};
-	int i;//DEBUG//using 60 60 ..56 58
-	int alter =36;
-	for(i =0; i<9; i++)
-	{
-		victoryFanfareNotes[i] -=alter;
-	}
+	unsigned char victoryNumFanfare = 53;
+	char victoryFanfareNotes[53] = {55,60,64,60,60,60,60,65,65,55,65,55,60,64,55,
+		57,59,60,56,58,60,55,60,64,62,64,62,65,
+		62,65,65,65,65,64,60,60,60,58,62,64,
+		60,55,55,60,55,65,59,65,60,60,60,60,60};
 	
-	char duration[8] = {14, 14, 14, 14, 30, 30, 18, 18, 18}; //These probably need to be edited.
+	//char duration[8] = {14, 14, 14, 14, 30, 30, 18, 18, 18}; //These probably need to be edited.
+		char duration[53] = {18, 18, 18, 18, 18, 18,  9,  9, 18, 18, 45,  9, 54, 54, 54, 9,  9,  9,  9,  9,  9, 54, 36, 18, 54, 45,  9, 54, 54, 54,  9,  9,  9,  9,  9,  9, 54, 36, 18, 54, 45,  9, 54, 54, 54, 18, 18,  9,  9, 54, 54, 54, 18, 18,  9,  9, 54, 18, 18, 18,  9,  9, 27,  9, 54 }; //These probably need to be edited.
 	oi_load_song(VICTORY_FANFARE,victoryNumFanfare, victoryFanfareNotes, duration);
 	oi_play_song(0);
 }
