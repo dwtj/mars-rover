@@ -65,20 +65,20 @@ void oi_update(oi_t *self) {
 	sensor = (char *) self;
 	
 	// Fix byte ordering for multi-byte members of the struct
-	self->distance                 = (sensor[12] << 8) + sensor[13];
-	self->angle                    = (sensor[14] << 8) + sensor[15];
-	self->voltage                  = (sensor[17] << 8) + sensor[18];
-	self->current                  = (sensor[19] << 8) + sensor[20];
-	self->charge                   = (sensor[22] << 8) + sensor[23];
-	self->capacity                 = (sensor[24] << 8) + sensor[25];
-	self->wall_signal              = (sensor[26] << 8) + sensor[27];
-	self->cliff_left_signal        = (sensor[28] << 8) + sensor[29];
+	self->distance				 = (sensor[12] << 8) + sensor[13];
+	self->angle					= (sensor[14] << 8) + sensor[15];
+	self->voltage				  = (sensor[17] << 8) + sensor[18];
+	self->current				  = (sensor[19] << 8) + sensor[20];
+	self->charge				   = (sensor[22] << 8) + sensor[23];
+	self->capacity				 = (sensor[24] << 8) + sensor[25];
+	self->wall_signal			  = (sensor[26] << 8) + sensor[27];
+	self->cliff_left_signal		= (sensor[28] << 8) + sensor[29];
 	self->cliff_frontleft_signal   = (sensor[30] << 8) + sensor[31]; 
 	self->cliff_frontright_signal  = (sensor[32] << 8) + sensor[33];
-	self->cliff_right_signal       = (sensor[34] << 8) + sensor[35];
-	self->cargo_bay_voltage        = (sensor[41] << 8) + sensor[42];
-	self->requested_velocity       = (sensor[48] << 8) + sensor[42];
-	self->requested_radius         = (sensor[50] << 8) + sensor[51];
+	self->cliff_right_signal	   = (sensor[34] << 8) + sensor[35];
+	self->cargo_bay_voltage		= (sensor[41] << 8) + sensor[42];
+	self->requested_velocity	   = (sensor[48] << 8) + sensor[42];
+	self->requested_radius		 = (sensor[50] << 8) + sensor[51];
 	self->requested_right_velocity = (sensor[52] << 8) + sensor[53];
 	self->requested_left_velocity  = (sensor[54] << 8) + sensor[55];
 	
@@ -90,9 +90,9 @@ void oi_update(oi_t *self) {
 /// Sets the LEDs on the iRobot.
 /**
 * Set the state of the three LEDs on the iRobot (Power, Play, Advance).
-* @play_led        uint8_t either 0 (off) or 1 (on)
-* @advance_led     uint8_t either 0 (off) or 1 (on)
-* @power_color     uint8_t the color of the power LED; 0 = green, 255 = red
+* @play_led		uint8_t either 0 (off) or 1 (on)
+* @advance_led	 uint8_t either 0 (off) or 1 (on)
+* @power_color	 uint8_t the color of the power LED; 0 = green, 255 = red
 * @power_intensity uint8_t the intensity of the power LED; 0 = off, 255 = full intensity
 */
 void oi_set_leds(uint8_t play_led, uint8_t advance_led, uint8_t power_color, uint8_t power_intensity) {
@@ -124,104 +124,96 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 //Handler for OI, moved from control.
 void oi_system()
 {
-    enum {
-        oi_command_init = 0,
-        oi_command_move = 1,
-        oi_command_rotate = 2,
-        oi_command_play_song = 3,
-        oi_command_dump = 4,
-    } oi_command = usart_rx();
+	enum {
+		oi_command_init = 0,
+		oi_command_move = 1,
+		oi_command_rotate = 2,
+		oi_command_play_song = 3,
+		oi_command_dump = 4,
+	} oi_command = usart_rx();
 
-    txq_enqueue(oi_command);
+	txq_enqueue(oi_command);
 
 	switch (oi_command) {
-	case oi_command_init:
+		case oi_command_init:
 
-		oi_init(&(control.oi_state));
-		break;
-
-
-	case oi_command_move:
-
-		if(rx_frame()) {
-            r_error(error_frame,"Move should not have multiple frames.");
-        }
-
-        struct {
-            uint8_t speed;
-            uint8_t dist;
-            bool stream;
-        } *move_data = (void *) &control.data;
-
-		#warning "Stream functionality to be implemented later."
-        //Stream returns the distance traveled
-
-		move_dist(&(control.oi_state), move_data->dist, move_data->speed);
-		break;
+			oi_init(&(control.oi_state));
+			break;
 
 
-	case oi_command_rotate:
+		case oi_command_move:
+	
+			if(rx_frame()) {
+				r_error(error_frame,"Move should not have multiple frames.");
+			}
 
-	    if (rx_frame()) {
-            r_error(error_bad_message, "Rotate should only have one data frame.");
-        }
+			struct {
+				uint8_t speed;
+				uint8_t dist;
+				bool stream;
+			} *move_data = (void *) &control.data;
 
-		int16_t *angle = &(control.data[0]);
+			#warning "Stream functionality to be implemented later."
+			//Stream returns the distance traveled
 
-        if (control.data_len != sizeof(*angle)) {
-            r_error(error_bad_message, "Received too much data with rotate "
-                                                                   "message.");
-        }
+			move_dist(&(control.oi_state), move_data->dist, move_data->speed);
+			break;
 
-		turn(&(control.oi_state), *angle);
-		break;
-	//Sing me a song.
-	case oi_command_play_song:
-	;
-	//assuming that we get two data frames, the first containing the notes and the second containing the durations.
-	int j;
-		struct {
-			uint8_t n; //The number of notes present in the song
-			//char data[n];
-			uint8_t index;
-		} *song_data = (void *) &control.data;
-		
-	//	int j;
-		 
-		while(rx_frame())//this should happen twice please
-		{
-			char tmp_notes[song_data->n];
-			char tmp_durs[song_data->n];
+		case oi_command_rotate:
+
+			if (rx_frame()) {
+				r_error(error_bad_message, "Rotate should only have one data frame.");
+			}
+
+			int16_t *angle = &(control.data[0]);
+
+			if (control.data_len != sizeof(*angle)) {
+				r_error(error_bad_message, "Received too much data with rotate "
+																	   "message.");
+			}
+
+			turn(&(control.oi_state), *angle);
+			break;
 			
-				for(j =0; j<song_data->n; j++)
-				{
-					//tmp_notes[n];
+			//Sing me a song.
+		case oi_command_play_song:
+			;
+			//assuming that we get two data frames, the first containing the notes and the second containing the durations.
+			int j;
+				struct {
+					uint8_t n; //The number of notes present in the song
+					//char data[n];
+					uint8_t index;
+				} *song_data = (void *) &control.data;
+		
+			//	int j;
+		 
+			while(rx_frame()) { //this should happen twice please
+				char tmp_notes[song_data->n];
+				char tmp_durs[song_data->n];
+			
+				for(j =0; j<song_data->n; j++) {
+					//tmp_notes[n]; TODO: broken
+					#warning "oi_command_play_song not implemented"
 				}
 
-		}
+			}
 		
-	
-		;//First thing after a case must be a statement
-		//we only have the one song....
-		char song[] = {96, 96, 96, 96, 92, 94, 96, 94, 96};
-		char duration[] = {8, 8, 8, 8, 12, 12, 8, 8, 8}; //These probably need to be edited.
-		oi_load_song(0,9, song[0], duration[0]);//??
-		oi_play_song(0);
-		break;
+			break;
 
-	case oi_command_dump:
-        lcd_putc('D');  // DEBUG
-        //copies all of the data from OI_UPDATE and transmits to Control.
-        oi_update(&(control.oi_state));
-        memcpy(control.data, &control.oi_state, sizeof(control.oi_state));
-        control.data_len = sizeof(control.oi_state);
-        tx_frame(false);
-        lcd_putc('E');  // DEBUG
-	    break;
+		case oi_command_dump:
+			lcd_putc('D');  // DEBUG
+			//copies all of the data from OI_UPDATE and transmits to Control.
+			oi_update(&(control.oi_state));
+			memcpy(control.data, &control.oi_state, sizeof(control.oi_state));
+			control.data_len = sizeof(control.oi_state);
+			tx_frame(false);
+			lcd_putc('E');  // DEBUG
+			break;
 
-	default:
-		r_error(error_bad_message, "Bad OI Command");
-		break;
+		default:
+			r_error(error_bad_message, "Bad OI Command");
+			break;
 	}
 }
 
@@ -231,6 +223,7 @@ void oi_load_song(int song_index, int num_notes, unsigned char *notes, unsigned 
 	oi_byte_tx(OI_OPCODE_SONG);
 	oi_byte_tx(song_index);
 	oi_byte_tx(num_notes);
+	
 	for (i=0;i<num_notes;i++) {
 		oi_byte_tx(notes[i]);
 		oi_byte_tx(duration[i]);
