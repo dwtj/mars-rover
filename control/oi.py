@@ -1,7 +1,8 @@
 # oi.py
 
-from codes import MesgID, SubsysID, OICommand
+import struct
 
+from codes import MesgID, SubsysID, OICommand
 
 
 def init(sen):
@@ -28,27 +29,17 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     Data frame sent: 2 bytes for `speed`, 2 bytes for `distance`, and 1 byte
     for `stream`.
 
-    Data frame received: 1 byte containing one of the following values
-    corresponding to why `rover` stopped and 2 bytes containing the actual
-    distance traveled.
+    Data frame received: 1 byte containing why `rover` stopped (as encoded 
+    in `OIStopCommand`) and 2 bytes containing the actual distance traveled.
 
-    traveled full distance = 0
-    left bumper = 1
-    right bumper = 2
-    left and right bumper = 3
-    drop off = 4
-    white tape = 5
-    left wheel = 6
-    right wheel = 7
-    middle wheel = 8
-    
     """
 
     if not 0 < speed and speed <= 500:
         raise ValueError("Argument `speed` must be in the interval (0, 500].")
     
     if not (0 < distance and distance <= 300) and distance != None:
-        raise ValueError("Argument `distance` must be in the closed interval [-3000, 3000].")
+        raise ValueError("Argument `distance` must be in the closed interval"
+                                                              "[-3000, 3000].")
 
     if stream != False:
         raise NotImplementedError()
@@ -83,12 +74,71 @@ def play_song(sen):
 
 
 
+
 def dump(sen):
     """
+    TODO: description.
+
     Dumps all OI data. This function should unpack these bytes and place
     them into a python version of the OI struct.
     """
+
+    # This mirrors the `oi_t` struct defined in `open_interface.h`.
+    # Use this format string to unpack the copy of `oi_t` from the rover.
+
+    format = "<"   # little endian
+
+    format += "B"  # bumper_right, bumper_left,
+                   # wheeldrop_right, wheeldrop_left, wheeldrop_caster
+
+    format += "B"  # wall
+    format += "B"  # cliff_left
+    format += "B"  # cliff_frontleft
+    format += "B"  # cliff_frontright
+    format += "B"  # cliff_right
+    format += "B"  # virtual_wall
+
+    format += "B"  # overcurrent_{ld1, ld0, ld2, driveright, driveleft}
+
+    format += "H"  # unused_bytes
+
+    format += "B"  # infared_byte
+    format += "B"  # button_{play, advance}
+
+    format += "H"  # distance
+    format += "H"  # angle
+
+    format += "B"  # charging_state
+    format += "H"  # voltage
+    format += "h"  # current
+    format += "b"  # temperature
+    format += "H"  # charge
+    format += "H"  # capacity
     
-    raise NotImplementedError()
-    
-    # TODO
+    format += "H"  # wall_signal
+    format += "H"  # cliff_left_signal
+    format += "H"  # cliff_frontleft_signal
+    format += "H"  # cliff_frontright_signal
+    format += "H"  # cliff_right_signal
+
+    format += "B"  # cargo_bay_{io0, io1, io2, io3, baud}
+    format += "H"  # cargo_bay_voltage
+
+    format += "B"  # {internal_charger_on, home_base_charger_on}
+
+    format += "B"  # oi_mode
+
+    format += "B"  # song_number
+    format += "B"  # song_playing
+
+    format += "B"  # number_packets
+    format += "h"  # requested_velocity
+    format += "h"  # requested_radius
+    format += "h"  # requested_right_velocity
+    format += "h"  # requested_left_velocity
+
+
+    sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.dump, None)
+    data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.dump, True)
+
+    return struct.unpack(format, data)

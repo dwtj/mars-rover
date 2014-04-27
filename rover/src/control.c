@@ -44,7 +44,6 @@ bool rx_frame()
 
     // Get the (expected) length of this data frame:
     control.data_len = usart_rx();
-    lcd_putc(control.data_len + '0');  // DEBUG
 	if(control.data_len > DATA_FRAME_MAX_LEN) {
 		r_error(error_bad_message, "Data frame length must not exceed DATA_FRAME_MAX_LEN");
 	}
@@ -62,8 +61,6 @@ bool rx_frame()
     control.data_len = usart_rx();
     lcd_putc(control.data_len + '0');  // DEBUG
     if (control.data_len > i) {
-        lprintf("%d, %d", i, control.data_len);  // DEBUG
-        wait_button("");  // DEBUG
 		r_error(error_bad_message, "The real data frame length cannot be larger than the expected data frame length.");
     }
 
@@ -100,7 +97,6 @@ void tx_frame(bool another_frame)
  */
 void dist_reading_handler(subsys_t subsys)
 {
-    lcd_putc('A');  // DEBUG: I AM HERE
     // The interface used to access the request parameters encoded in the
     // data frame of the received message:
 
@@ -123,8 +119,8 @@ void dist_reading_handler(subsys_t subsys)
     }
     else if (subsys == subsys_sonar)
     {
-        raw_reading = ir_raw_reading;
-        conv_reading = ir_reading;
+        raw_reading = sonar_raw_reading;
+        conv_reading = sonar_reading;
     }
     else
     {
@@ -141,13 +137,9 @@ void dist_reading_handler(subsys_t subsys)
     }
     if (control.data_len != sizeof(request)) 
     {
-        //lprintf("%d", control.data_len);  // DEBUG
-        //wait_button("");  // DEBUG
         r_error(error_frame, "Did not receive the anticipated number of data "
                              "bytes in the distance reading request message.");
     }
-
-    lcd_putc('B');  // DEBUG: I AM HERE
 
     // The request that is in `control.data` has been validated. Start
     // response. First, make a copy of the request so it doesn't get clobbered.
@@ -202,7 +194,6 @@ void dist_reading_handler(subsys_t subsys)
         control.data_len = i * (request.raw ? sizeof(uint16_t) : sizeof(float));
         tx_frame(readings_sent < request.n);
         txq_drain();
-        lcd_putc('C');  // DEBUG: I AM HERE
     }
 }
 
@@ -320,6 +311,11 @@ void control_mode()
 
    	lcd_init();
     init_push_buttons();
+
+    sonar_init();
+    ir_init();
+    servo_init();
+    oi_init(&control.oi_state);
 
 	usart_init();
     usart_drain_rx();

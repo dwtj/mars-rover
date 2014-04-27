@@ -124,43 +124,59 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 //Handler for OI, moved from control.
 void oi_system()
 {
-	switch (usart_rx()) {
-	case 0:
+    enum {
+        oi_command_init = 0,
+        oi_command_move = 1,
+        oi_command_rotate = 2,
+        oi_command_play_song = 3,
+        oi_command_dump = 4,
+    } oi_command = usart_rx();
+
+    txq_enqueue(oi_command);
+
+	switch (oi_command) {
+	case oi_command_init:
+
 		oi_init(&(control.oi_state));
 		break;
-	//Move
-	case 1:
-	//	Assuming Move only has one frame
-		if(rx_frame())
-			{
-				r_error(error_frame,"Move should not have multiple frames.");
-			}
-			
-			struct {
-				uint8_t speed;
-				uint8_t dist;
-				bool stream;
-			} *move_data = (void *) &control.data;
-			
-		#warning "Stream functionality to be implemented later."//Stream returns the distance traveled
+
+
+	case oi_command_move:
+
+		if(rx_frame()) {
+            r_error(error_frame,"Move should not have multiple frames.");
+        }
+
+        struct {
+            uint8_t speed;
+            uint8_t dist;
+            bool stream;
+        } *move_data = (void *) &control.data;
+
+		#warning "Stream functionality to be implemented later."
+        //Stream returns the distance traveled
+
 		move_dist(&(control.oi_state), move_data->dist, move_data->speed);
 		break;
-	//Turn
-	case 2:
-		//	Assuming turn only has one frame
-		if(rx_frame())
-		{
-			r_error(error_frame,"Rotate should not have multiple frames.");
-		}
-		
-		struct {
-			uint8_t angle;
-		} *turn_data = (void *) &control.data;	
-	
-		turn(&(control.oi_state), turn_data->angle);
+
+
+	case oi_command_rotate:
+
+	    if (rx_frame()) {
+            r_error(error_bad_message, "Rotate should only have one data frame.");
+        }
+
+		int16_t *angle = &(control.data[0]);
+
+        if (control.data_len != sizeof(*angle)) {
+            r_error(error_bad_message, "Received too much data with rotate "
+                                                                   "message.");
+        }
+
+		turn(&(control.oi_state), *angle);
 		break;
 	//Sing me a song.
-	case 3:
+	case oi_command_play_song:
 	;
 	//assuming that we get two data frames, the first containing the notes and the second containing the durations.
 	int j;
@@ -185,7 +201,6 @@ void oi_system()
 		}
 		
 	
-	
 		;//First thing after a case must be a statement
 		//we only have the one song....
 		char song[] = {96, 96, 96, 96, 92, 94, 96, 94, 96};
@@ -193,15 +208,17 @@ void oi_system()
 		oi_load_song(0,9, song[0], duration[0]);//??
 		oi_play_song(0);
 		break;
-	//DUMP EVERYTHING
-	case 4:
-	//copies all of the data from OI_UPDATE and transmits to Control.
-	oi_update(&(control.oi_state));
-	memcpy(&control.data, &control.oi_state, sizeof(control.oi_state));
-	control.data_len = sizeof(control.oi_state);
-	tx_frame(false);
-	
-	break;
+
+	case oi_command_dump:
+        lcd_putc('D');  // DEBUG
+        //copies all of the data from OI_UPDATE and transmits to Control.
+        oi_update(&(control.oi_state));
+        memcpy(control.data, &control.oi_state, sizeof(control.oi_state));
+        control.data_len = sizeof(control.oi_state);
+        tx_frame(false);
+        lcd_putc('E');  // DEBUG
+	    break;
+
 	default:
 		r_error(error_bad_message, "Bad OI Command");
 		break;
