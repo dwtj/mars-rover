@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "util.h"
-#include "oi.h"
+#include "open_interface.h"
 #include "r_error.h"
 #include "control.h"
 
@@ -16,7 +16,11 @@ void oi_free(oi_t *self) {
 }
 
 /// Initialize the Create
-void oi_init(oi_t *self) {
+void oi_init(oi_t *self)
+{
+	lcd_clear();
+	lcd_puts("Starting OI...");
+
 	// Setup USART1 to communicate to the iRobot Create using serial (baud = 57600)
 	UBRR1L = 16; // UBRR = (FOSC/16/BAUD-1);
 	UCSR1B = (1 << RXEN) | (1 << TXEN);
@@ -38,6 +42,8 @@ void oi_init(oi_t *self) {
 	
 	oi_update(self);
 	oi_update(self); // call twice to clear distance/angle
+
+	lcd_clear();
 }
 
 
@@ -65,20 +71,20 @@ void oi_update(oi_t *self) {
 	sensor = (char *) self;
 	
 	// Fix byte ordering for multi-byte members of the struct
-	self->distance                 = (sensor[12] << 8) + sensor[13];
-	self->angle                    = (sensor[14] << 8) + sensor[15];
-	self->voltage                  = (sensor[17] << 8) + sensor[18];
-	self->current                  = (sensor[19] << 8) + sensor[20];
-	self->charge                   = (sensor[22] << 8) + sensor[23];
-	self->capacity                 = (sensor[24] << 8) + sensor[25];
-	self->wall_signal              = (sensor[26] << 8) + sensor[27];
-	self->cliff_left_signal        = (sensor[28] << 8) + sensor[29];
+	self->distance				 = (sensor[12] << 8) + sensor[13];
+	self->angle					= (sensor[14] << 8) + sensor[15];
+	self->voltage				  = (sensor[17] << 8) + sensor[18];
+	self->current				  = (sensor[19] << 8) + sensor[20];
+	self->charge				   = (sensor[22] << 8) + sensor[23];
+	self->capacity				 = (sensor[24] << 8) + sensor[25];
+	self->wall_signal			  = (sensor[26] << 8) + sensor[27];
+	self->cliff_left_signal		= (sensor[28] << 8) + sensor[29];
 	self->cliff_frontleft_signal   = (sensor[30] << 8) + sensor[31]; 
 	self->cliff_frontright_signal  = (sensor[32] << 8) + sensor[33];
-	self->cliff_right_signal       = (sensor[34] << 8) + sensor[35];
-	self->cargo_bay_voltage        = (sensor[41] << 8) + sensor[42];
-	self->requested_velocity       = (sensor[48] << 8) + sensor[42];
-	self->requested_radius         = (sensor[50] << 8) + sensor[51];
+	self->cliff_right_signal	   = (sensor[34] << 8) + sensor[35];
+	self->cargo_bay_voltage		= (sensor[41] << 8) + sensor[42];
+	self->requested_velocity	   = (sensor[48] << 8) + sensor[42];
+	self->requested_radius		 = (sensor[50] << 8) + sensor[51];
 	self->requested_right_velocity = (sensor[52] << 8) + sensor[53];
 	self->requested_left_velocity  = (sensor[54] << 8) + sensor[55];
 	
@@ -90,9 +96,9 @@ void oi_update(oi_t *self) {
 /// Sets the LEDs on the iRobot.
 /**
 * Set the state of the three LEDs on the iRobot (Power, Play, Advance).
-* @play_led        uint8_t either 0 (off) or 1 (on)
-* @advance_led     uint8_t either 0 (off) or 1 (on)
-* @power_color     uint8_t the color of the power LED; 0 = green, 255 = red
+* @play_led		uint8_t either 0 (off) or 1 (on)
+* @advance_led	 uint8_t either 0 (off) or 1 (on)
+* @power_color	 uint8_t the color of the power LED; 0 = green, 255 = red
 * @power_intensity uint8_t the intensity of the power LED; 0 = off, 255 = full intensity
 */
 void oi_set_leds(uint8_t play_led, uint8_t advance_led, uint8_t power_color, uint8_t power_intensity) {
@@ -123,15 +129,15 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 //Handler for OI, moved from control.
 void oi_system()
 {
-    enum {
-        oi_command_init = 0,
-        oi_command_move = 1,
-        oi_command_rotate = 2,
-        oi_command_play_song = 3,
-        oi_command_dump = 4,
-    } oi_command = usart_rx();
+	enum {
+		oi_command_init = 0,
+		oi_command_move = 1,
+		oi_command_rotate = 2,
+		oi_command_play_song = 3,
+		oi_command_dump = 4,
+	} oi_command = usart_rx();
 
-    txq_enqueue(oi_command);
+	txq_enqueue(oi_command);
 
 	switch (oi_command) {
 	case oi_command_init:
@@ -143,17 +149,17 @@ void oi_system()
 	case oi_command_move:
 
 		if(rx_frame()) {
-            r_error(error_frame,"Move should not have multiple frames.");
-        }
+			r_error(error_frame,"Move should not have multiple frames.");
+		}
 
-        struct {
-            uint8_t speed;
-            uint8_t dist;
-            bool stream;
-        } *move_data = (void *) &control.data;
+		struct {
+			uint8_t speed;
+			uint8_t dist;
+			bool stream;
+		} *move_data = (void *) &control.data;
 
 		#warning "Stream functionality to be implemented later."
-        //Stream returns the distance traveled
+		//Stream returns the distance traveled
 
 		move_dist(&(control.oi_state), move_data->dist, move_data->speed);
 		break;
@@ -161,16 +167,16 @@ void oi_system()
 
 	case oi_command_rotate:
 
-	    if (rx_frame()) {
-            r_error(error_bad_message, "Rotate should only have one data frame.");
-        }
+		if (rx_frame()) {
+			r_error(error_bad_message, "Rotate should only have one data frame.");
+		}
 
 		int16_t *angle = &(control.data[0]);
 
-        if (control.data_len != sizeof(*angle)) {
-            r_error(error_bad_message, "Received too much data with rotate "
-                                                                   "message.");
-        }
+		if (control.data_len != sizeof(*angle)) {
+			r_error(error_bad_message, "Received too much data with rotate "
+																   "message.");
+		}
 
 		turn(&(control.oi_state), *angle);
 		break;
@@ -187,14 +193,14 @@ void oi_system()
 		break;
 
 	case oi_command_dump:
-        lcd_putc('D');  // DEBUG
-        //copies all of the data from OI_UPDATE and transmits to Control.
-        oi_update(&(control.oi_state));
-        memcpy(control.data, &control.oi_state, sizeof(control.oi_state));
-        control.data_len = sizeof(control.oi_state);
-        tx_frame(false);
-        lcd_putc('E');  // DEBUG
-	    break;
+		lcd_putc('D');  // DEBUG
+		//copies all of the data from OI_UPDATE and transmits to Control.
+		oi_update(&(control.oi_state));
+		memcpy(control.data, &control.oi_state, sizeof(control.oi_state));
+		control.data_len = sizeof(control.oi_state);
+		tx_frame(false);
+		lcd_putc('E');  // DEBUG
+		break;
 
 	default:
 		r_error(error_bad_message, "Bad OI Command");

@@ -48,7 +48,7 @@
         <InterfaceName>JTAG</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.jtagicemkii</ToolType>
-      <ToolNumber>070000004693</ToolNumber>
+      <ToolNumber>070000004698</ToolNumber>
       <ToolName>JTAGICE mkII</ToolName>
     </com_atmel_avrdbg_tool_jtagicemkii>
     <com_atmel_avrdbg_tool_jtagice3plus>
@@ -196,6 +196,9 @@
     <Compile Include="include\sonar.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\tests.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\txq.h">
       <SubType>compile</SubType>
     </Compile>
@@ -239,6 +242,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\sonar.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\tests.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\timer.c">

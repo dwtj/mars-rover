@@ -62,26 +62,31 @@ void servo_manual_calib()
 static void set_pulse_proportion(float p){
 	// The actual waveform generated is outputted on PE4 of channel B
 	OCR3B = (uint16_t) roundf(TOP * p);
-	lprintf("%u", OCR3B);
 }
 
 
 #warning "TODO: fix the servo handlers"
 void servo_system()
 {
-    uint8_t command_id = usart_rx();
-    txq_enqueue(command_id);
+	enum {
+		command_init = 0,
+		command_state = 1,
+		command_angle = 2,
+		command_pulse_width = 3,
+	} command_id = usart_rx();
+
+	txq_enqueue(command_id);
 
 	switch (command_id) {
-	case 0:
+	case command_init:
 		servo_init();
 		break;
-	//servo_state()
-	case 1:
+
+	case command_state:
 		#warning "Servo state not yet implemented."
 		break;
-	//servo move angle
-	case 2:
+
+	case command_angle:
 		if(rx_frame())
 		{
 			r_error(error_frame, "Servo expected single data frame.");
@@ -93,21 +98,19 @@ void servo_system()
 		
 		servo_angle(servo_data->angle, servo_data->wait);
 		break;
-	//servo pulse width
-    	case 3:
-		if(rx_frame()){
+
+	case command_pulse_width:
+		if(rx_frame()) {
 			r_error(error_frame,"Pulse Width expected but one frame.");
 		}
-		
-		struct {
-			float p;
-		} *servo_data2 = (void *) &control.data;
-			
-		set_pulse_proportion(servo_data2->p);
+
+		float *p = (void *) &control.data;
+		set_pulse_proportion(*p);
 		break;
+
 	default:
-        	r_error(error_bad_message, "Bad servo Command");
-        	break;
+			r_error(error_bad_message, "Bad servo Command");
+			break;
 	}
 }
 
@@ -116,9 +119,9 @@ void servo_init()
 {
 	TCCR3A = 0b00100011; // WGM 15, output compare from channel B
 	TCCR3B = 0b00011010; // 1/8 prescaler
-	TCCR3C = 0;          // Not using force output compares
-	ETIMSK = 0;          // Not using interrupts
-	OCR3A = TOP;	     // set top
+	TCCR3C = 0;		  // Not using force output compares
+	ETIMSK = 0;		  // Not using interrupts
+	OCR3A = TOP;		 // set top
 	
 	DDRE = 0b00010000;   // Set data direction on Pin 4 of Port E to output.
 	

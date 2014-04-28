@@ -15,7 +15,7 @@
 #include "lcd.h"
 #include "util.h"
 #include "r_error.h"
-#include "oi.h"
+#include "open_interface.h"
 
 
 #ifndef CONTROL_H_
@@ -31,9 +31,9 @@
  * Codes to distinguish between different types of control signals:
  */
 typedef enum {
-	signal_null = 0,    // NULL
+	signal_null = 0,	// NULL
 	signal_start = 1,   // Start of message
-	signal_stop = 2,    // End of message
+	signal_stop = 2,	// End of message
 } signal;
 #define NUM_SIGNAL_CODES 3
 
@@ -45,7 +45,7 @@ typedef enum {
 	mesg_error = 0,
 	mesg_ping = 1,
 	mesg_echo = 2,
-    mesg_rng_seed = 3,
+	mesg_rng_seed = 3,
 	mesg_command = 4,
 } mesg;
 #define NUM_MESG_CODES 5

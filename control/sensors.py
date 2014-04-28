@@ -1,6 +1,7 @@
 # sensors.py - A class that fascilitates conversion from raw sensor data to
 # usable measurements using dynamic calibration data.
 
+import sys
 import csv
 import time
 
@@ -76,24 +77,29 @@ def calibrate_dist(sen, ir_csv, sonar_csv, inc = 1.0, start = 5.0, end = 100.0):
     sonar_csv = csv.writer(open(sonar_csv, 'a'))
     ir_csv = csv.writer(open(ir_csv, 'a'))
 
-    dist = start
 
+    # For both IR and sonar at each distance and for each of the 50
+    # readings: add the current distance along with the reading as a row
+    # in the `.csv` file.
+
+    dist = start
     while dist < end:
 
         # Report current distance to the user and wait for the enter key:
         input("dist: {:.2f}".format(dist))
 
-        # For both IR and sonar at each distance and for each of the 50
-        # readings: add the current distance along with the reading as a row
-        # in the `.csv` file.
+        try:
+            if 3.0 <= dist and dist <= 300.0:
+                sonar_csv.writerows([(dist, r) for r in sonar.readings(sen, n=50)])
 
-        if 3.0 <= dist and dist <= 300.0:
-            sonar_csv.writerows([(dist, r) for r in sonar.readings(sen, n=50)])
+            if 9.0 <= dist and dist <= 80.0:
+                ir_csv.writerows([(dist, r) for r in ir.readings(sen, n=50)])
 
-        if 9.0 <= dist and dist <= 80.0:
-            ir_csv.writerows([(dist, r) for r in ir.readings(sen, n=50)])
+            dist += inc
 
-        dist += inc
+        except Exception as ex:
+            sys.stderr.write("Exception while generating calibration data:")
+            sys.stderr.write(str(ex) + '\n')
 
 
 
@@ -216,7 +222,7 @@ def gen_ir_converter(ir_csv, plot_conv = False):
     a curve.
     """
 
-    (conv, raw, dist) = _gen_dist_converter(ir_csv, 3)
+    (conv, raw, dist) = _gen_dist_converter(ir_csv, 5)
 
     if plot_conv == True:
         _plot_dist_converter(conv, raw, dist, color = "green")

@@ -65,7 +65,7 @@ float ir_reading() {
  */
 uint16_t ir_raw_reading()
 {
-    ir_start();
+	ir_start();
 
 	while (ADCSRA & 0x40) {
 		;  // wait while ADSC is high -> conversion is still in process
@@ -107,9 +107,9 @@ void send_dist_reading(uint8_t dist, uint16_t reading)
  */
 float ir_conv(uint16_t d)
 {
-    // The intercept and the first, second, and third-order coefficients:
-    const static float coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
-    return coef[0] + d * (coef[1] + d * (coef[2] + d * coef[3]));
+	// The intercept and the first, second, and third-order coefficients:
+	const static float coef[] = {100.5, -0.2811, 3.148e-4, -1.254e-7};
+	return coef[0] + d * (coef[1] + d * (coef[2] + d * coef[3]));
 }
 
 
@@ -156,15 +156,15 @@ void ir_calibrate(bool bam_send, bool save_means)
 			if (bam_send) {
 				send_dist_reading(dist, sample);
 			}
-            if (save_means) {
-			    avg += ((float) sample) / NUM_CALIB_SAMPLES;
-            }
+			if (save_means) {
+				avg += ((float) sample) / NUM_CALIB_SAMPLES;
+			}
 			wait_ms(20);
 		}
 		
-        if (save_means) {
-		    calib_data[dist] = (uint16_t) round(avg);
-        }
+		if (save_means) {
+			calib_data[dist] = (uint16_t) round(avg);
+		}
 	}
 }
 
@@ -173,16 +173,16 @@ void ir_calibrate(bool bam_send, bool save_means)
 
 void ir_system()
 {
-    uint8_t command_id = usart_rx();
-    txq_enqueue(command_id);
+	uint8_t command_id = usart_rx();
+	txq_enqueue(command_id);
 
 	switch(command_id) {
 	case 0:
 		ir_init();
 		break;
 	case 1:
-        dist_reading_handler(subsys_ir);
-        break;
+		dist_reading_handler(subsys_ir);
+		break;
 	default:
 		r_error(error_bad_message, "Bad IR Command");
 		break;
