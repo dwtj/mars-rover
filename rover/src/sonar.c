@@ -275,7 +275,7 @@ uint16_t sonar_raw_reading()
 	rv = ticks_to_time(sonar_echo_fall - sonar_echo_rise);
 	
 	sonar_state = NOT_READY;
-	wait_ms(1);  // TODO: Make this smaller.
+	wait_ms(10);
 	sonar_state = READY;
 	
 	return rv;

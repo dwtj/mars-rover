@@ -7,6 +7,7 @@
 
 #include "labs.h"
 #include "control.h"
+#include "tests.h"
 
 int main()
 {
@@ -32,6 +33,10 @@ int main()
 		oi_load_song(0,9, song[0], duration[0]);//??
 		oi_play_song(0);
         break;
+
+	case 5:
+		readings_stream_mode();
+		break;
 
     default:
         lcd_puts("Invalid selection.");

@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdint.h>
+
+#include "IR.h"
+#include "sonar.h"
 #include "tests.h"
 #include "control.h"
 #include "usart.h"
@@ -51,5 +56,52 @@ void send_mesg_test_mode()
 			wait_button("Invalid selection.");
 			break;
 		}
+	}
+}
+
+
+
+void readings_stream_mode()
+{
+	const uint8_t BUF_LENGTH = 100;
+	char buf[BUF_LENGTH];
+
+	enum {
+		reading_ir = 1,
+		reading_sonar = 2,
+		reading_sonar_mode = 3
+	} reading;
+
+	init_push_buttons();
+	lcd_init();
+
+	ir_init();
+	sonar_init();
+
+	usart_init();
+	usart_drain_rx();
+
+	while (true) {
+		switch (wait_button("Readings Stream")) {
+		case reading_ir:
+			snprintf(buf, BUF_LENGTH, "IR: %u\n", ir_raw_reading());
+			break;
+
+		case reading_sonar:
+			snprintf(buf, BUF_LENGTH, "Sonar: %u\n", sonar_raw_reading());
+			break;
+
+		case reading_sonar_mode:
+			while (true) {
+				snprintf(buf, BUF_LENGTH, "Sonar: %u\n", sonar_raw_reading());
+				usart_tx_buf(buf);
+			}
+			break;
+
+		default:
+			buf[0] = '\0';
+		}
+
+		usart_tx_buf(buf);
 	}
 }
