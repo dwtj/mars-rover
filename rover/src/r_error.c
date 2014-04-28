@@ -37,13 +37,13 @@ void error_handler() {
 void r_error(uint8_t err_num, char* mesg)
 {
 	#warning "I suspect that this needs to be revised."
-    /*
+	/*
 	usart_tx(signal_start);
 	usart_tx(mesg_error);
 	usart_tx(err_num);
 	usart_tx_buf(mesg);
 	usart_tx(signal_stop);
-    */
+	*/
 	lprintf("Error: %d: %s", err_num, mesg);
 	abort_command();
 	while(1) {

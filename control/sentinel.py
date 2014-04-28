@@ -413,7 +413,7 @@ class Sentinel():
         buf = bytearray(512)
 
         while True:
-            n = self.readinto(b)
+            n = self.readinto(buf)
             s = buf[0:n].decode('utf-8')
             stream.write(s)
             time.sleep(0.1)
