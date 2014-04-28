@@ -62,27 +62,35 @@ void servo_manual_calib()
 static void set_pulse_proportion(float p){
 	// The actual waveform generated is outputted on PE4 of channel B
 	OCR3B = (uint16_t) roundf(TOP * p);
-	lprintf("%u", OCR3B);
 }
 
 
 #warning "TODO: fix the servo handlers"
 void servo_system()
 {
-	uint8_t command_id = usart_rx();
+	enum {
+		command_init = 0,
+		command_state = 1,
+		command_angle = 2,
+		command_pulse_width = 3,
+	} command_id = usart_rx();
+
 	txq_enqueue(command_id);
 
 	switch (command_id) {
-	case 0:
+	case command_init:
 		servo_init();
 		break;
-	//servo_state()
-	case 1:
+
+	case command_state:
 		#warning "Servo state not yet implemented."
 		break;
-	//servo move angle
-	case 2:
-		; //Can't start a case statement with a declaration
+
+	case command_angle:
+		if(rx_frame())
+		{
+			r_error(error_frame, "Servo expected single data frame.");
+		}
 		struct {
 			uint8_t angle;
 			bool wait;
@@ -101,7 +109,7 @@ void servo_system()
 		break;
 		
 	//servo pulse width
-	case 3:
+	case command_pulse_width:
 		if(rx_frame()){
 			r_error(error_frame,"Pulse Width expected but one frame.");
 		}

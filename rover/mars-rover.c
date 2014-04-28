@@ -7,8 +7,12 @@
 
 #include "labs.h"
 #include "control.h"
+<<<<<<< HEAD
 #include "open_interface.h"
 #include "objects.h"
+=======
+#include "tests.h"
+>>>>>>> dwtj-master
 
 #define RICK_ROLL			0
 #define IMERPIAL_MARCH 		1
@@ -104,6 +108,7 @@ void playSong(void){
 
 static void part2()
 {
+<<<<<<< HEAD
 	#define MY_RX_BUFSIZE 200
 	static char buf[MY_RX_BUFSIZE];
 	
@@ -183,5 +188,4 @@ int main()
 				break;
 		}
 //	}
-
 }

@@ -99,7 +99,6 @@ void dist_reading_handler(subsys_t subsys)
 {
 	// The interface used to access the request parameters encoded in the
 	// data frame of the received message:
-
 	struct {
 		uint16_t n;		// The number of readings to be performed.
 		bool raw;		  // Whether the data should be raw or converted.
@@ -108,7 +107,6 @@ void dist_reading_handler(subsys_t subsys)
 	} request;
 
 	// Point the function pointers to the subsystem indicated by `subsys`:
-
 	int (*raw_reading)();
 	int (*conv_reading)();
 
@@ -159,10 +157,7 @@ void dist_reading_handler(subsys_t subsys)
 		float conv[CONV_READINGS_PER_FRAME];
 	} *response = (void *) &control.data;
 
-	// An index into a an array of `response`:
-	uint8_t i;
-
-	// The number of readings which have been either:
+	uint8_t i;  // An index into an array of `response`.
 	uint16_t readings_sent = 0;
 
 	// Each iteration generates a response frame of readings.
