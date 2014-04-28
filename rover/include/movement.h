@@ -20,13 +20,20 @@ typedef struct {
 	uint8_t success;
 } move_t;
 
+//The values that we have to send back to the controller for the movement function
+typedef struct {
+	uint8_t travelled;
+	uint8_t flag;
+} movement_data_t;
+
+movement_data_t* movement_data;
 
 // If `dist` is a positive value, then the robot moves forward at full speed
 // until it has moved  forward `dist` millimeters. If `dist` is negative, then it
 // moves backwards at full speed until it has moved `dist` millimeters backwards.
 // If `dist` is zero, it does not move.
 int move_dist(oi_t *sensor_data, int dist, int spd);
-
+//int move_dist(oi_t *sensor_data, int dist);
 
 // Similar to `move_dist`, if `angle` is positive, then the robot rotates in-place
 // counter-clockwise until it has moved `angle` degrees. If `angle` is negative, then it

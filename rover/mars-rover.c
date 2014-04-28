@@ -8,6 +8,7 @@
 #include "labs.h"
 #include "control.h"
 #include "open_interface.h"
+#include "objects.h"
 
 #define RICK_ROLL			0
 #define IMERPIAL_MARCH 		1
@@ -78,7 +79,7 @@ void playSong(void){
 	switch(wait_button("Select song")){
 		
 		case 1:
-			load_song1(); //plays Rick Roll song
+			load_song1(); //plays Rick Roll song -whats this song???
 			break;
 		case 2:
 			load_song2(); //plays the Imperial March
@@ -90,7 +91,7 @@ void playSong(void){
 			load_song4(); //plays Mario Underwater song
 			break;
 		case 5:
-			load_song5(); //plays Victory fanfare
+			load_song5(); //plays Victory fanfare - not well
 			break;
 		
 		default:
@@ -100,36 +101,87 @@ void playSong(void){
 	}
 }
 
-int main()
-{			
-	init_push_buttons();
-	lcd_init();
-	oi_init(oi_alloc());
-	char song[] = {96, 96, 96, 96, 92, 94, 96, 94, 96};
-	char duration[] = {8, 8, 8, 8, 12, 12, 8, 8, 8}; //These probably need to be edited.
-	init_push_buttons();
-	lcd_init();
 
-	switch (wait_button("Select Mode")) {
-	case 1:
-		control_mode();
-		break;
-
-	case 2:
-		send_mesg_test_mode();
-		break;
-
-	case 3:
-		objects_lab();
-		break;
-
-	case 4:
-		playSong();
-		break;
-
-	default:
-		lcd_puts("Invalid selection.");
-		break;
+static void part2()
+{
+	#define MY_RX_BUFSIZE 200
+	static char buf[MY_RX_BUFSIZE];
+	
+	scan_results results;
+	objects_scan(&results);
+	
+	//wait_button("here0");
+	
+	snprintf(buf, MY_RX_BUFSIZE, "Objects Found: %d\n\n", results.n);
+	
+	//wait_button("here1");
+	
+	usart_tx_buf(buf);
+	
+	//wait_button("here2");
+	
+	lprintf("%s", buf);
+	
+	//wait_button("here3");
+	
+	uint8_t minwidth = 180;
+	//uint8_t min_id = 0;
+	uint16_t min_midpoint = 0;
+	uint8_t delta;
+	
+	for (int i = 0; i < results.n; i++) {
+		delta = results.objects[i].theta2 - results.objects[i].theta1;
+		if (delta < minwidth){
+			minwidth = delta;
+			min_midpoint = (results.objects[i].theta2 + results.objects[i].theta1) / 2;
+			//min_id = i;
+		}
+		snprint_object(buf, MY_RX_BUFSIZE, results.objects + i);
+		usart_tx_buf(buf);
+		usart_tx_buf("\n\n");
 	}
+	
+	// go to midpoint of min_id;
+	servo_angle(min_midpoint, true);
+	
+	wait_button("");
+}
+
+int main()
+{		
+	oi_t *sensor_data = oi_alloc();
+			
+	init_push_buttons();
+	lcd_init();
+	oi_init(sensor_data);
+	servo_init();
+	init_push_buttons();
+	lcd_init();
+
+//	while(1){
+		switch (wait_button("Select Mode")) {
+			case 1:
+				control_mode();
+				break;
+
+			case 2:
+				send_mesg_test_mode();
+				break;
+
+			case 3:
+				objects_lab();
+				break;
+
+			case 4:
+				playSong();
+				break;
+			case 5: //Debugging
+				move_dist(sensor_data, 20, 100);
+				break;
+			default:
+				lcd_puts("Invalid selection.");
+				break;
+		}
+//	}
 
 }

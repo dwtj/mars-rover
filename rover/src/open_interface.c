@@ -4,6 +4,7 @@
 #include "open_interface.h"
 #include "r_error.h"
 #include "control.h"
+#include "movement.h"
 
 /// Allocate memory for a the sensor data
 oi_t* oi_alloc() {
@@ -147,15 +148,18 @@ void oi_system()
 			}
 
 			struct {
-				uint8_t speed;
-				uint8_t dist;
+				uint16_t speed;
+				uint16_t dist;
 				bool stream;
 			} *move_data = (void *) &control.data;
 
 			#warning "Stream functionality to be implemented later."
 			//Stream returns the distance traveled
-
+			//lcd_puts  ("In OI subsystem"); //debug
 			move_dist(&(control.oi_state), move_data->dist, move_data->speed);
+			txq_enqueue(movement_data->travelled);
+			txq_enqueue(movement_data->flag);
+			txq_drain();
 			break;
 
 		case oi_command_rotate:
