@@ -233,9 +233,10 @@ def gen_ir_converter(ir_csv, plot_conv = False):
 
 
 def _plot_dist_converter(conv, raw, dist, color = "blue"):
+    ax = plt.subplot()
     xs = np.arange(min(raw), max(raw) + 1)
-    plt.plot(xs, conv(xs), c = color)
-    plt.scatter(raw, dist, c = color)
+    ax.plot(xs, conv(xs), c = color)
+    ax.scatter(raw, dist, c = color)
 
 
 

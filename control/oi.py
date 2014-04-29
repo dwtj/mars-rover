@@ -37,7 +37,7 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     if not 0 < speed and speed <= 500:
         raise ValueError("Argument `speed` must be in the interval (0, 500].")
     
-    if not (0 < distance and distance <= 300) and distance != None:
+    if not (0 < distance and distance <= 3000) and distance != None:
         raise ValueError("Argument `distance` must be in the closed interval"
                                                               "[-3000, 3000].")
 
