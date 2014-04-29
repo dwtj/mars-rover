@@ -45,7 +45,9 @@ move_t course_correction(oi_t *sensor_data)
 	int lateral_dist= 250;
 	oi_set_wheels(0, 0);  // stop
 	
-	move.y = move_dist(sensor_data, -backup_dist, 300);
+	movement_data_t movement_data = move_dist(sensor_data, -backup_dist, 300);
+	
+	move.y = movement_data.travelled;
 
 	// DEBUG:
 	lprintf("left: %i, right: %i", sensor_data->bumper_left, sensor_data->bumper_right);
@@ -78,7 +80,8 @@ int navigate_dist(oi_t *sensor_data, int dist) {
 			}
 		}
 		dist_traveled += move.y;  // adds a negative number
-		dist_traveled += move_dist(sensor_data, dist - dist_traveled,300);
+		movement_data_t move = move_dist(sensor_data, dist - dist_traveled,300);
+		dist_traveled += move.travelled;
 		count_moves++;
 	}
 	
@@ -92,12 +95,15 @@ bool detectWhite (){
 
 // distance accumulated will be zeroed before return.
 // Only while attempting to move forward should it stop for the bumper sensors.
-int move_dist(oi_t *sensor_data, int dist, int spd) {
+movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
+{
 	oi_update(sensor_data);
 	int sum = 0;
 	int velocity = (dist < 0) ? -spd: spd;  // move at indicated speed
 	oi_set_wheels(velocity, velocity);
 	stop_flag = full_distance;
+
+	movement_data_t rv;
 	
 	//If attempting to go forward
 	if (dist > 0) {
@@ -140,16 +146,7 @@ int move_dist(oi_t *sensor_data, int dist, int spd) {
 			}	
 			
 		}//while
-		
-		movement_data->travelled = sum;
-		movement_data->flag = stop_flag;
-		
-		#warning "Still needs to send back a signal that specifies that a bumper was activated"
-// 		txq_enqueue(stop_flag);
-// 		txq_enqueue(sum);
-// 		txq_drain();
-// 		return sum; //return the distance traveled before hitting the object
-
+	
 	//If attempting to go backwards
 	} else if(dist < 0) {
 		while (sum > dist) {
@@ -165,7 +162,11 @@ int move_dist(oi_t *sensor_data, int dist, int spd) {
 	// TODO: maybe add a delay here before reading the last distance update 
 	oi_update(sensor_data);
 	sum += sensor_data->distance;
-	return sum;
+	
+	rv.travelled = sum;
+	rv.flag = stop_flag;
+	
+	return rv;
 }
 
 

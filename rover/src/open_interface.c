@@ -131,6 +131,8 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 //Handler for OI, moved from control.
 void oi_system()
 {
+	movement_data_t movement_data;
+	
 	enum {
 		oi_command_init = 0,
 		oi_command_move = 1,
@@ -158,14 +160,20 @@ void oi_system()
 				uint16_t dist;
 				bool stream;
 			} *move_data = (void *) &control.data;
+			
+			struct {
+				uint16_t dist;
+				uint8_t flag;
+			} *response_move = (void *) &control.data;
 
 			#warning "Stream functionality to be implemented later."
 			//Stream returns the distance traveled
 			//lcd_puts  ("In OI subsystem"); //debug
 			move_dist(&(control.oi_state), move_data->dist, move_data->speed);
-			txq_enqueue(movement_data->travelled);
-			txq_enqueue(movement_data->flag);
-			txq_drain();
+			response_move->dist = movement_data.travelled;
+			response_move->flag = movement_data.flag;
+			control.data_len = 3;
+			tx_frame(false);
 			break;
 
 		case oi_command_rotate:

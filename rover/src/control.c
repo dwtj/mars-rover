@@ -306,7 +306,7 @@ void control_mode()
 	sonar_init();
 	ir_init();
 	servo_init();
-	oi_init(&control.oi_state);
+	oi_init(&(control.oi_state));
 
 	usart_init();
 	usart_drain_rx();
@@ -333,7 +333,7 @@ void control_mode()
 		// Check for stop byte indefinitely:
 		byte = usart_rx();
 		if (byte != signal_stop) {
-			sprintf(r_error_buf, "Recieved %u instead of expected stop byte.", byte);
+			sprintf(r_error_buf, "Received %u instead of expected stop byte.", byte);
 			r_error(error_txq, r_error_buf);
 		}
 		lcd_putc(')');  // DEBUG: found stop byte
