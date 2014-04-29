@@ -52,14 +52,26 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     return unpacked_data
 
 
+
 def rotate(sen, angle):
     """
     Expects `angle` in range (-360, 360). Positive values represent clockwise 
     motion and negative values represent counterclockwise motion. 
+    
+    Returns nothing.
+
+    Data frame sent: 2 bytes for `angle`.
+
+    Data frame received: none
+    
     """
 
-    raise NotImplementedError()
-    # TODO
+    if not -360 < angle and angle <= 360:
+        raise ValueError("Argument `angle` must be in the interval (-360, 360)")
+
+    b = struct.pack("<h", angle)
+    sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.rotate, b)
+    sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.rotate, False)
 
 
 
