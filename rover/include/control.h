@@ -46,8 +46,8 @@ typedef enum {
 	mesg_error = 0,
 	mesg_ping = 1,
 	mesg_echo = 2,
-	mesg_rng_seed = 3,
-	mesg_command = 4,
+	mesg_command = 3,
+	mesg_rng_seed = 4,
 } mesg;
 #define NUM_MESG_CODES 5
 

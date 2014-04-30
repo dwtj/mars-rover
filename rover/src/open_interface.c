@@ -169,7 +169,7 @@ void oi_system()
 			#warning "Stream functionality to be implemented later."
 			//Stream returns the distance traveled
 			//lcd_puts  ("In OI subsystem"); //debug
-			move_dist(&(control.oi_state), move_data->dist, move_data->speed);
+			movement_data = move_dist(&(control.oi_state), move_data->dist, move_data->speed);
 			response_move->dist = movement_data.travelled;
 			response_move->flag = movement_data.flag;
 			control.data_len = 3;
@@ -182,9 +182,9 @@ void oi_system()
 				r_error(error_bad_message, "Rotate should only have one data frame.");
 			}
 
-			int16_t *angle = &(control.data[0]);
+			int16_t *angle = &(control.data[0]); // TODO: test if this is the right number of bytes
 
-			if (control.data_len != sizeof(*angle)) {
+			if (control.data_len != 2/*sizeof(*angle)*/) { // TODO: hardcoding to debug
 				r_error(error_bad_message, "Received too much data with rotate "
 																	   "message.");
 			}
