@@ -22,6 +22,9 @@ It should be the purpose of `comm.c` (the communications module of `rover`) to f
 			SubsysID
 		</td>
 		<td>
+			Subsystem Command
+		</td>
+		<td>
 			Data Length, n
 		</td>
 		<td>
@@ -51,7 +54,7 @@ It should be the purpose of `comm.c` (the communications module of `rover`) to f
 	</tr>
 </table>
 
-Start, MesgID and Stop are essential in every message. SubsysID and the data frame (Data Length, Data Byte, and "Another Data Frame?") may be necessary, depending on MesgID and SubsysID. 
+Start, MesgID and Stop are essential in every message. SubsysID, the subsystem command (e.g. an element from LCDCommand, OICommand, etc) the data frame (Data Length, Data Byte, and "Another Data Frame?") may be necessary, depending on MesgID and SubsysID. 
 
 
 
