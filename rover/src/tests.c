@@ -113,6 +113,6 @@ void test_songs_mode(void)
 {
 	while (true) {
 		uint8_t song_id = wait_button("Select song");
-		song_load(song_id)
+		songs_load(song_id);
 	}
 }

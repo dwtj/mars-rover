@@ -76,9 +76,9 @@ void songs_load(uint8_t song_id)
 		break;
 
 	case IMPERIAL_MARCH:
-		oi_load_song(IMERPIAL_MARCH, ImperialMarchNumNotes,
+		oi_load_song(IMPERIAL_MARCH, ImperialMarchNumNotes,
 				     ImperialMarchNotes, ImperialMarchDurations);
-		oi_play_song(IMERPIAL_MARCH);
+		oi_play_song(IMPERIAL_MARCH);
 		break;
 
 	case MARIO_UNDERWORLD:
@@ -95,5 +95,9 @@ void songs_load(uint8_t song_id)
 		oi_load_song(VICTORY_FANFARE,victoryNumFanfare,
 		             victoryFanfareNotes, victoryFanfareDurations);
 		oi_play_song(VICTORY_FANFARE);
-	
+		break;
+		
+	default:
+		; // TODO: report that song is not defined
+	}
 }
