@@ -16,10 +16,12 @@ import oi
 DEFAULT_CALIBRATION_DATA_DIR = 'calibrate/data/default'
 
 
-def calibrate_cliff(sen, cliff_csv):
+def calibrate_cliff(sen, cliff_csv, n = 10):
     """ Interacts with the rover over the given `Sentinel` object to generate
     calibration data for each of the four cliff sensor LEDs of the `rover`.
     This data is then appended to the indicated `.csv` file.
+
+    The method records `n` samples from each of the four sensors.
 
     The rows appended to the `.csv` file will contains four columns, one for
     each of the LEDs. In particular:
@@ -28,13 +30,11 @@ def calibrate_cliff(sen, cliff_csv):
     - second colunn: front left sensor
     - third column: front right sensor
     - fourth column: right sensor
-
-    There will be 100 samples are measured over at least 5 seconds.
     """
 
     cliff_csv = csv.writer(open(cliff_csv, 'a'))
 
-    for i in range(10):
+    for i in range(n):
         dump = oi.dump(sen)
         cliff_csv.writerow([dump[x] for x in range(20, 24)])
         time.sleep(0.05)
@@ -90,10 +90,12 @@ def calibrate_dist(sen, ir_csv, sonar_csv, inc = 1.0, start = 5.0, end = 100.0):
 
         try:
             if 3.0 <= dist and dist <= 300.0:
-                sonar_csv.writerows([(dist, r) for r in sonar.readings(sen, n=50)])
+                rows = [(dist, r) for r in sonar.readings(sen, n=50)]
+                sonar_csv.writerows(rows)
 
             if 9.0 <= dist and dist <= 80.0:
-                ir_csv.writerows([(dist, r) for r in ir.readings(sen, n=50)])
+                rows = [(dist, r) for r in ir.readings(sen, n=50)]
+                ir_csv.writerows()
 
             dist += inc
 
