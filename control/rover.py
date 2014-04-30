@@ -44,6 +44,8 @@ class Rover():
         # distance (in cm) as measured in that reading and converted.
         self.scan_points = []
 
+        self.scan_contours = []
+
         # Startup the figure and axis to be used for displaying scan data:
         self.scan_view = plt.figure().add_subplot(111, projection = 'polar')
         self.clear_scan()
@@ -56,7 +58,7 @@ class Rover():
         self.y_loc = 0.0
         self.direction = 0.0
 
-        # Locations of various events to be displayed on `env_view`:
+        # Locations of various objects and events to be displayed on `env_view`:
         env = {
                 # The dangers that the rover has found so far:
                 "bumps": [],
@@ -67,6 +69,9 @@ class Rover():
                 # Point observations found in scans and mapped to `env` space:
                 "ir_obs": [],
                 "sonar_obs": []
+
+                # Object contours represented by regressions on the `obs` data:
+                "contours": []
               }
 
 
@@ -177,6 +182,20 @@ class Rover():
 
 
 
+    def plot_obj_contours(self):
+        """ Generates a regression for each independent object discovered in the
+        current scan, and draws it onto both the `scan_view` and the `env_view`.
+        """
+
+        # TODO: Until a scan is finalized by moving, keep track of those
+        # contours which were plotted so that they can be removed and updated
+        # when new scan data arrives.
+
+        raise NotImplementedError
+
+
+
+
     def radial_to_env(self, thetas, rs):
         """ Uses the rover's current orientation in the environment (i.e. its
         current location and angle) to map these radial points into the
@@ -209,19 +228,26 @@ class Rover():
 
 
 
-    def danger_found(bump = False, cliff = False, drop = False, tape = False):
+    def danger_found(self, danger_id):
         """ Appends a new danger to the appropriate list of `env`, and updates
-        the `env_view`. """
+        the `env_view`. The position at which the danger is placed is computed
+        based on the rover's location and direction, but also where on the robot
+        that particular danger-detection sensor is located. """
         
         raise NotImplementedError
 
 
 
 
-    def _regress_scan_data(data):
-        """ Looks at the current contents of `scan_data` and uses it to
-        generate an approximate distance to the nearest object at every angle
-        for which there is scan data. """
+    def _obj_contours(self):
+        """ Looks at the current contents of `scan_points` and uses it to
+        generate a list of regressions that define the contours of observed
+        objects. Each element in the list is considered to be a distinct object.
+        """
+
+        # TODO: ignore objects that have very small angular width.
+
+        raise NotImplementedError
 
         knots = np.linspace(0, 180, 61)
         return LSQUnivariateSpline(data[:, 0], data[:, 1])
