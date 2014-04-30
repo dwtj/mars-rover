@@ -95,19 +95,32 @@ void servo_system()
 			uint8_t angle;
 			bool wait;
 		} *servo_data = (void *) &control.data;
+	
+		if(rx_frame())
+		{
+			r_error(error_frame, "Servo expected single data frame.");
+		}
+
+		if (control.data_len != sizeof(*servo_data)) {
+			r_error(error_frame, "The expected data length is different from the action.");  
+		}
 		
 		servo_angle(servo_data->angle, servo_data->wait);
 		break;
-
+		
+	//servo pulse width
 	case command_pulse_width:
-		if(rx_frame()) {
+		if(rx_frame()){
 			r_error(error_frame,"Pulse Width expected but one frame.");
 		}
-
+		if (control.data_len != sizeof(float)) {
+			r_error (error_frame, "The expected data length is different from the action.");  
+		}
+		
 		float *p = (void *) &control.data;
 		set_pulse_proportion(*p);
 		break;
-
+		
 	default:
 			r_error(error_bad_message, "Bad servo Command");
 			break;

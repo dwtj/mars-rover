@@ -241,10 +241,12 @@ static void command_handler()
 
 	// Use the `subsys` code of the recieved message to choose the handler.
 	uint8_t subsys = usart_rx();
-	if (0 <= subsys && subsys < NUM_SUBSYS_CODES) {
+	if ((subsys >= 0) && (subsys < NUM_SUBSYS_CODES)) {
 		txq_enqueue(subsys);
+		txq_drain();
 		subsystem_handlers[subsys]();
 	} else {
+		lprintf("subsys received: %u", subsys); // TODO: remove
 		r_error(error_bad_message, "Invalid subsystem ID.");
 	}
 }
@@ -277,9 +279,12 @@ static void mesg_handler()
 	{
 		// Use the message type of the received message to choose the handler.
 		// Also start a response message of the same message type.
-		txq_enqueue(signal_start);
-		txq_enqueue(mesg_id);
-		mesg_handlers[mesg_id]();
+		
+		// TODO: remove "good" etc comments before committing; debugging oi.move()
+		
+		txq_enqueue(signal_start); // good
+		txq_enqueue(mesg_id); // good; enqueues 3 for command_handler
+		mesg_handlers[mesg_id](); 
 		txq_enqueue(signal_stop);
 		txq_drain();
 	}
@@ -306,7 +311,7 @@ void control_mode()
 	sonar_init();
 	ir_init();
 	servo_init();
-	oi_init(&control.oi_state);
+	oi_init(&(control.oi_state));
 
 	usart_init();
 	usart_drain_rx();
@@ -333,7 +338,7 @@ void control_mode()
 		// Check for stop byte indefinitely:
 		byte = usart_rx();
 		if (byte != signal_stop) {
-			sprintf(r_error_buf, "Recieved %u instead of expected stop byte.", byte);
+			sprintf(r_error_buf, "Received %u instead of expected stop byte.", byte);
 			r_error(error_txq, r_error_buf);
 		}
 		lcd_putc(')');  // DEBUG: found stop byte

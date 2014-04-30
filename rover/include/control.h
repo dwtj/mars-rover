@@ -8,6 +8,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <assert.h>
+#include <stdbool.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
@@ -45,8 +46,8 @@ typedef enum {
 	mesg_error = 0,
 	mesg_ping = 1,
 	mesg_echo = 2,
-	mesg_rng_seed = 3,
-	mesg_command = 4,
+	mesg_command = 3,
+	mesg_rng_seed = 4,
 } mesg;
 #define NUM_MESG_CODES 5
 
@@ -83,11 +84,8 @@ extern control_t control;
 
 void dist_reading_handler(subsys_t);
 
+void tx_frame(bool another_frame);
 
-void read_frame();
-
-
-void write_frame();
-
+bool rx_frame();
 
 #endif /* CONTROL_H_ */

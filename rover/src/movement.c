@@ -8,26 +8,29 @@
 
 // TODO: refactor out the use of global variable
 
-enum {
-	none,
-	left,
-	right,
-	both
-} bumper_flag;
-
-enum {
-	nothing,
-	front_left_cliff,
-	front_right_cliff,
-	left_cliff,
-	right_cliff
-} cliff_flag;
 
 #include "open_interface.h"
 #include "movement.h"
 #include "lcd.h"
 #include "util.h"
+#include <stdbool.h>
 #include <math.h>
+
+enum {
+	full_distance = 0,
+	left_bumper = 1,
+	right_bumper = 2,
+	left_and_right_bumper = 3,
+	front_left_cliff = 4,
+	front_right_cliff = 5,
+	left_cliff = 6,
+	right_cliff = 7,
+	// TODO: the rest of these have not been implemented
+	white_tape = 8,
+	left_wheel = 9,
+	right_wheel = 10,
+	middle_wheel = 11
+} stop_flag;
 
 
 // Returns 0 if a bump is detected while making a course correction.
@@ -42,7 +45,9 @@ move_t course_correction(oi_t *sensor_data)
 	int lateral_dist= 250;
 	oi_set_wheels(0, 0);  // stop
 	
-	move.y = move_dist(sensor_data, -backup_dist, 300);
+	movement_data_t movement_data = move_dist(sensor_data, -backup_dist, 300);
+	
+	move.y = movement_data.travelled;
 
 	// DEBUG:
 	lprintf("left: %i, right: %i", sensor_data->bumper_left, sensor_data->bumper_right);
@@ -50,7 +55,7 @@ move_t course_correction(oi_t *sensor_data)
 	// If left bumper only detected, then CCW 90 degrees.
 	// If right bumper only detected, then turn CW 90 degrees.
 	// If both bumpers detected, then CCW 90 degrees.
-	int angle = (bumper_flag == left || bumper_flag == both) ? -90 : 90;
+	int angle = (stop_flag == left_bumper || stop_flag == left_and_right_bumper) ? -90 : 90;
 	
 	turn(sensor_data, angle);	
 	move_dist(sensor_data, lateral_dist,300);
@@ -61,7 +66,6 @@ move_t course_correction(oi_t *sensor_data)
 	lcd_clear();
 	return move;
 }
-
 
 int navigate_dist(oi_t *sensor_data, int dist) {
 	int dist_traveled = 0;
@@ -76,69 +80,79 @@ int navigate_dist(oi_t *sensor_data, int dist) {
 			}
 		}
 		dist_traveled += move.y;  // adds a negative number
-		dist_traveled += move_dist(sensor_data, dist - dist_traveled,300);
+		movement_data_t move = move_dist(sensor_data, dist - dist_traveled,300);
+		dist_traveled += move.travelled;
 		count_moves++;
 	}
 	
 	return count_moves - 1; // the number of bumps detected
 }
 
+///Function that detects the white strips on the floor, returns true if the white tape was detected, false otherwise
+bool detectWhite (){
+	;
+}
 
 // distance accumulated will be zeroed before return.
 // Only while attempting to move forward should it stop for the bumper sensors.
-int move_dist(oi_t *sensor_data, int dist, int spd) {
+movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
+{
 	oi_update(sensor_data);
 	int sum = 0;
 	int velocity = (dist < 0) ? -spd: spd;  // move at indicated speed
 	oi_set_wheels(velocity, velocity);
+	stop_flag = full_distance;
+
+	movement_data_t rv;
 	
 	//If attempting to go forward
 	if (dist > 0) {
-		while (sum < dist) {
+		while ((sum < dist) && !stop_flag) {
 			oi_update(sensor_data);
 			sum += sensor_data->distance; //adds a positive value
-			if (sensor_data->bumper_left || sensor_data->bumper_right) {
+			
 				
-				//Bumper detection
-				if (sensor_data->bumper_left && sensor_data->bumper_right) {
-					bumper_flag = both;
-				} else if (sensor_data->bumper_left) {
-					bumper_flag = left;
-				} else if (sensor_data->bumper_right) {
-					bumper_flag = right;
-				}
-				
-				//cliff detection
-				else if (sensor_data->cliff_left_signal){
-					cliff_flag = left_cliff;
-				}
-				else if (sensor_data->cliff_right_signal){
-					cliff_flag = right_cliff;
-				}
-				else if (sensor_data->cliff_frontleft_signal){
-					cliff_flag = front_left_cliff;
-				}
-				else if (sensor_data->cliff_frontright_signal){
-					cliff_flag = front_right_cliff;
-				}
+			//Bumper detection
+			if (sensor_data->bumper_left && sensor_data->bumper_right) {
+				stop_flag = left_and_right_bumper;
+				break;
+			} else if (sensor_data->bumper_left) {
+				stop_flag = left_bumper;
+				break;
+			} else if (sensor_data->bumper_right) {
+				stop_flag = right_bumper;
 				break;
 			}
+				
+				//cliff detection
+			else if (sensor_data->cliff_left) {
+					stop_flag = left_cliff;
+					break;
+			}else if (sensor_data->cliff_right) {
+					stop_flag = right_cliff;
+					break;
+			} else if (sensor_data->cliff_frontleft) {
+						stop_flag = front_left_cliff;
+						break;
+			} else if (sensor_data->cliff_frontright) {
+				stop_flag = front_right_cliff;
+				break;
+			}
+								
+			//white strip detection
+			else if (detectWhite()) {
+				stop_flag = white_tape;
+				break;
+			}	
 			
-			if (bumper_flag != none){ //if one of the bumpers was activated, stop moving
-				#warning "Still needs to send back a signal that specifies that a bumper was activated"
-				return sum; //return the distance traveled before hitting the object
-			}
-			if (cliff_flag != nothing){ //if one of the cliffs was activated, stop moving
-				#warning "Still needs to send back a signal that specifies that one of the cliff detectors was activated"
-				return sum; //return the distance traveled before detecting a cliff
-			}
-		}
-
+		}//while
+	
 	//If attempting to go backwards
 	} else if(dist < 0) {
 		while (sum > dist) {
 			oi_update(sensor_data);
 			sum += sensor_data->distance;  // adds a negative value
+			#warning "moving backwards in move_dist is not implemented"
 		}
 	} else {
 		// dist == 0, so do nothing
@@ -148,7 +162,11 @@ int move_dist(oi_t *sensor_data, int dist, int spd) {
 	// TODO: maybe add a delay here before reading the last distance update 
 	oi_update(sensor_data);
 	sum += sensor_data->distance;
-	return sum;
+	
+	rv.travelled = sum;
+	rv.flag = stop_flag;
+	
+	return rv;
 }
 
 

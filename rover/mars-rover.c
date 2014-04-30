@@ -40,9 +40,6 @@ void init_subsystems()
 
 int main()
 {
-    char song[] = {96, 96, 96, 96, 92, 94, 96, 94, 96};
-	char duration[] = {8, 8, 8, 8, 12, 12, 8, 8, 8}; //These probably need to be edited.
-
 	init_subsystems();
 
     switch (wait_button("Select Mode")) {
@@ -59,8 +56,7 @@ int main()
         break;
 
     case 4:
-		oi_load_song(0,9, song[0], duration[0]);//??
-		oi_play_song(0);
+		test_songs_mode();
         break;
 
 	case 5:

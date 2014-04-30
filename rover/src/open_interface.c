@@ -4,6 +4,7 @@
 #include "open_interface.h"
 #include "r_error.h"
 #include "control.h"
+#include "movement.h"
 
 /// Allocate memory for a the sensor data
 oi_t* oi_alloc() {
@@ -126,9 +127,12 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 	oi_byte_tx(left_wheel& 0xff);
 }
 
+
 //Handler for OI, moved from control.
 void oi_system()
 {
+	movement_data_t movement_data;
+	
 	enum {
 		oi_command_init = 0,
 		oi_command_move = 1,
@@ -140,71 +144,93 @@ void oi_system()
 	txq_enqueue(oi_command);
 
 	switch (oi_command) {
-	case oi_command_init:
 
-		oi_init(&(control.oi_state));
-		break;
+		case oi_command_init:
+			oi_init(&(control.oi_state));
+			break;
 
+		case oi_command_move:
+	
+			if(rx_frame()) {
+				r_error(error_frame,"Move should not have multiple frames.");
+			}
 
-	case oi_command_move:
+			struct {
+				uint16_t speed;
+				uint16_t dist;
+				bool stream;
+			} *move_data = (void *) &control.data;
+			
+			struct {
+				uint16_t dist;
+				uint8_t flag;
+			} *response_move = (void *) &control.data;
 
-		if(rx_frame()) {
-			r_error(error_frame,"Move should not have multiple frames.");
-		}
+			#warning "Stream functionality to be implemented later."
+			//Stream returns the distance traveled
+			//lcd_puts  ("In OI subsystem"); //debug
+			movement_data = move_dist(&(control.oi_state), move_data->dist, move_data->speed);
+			response_move->dist = movement_data.travelled;
+			response_move->flag = movement_data.flag;
+			control.data_len = 3;
+			tx_frame(false);
+			break;
 
-		struct {
-			uint8_t speed;
-			uint8_t dist;
-			bool stream;
-		} *move_data = (void *) &control.data;
+		case oi_command_rotate:
 
-		#warning "Stream functionality to be implemented later."
-		//Stream returns the distance traveled
+			if (rx_frame()) {
+				r_error(error_bad_message, "Rotate should only have one data frame.");
+			}
 
-		move_dist(&(control.oi_state), move_data->dist, move_data->speed);
-		break;
+			int16_t *angle = &(control.data[0]); // TODO: test if this is the right number of bytes
 
+			if (control.data_len != 2/*sizeof(*angle)*/) { // TODO: hardcoding to debug
+				r_error(error_bad_message, "Received too much data with rotate "
+																	   "message.");
+			}
 
-	case oi_command_rotate:
+			turn(&(control.oi_state), *angle);
+			break;
+			
+			//Sing me a song.
+		case oi_command_play_song:
+			;
+			//assuming that we get two data frames, the first containing the notes and the second containing the durations.
+			int j;
+				struct {
+					uint8_t n; //The number of notes present in the song
+					//char data[n];
+					uint8_t index;
+				} *song_data = (void *) &control.data;
+		
+			//	int j;
+		 
+			while(rx_frame()) { //this should happen twice please
+				char tmp_notes[song_data->n];
+				char tmp_durs[song_data->n];
+			
+				for(j =0; j<song_data->n; j++) {
+					//tmp_notes[n]; TODO: broken
+					#warning "oi_command_play_song not implemented"
+				}
 
-		if (rx_frame()) {
-			r_error(error_bad_message, "Rotate should only have one data frame.");
-		}
+			}
+		
+			break;
 
-		int16_t *angle = &(control.data[0]);
+		case oi_command_dump:
+			lcd_putc('D');  // DEBUG
+			//copies all of the data from OI_UPDATE and transmits to Control.
+			oi_update(&(control.oi_state));
+			memcpy(control.data, &control.oi_state, sizeof(control.oi_state));
+			control.data_len = sizeof(control.oi_state);
+			tx_frame(false);
+			lcd_putc('E');  // DEBUG
+			break;
 
-		if (control.data_len != sizeof(*angle)) {
-			r_error(error_bad_message, "Received too much data with rotate "
-																   "message.");
-		}
-
-		turn(&(control.oi_state), *angle);
-		break;
-
-
-	case oi_command_play_song:
-
-		;//First thing after a case must be a statement
-		//we only have the one song....
-		char song[] = {96, 96, 96, 96, 92, 94, 96, 94, 96};
-		char duration[] = {8, 8, 8, 8, 12, 12, 8, 8, 8}; //These probably need to be edited.
-		oi_load_song(0,9, song[0], duration[0]);//??
-		oi_play_song(0);
-		break;
-
-	case oi_command_dump:
-		lcd_putc('D');  // DEBUG
-		//copies all of the data from OI_UPDATE and transmits to Control.
-		oi_update(&(control.oi_state));
-		memcpy(control.data, &control.oi_state, sizeof(control.oi_state));
-		control.data_len = sizeof(control.oi_state);
-		tx_frame(false);
-		lcd_putc('E');  // DEBUG
-		break;
-
-	default:
-		r_error(error_bad_message, "Bad OI Command");
-		break;
+		default:
+			r_error(error_bad_message, "Bad OI Command");
+			break;
 	}
 }
 
@@ -214,6 +240,7 @@ void oi_load_song(int song_index, int num_notes, unsigned char *notes, unsigned 
 	oi_byte_tx(OI_OPCODE_SONG);
 	oi_byte_tx(song_index);
 	oi_byte_tx(num_notes);
+	
 	for (i=0;i<num_notes;i++) {
 		oi_byte_tx(notes[i]);
 		oi_byte_tx(duration[i]);
