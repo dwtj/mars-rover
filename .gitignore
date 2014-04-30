@@ -1,6 +1,6 @@
 # Project Specific:
 
-control/calibrate/data/*
+control/calibrate/data
 
 
 # Visual Studio:
