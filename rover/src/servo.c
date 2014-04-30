@@ -65,6 +65,12 @@ static void set_pulse_proportion(float p){
 }
 
 
+static void set_pulse_width(uint16_t pulse_width) {
+	OCR3B = pulse_width;
+}
+
+
+
 #warning "TODO: fix the servo handlers"
 void servo_system()
 {
@@ -84,6 +90,7 @@ void servo_system()
 
 	case command_state:
 		#warning "Servo state not yet implemented."
+		r_error(error_unimplemented, "`command_state` is not yet implemented.")
 		break;
 
 	case command_angle:
@@ -95,19 +102,33 @@ void servo_system()
 			uint8_t angle;
 			bool wait;
 		} *servo_data = (void *) &control.data;
+	
+		if(rx_frame())
+		{
+			r_error(error_frame, "Servo expected single data frame.");
+		}
+
+		if (control.data_len != sizeof(*servo_data)) {
+			r_error(error_frame, "The expected data length is different from the action.");  
+		}
 		
 		servo_angle(servo_data->angle, servo_data->wait);
 		break;
-
+		
 	case command_pulse_width:
-		if(rx_frame()) {
+		if(rx_frame()){
 			r_error(error_frame,"Pulse Width expected but one frame.");
 		}
 
-		float *p = (void *) &control.data;
-		set_pulse_proportion(*p);
+		uint16_t *pulse_width = (void *) &control.data;
+		
+		if (control.data_len != sizeof(*pulse_width)) {
+			r_error (error_frame, "The expected data length is different from the action.");  
+		}
+		
+		set_pulse_width(*pulse_width);
 		break;
-
+		
 	default:
 			r_error(error_bad_message, "Bad servo Command");
 			break;
@@ -133,8 +154,8 @@ void servo_init()
 
 
 /**
- * Returns an approximate number of milliseconds that the system should wait before being certain
- * that the servo has reached its intended angle.
+ * Returns an approximate number of milliseconds that the system should wait
+ * before being certain that the servo has reached its intended angle.
  */
 static uint16_t servo_move_wait_time(uint8_t old_angle, uint8_t new_angle)
 {
@@ -147,11 +168,11 @@ static uint16_t servo_move_wait_time(uint8_t old_angle, uint8_t new_angle)
 
 
 /**
- * Moves servo to the desired angle `deg`, measured in degrees. Uses the simple analytical
- * approximation method derived from lab manual to compute the PWM pulse width. If `wait`
- * is `true`, then the function will wait for two seconds before returning. If `wait` is
- * `false`, then the function will immediately return, that is, before the servo has reached
- * the desired angle.
+ * Moves servo to the desired angle `deg`, measured in degrees. Uses the
+ * simple analytical approximation method derived from lab manual to compute
+ * the PWM pulse width. If `wait` is `true`, then the function will wait for
+ * two seconds before returning. If `wait` is `false`, then the function will
+ * immediately return, that is, before the servo has reached the desired angle.
  */
 void servo_angle(uint8_t deg, bool wait)
 {
@@ -160,15 +181,6 @@ void servo_angle(uint8_t deg, bool wait)
 	if (deg < 0 || deg > 180) {
 		return;
 	}
-	
-	/*
-	// The pulse period is 21.5ms.
-	// 0 degrees was recommended to be 0.5ms.
-	// 180 degrees was recommended to be 2.0ms.
-	
-	float p = 3.87594e-4 * deg + 0.023256;
-	set_pulse_proportion(p);
-	*/
 	
 	/* Simple least squares regression from calibration data on robot 13: */
 	OCR3B = round(18.6*deg + 1056.8);

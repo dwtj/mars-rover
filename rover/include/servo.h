@@ -9,6 +9,9 @@
 #ifndef SERVO_H_
 #define SERVO_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 void servo_pulse_proportion(float p);
 void servo_init();
 void servo_angle(uint8_t deg, bool wait);

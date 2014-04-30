@@ -78,7 +78,7 @@ class ServoCommand(IntEnum):
     init = 0
     state = 1
     angle = 2
-    pulse = 3
+    pulse_width = 3
 
 
 

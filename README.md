@@ -9,3 +9,17 @@ By Diamondstone and the Diamondstuds:
 - David Johnston (dwtj@iastate.edu)
 - Flavia Cavalcanti (flaviarc@iastate.edu)
 
+
+
+## Control Module ##
+
+Requirements:
+
+- python3
+- pyserial
+- numpy
+- matplotlib
+- scipy
+- ipython (recommended)
+
+The testing environment was Mac OS X 10.9.2 Mavericks.

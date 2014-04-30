@@ -6,6 +6,7 @@
 #include "tests.h"
 #include "control.h"
 #include "usart.h"
+#include "songs.h"
 #include "txq.h"
 #include "util.h"
 
@@ -103,5 +104,15 @@ void readings_stream_mode()
 		}
 
 		usart_tx_buf(buf);
+	}
+}
+
+
+
+void test_songs_mode(void)
+{
+	while (true) {
+		uint8_t song_id = wait_button("Select song");
+		songs_load(song_id);
 	}
 }
