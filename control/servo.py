@@ -77,30 +77,27 @@ def angle(sen, angle, wait = True):
     
     b = struct.pack("<I", angle)
     tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, b)
-    
-    # TODO: wait for "finished" signal from rover. 
-    # Is the finished signal in the data sent back? Make consistent with rover
-    #while rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, True) != ServoSignal.finished:
-        #pass
-    rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, False)
+    b = sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, True)
+    # TODO: Check that the response data in `b` is well-formed.
 
 
 
 
-def pulse(sen, p):
+def pulse_width(sen, pw):
     """
-    Sets `p` as the proportion of the servo's PWM cycle which is logical-high.
+    Sets `pw` to be the new pulse width for the servo's PWM cycle, i.e. the
+    number of clock-ticks for which the cycle is logical-high.
 
-    Expects a floating point number in the interval (0, 1), (though the values
-    near the boundaries of this interval are probably not advisable choices).
+    Expects an appropriately sized integer number. The range of appropriate
+    values is dependent upon the servo's calibration.
 
-    Sends a single 16-bit floating point numer in the data segment of the
-    sending message. Expects nothing the the response message's data segment
+    Sends a single 16-bit integer in the data segment of the sending message.
+    Expects nothing in the response message's data segment
     """
 
     if not (0.0 < p and p < 1.0):
         raise ValueError("Argument `p` must be a float in the interval (0, 1).")
 
-    b = struct.pack("<f", p)
-    sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse, b)
-    sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse, False)
+    b = struct.pack("<H", pw)
+    sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse_width, b)
+    sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse_width, False)
