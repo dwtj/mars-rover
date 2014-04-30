@@ -1,6 +1,8 @@
 #ifndef _SONGS_H
 #define _SONGS_H
 
-void songs_load();
+#include <stdint.h>
+
+void songs_load(uint8_t);
 
 #endif /* _SONGS_H */
