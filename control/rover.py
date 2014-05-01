@@ -52,6 +52,9 @@ class Rover():
         self.scan_contours = []
 
         # Startup the figure and axis to be used for displaying scan data:
+
+	# TODO: convert scan view to dict elem.
+
         self.scan_view = plt.figure().add_subplot(111, projection = 'polar')
         self.clear_scan()
 
@@ -62,8 +65,8 @@ class Rover():
         self.loc = (0.0, 0.0)
         self.direction = 0.0
 
-        # Locations of various objects and events to be displayed on `env_view`:
-        env = {
+        # Locations of various objects and events to be displayed on `env` view:
+        self.env = {
             # A list of locations at which the rover has previously stopped:
             'breadcrumbs': [],
 
@@ -81,16 +84,16 @@ class Rover():
             'contours': []
         }
 
-        env_plot = {
+        self.env_plot = {
             # The figure and axis onto which the environment is plotted:
-            'fig': None
-            'ax': None
+            'fig': None,
+            'view': None,
 
             # Contours that should be removed when scan data is appended:
-            'volatile_contours': None
+            'volatile_contours': None,
 
             # Contours that should remain permanently:
-            'contours': None
+            'contours': None,
 
             # A semi-circle that indicates the rover's current location and
             # direction:
@@ -140,7 +143,7 @@ class Rover():
 
         for (idx, angle) in enumerate(angles):
 
-            servo.pulse(self.sen, self.servo_conv(angle))
+            servo.pulse_width(self.sen, self.servo_conv(angle))
             rows = [r for r in range(idx * n, (idx+1) * n)]
 
             ir_data[rows, 0] = angle
@@ -154,7 +157,7 @@ class Rover():
         sonar_data[:, 1] = self.sonar_conv(sonar_data[:, 1])
 
         rv = (ir_data, sonar_data)
-        append_scan(rv)
+        self.append_scan(rv)
         return rv
 
 
@@ -167,8 +170,8 @@ class Rover():
         (1) The `scan_points` list, by simply appending this data.
         (2) The `scan_view`, by adding this data to the radial scatter plot.
         (3) The `env["obs"]` by transforming this new `scan` data to the
-            cartesian coordinate system displayed by `env_view`.
-        (4) The `env_view` itself, by plotting the just added `scan_points`
+            cartesian coordinate system displayed by `env` view.
+        (4) The `env` view itself, by plotting the just added `scan_points`
         """
 
         # (1):
@@ -185,12 +188,12 @@ class Rover():
         # (3):
         ir_data = self.radial_to_env_arr(ir_data[:, 0], ir_data[:, 1])
         sonar_data = self.radial_to_env_arr(sonar_data[:, 0], sonar_data[:, 0])
-        self.env["ir_obs"].append(ir_data)
-        self.env["sonar_obs"].append(sonar_data)
+        #self.env["ir_obs"].append(ir_data)
+        #self.env["sonar_obs"].append(sonar_data)
 
         # (4):
-        self.env_view.scatter(ir_data[:, 0], sonar_data[:, 1])
-        self.env_view.figure.canvas.draw()
+        #self.env['view'].scatter(ir_data[:, 0], sonar_data[:, 1])
+        #self.env['view'].figure.canvas.draw()
 
 
 
@@ -256,12 +259,13 @@ class Rover():
 
     def redraw_env():
 
-
+        pass
 
 
     def plot_obj_contours(self):
         """ Generates a regression for each independent object discovered in the
-        current scan, and draws it onto both the `scan_view` and the `env_view`.
+        current scan, and draws it onto both the `scan_view` and the `env` 
+	view.
         """
 
         # TODO: Until a scan is finalized by moving, keep track of those
@@ -276,7 +280,7 @@ class Rover():
     def radial_to_env(self, theta, r):
         """ Uses the rover's current orientation in the environment (i.e. its
         current location and angle) to map a single radial point into the
-        cartesian environment presented by `env_view`. Returns a 2-tuple, whose
+        cartesian environment presented by `env` view. Returns a 2-tuple, whose
         first entry is the x location and whose second entry is the y location.
 
 
@@ -292,7 +296,7 @@ class Rover():
     def radial_to_env_arr(self, thetas, rs):
         """ Uses the rover's current orientation in the environment (i.e. its
         current location and angle) to map these radial points into the
-        cartesian environment presented by `env_view`.
+        cartesian environment presented by `env` view.
 
         `thetas` is an `np.ndarray` of angles (measured in degrees), and `rs` is
         a `np.ndarray` of the corresponding radial distances.
@@ -325,7 +329,7 @@ class Rover():
 
     def danger_found(self, danger_id):
         """ Appends a new danger to the appropriate list of `env`, and updates
-        the `env_view`. The position at which the danger is placed is computed
+        the `env` view. The position at which the danger is placed is computed
         based on the rover's location and direction, but also where on the robot
         that particular danger-detection sensor is located. """
         

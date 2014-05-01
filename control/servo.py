@@ -98,9 +98,6 @@ def pulse_width(sen, pw):
     TODO: debug. not implemented on their end. "Did not receive the expected Start signal."
     """
 
-    if not (0.0 < p and p < 1.0):
-        raise ValueError("Argument `p` must be a float in the interval (0, 1).")
-
     b = struct.pack("<H", pw)
     sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse_width, b)
     sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse_width, False)
