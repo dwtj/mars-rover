@@ -73,12 +73,12 @@ def angle(sen, angle, wait = True):
     if not (0 <= angle and angle  <= 180):
         raise ValueError("Argument `angle` must be an integer in [0..180].")
     
-    b = struct.pack("<I", angle)
-    tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, b)
+    b = struct.pack("<B?", angle, wait)
+    sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, b)
     b = sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, True)
     # TODO: Check that the response data in `b` is well-formed.
 
-    raise NotImplementedError("Rotating the servo has not been implemented.")
+    #raise NotImplementedError("Rotating the servo has not been implemented.")
     
 
 
@@ -97,9 +97,6 @@ def pulse_width(sen, pw):
     
     TODO: debug. not implemented on their end. "Did not receive the expected Start signal."
     """
-
-    if not (0.0 < p and p < 1.0):
-        raise ValueError("Argument `p` must be a float in the interval (0, 1).")
 
     b = struct.pack("<H", pw)
     sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.pulse_width, b)

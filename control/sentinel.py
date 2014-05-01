@@ -221,7 +221,7 @@ class Sentinel():
         if self.is_watching:
             raise Exception("You cannot read when the sentinel is watching.")
 
-        self.ser.timeout = 1
+        self.ser.timeout = 20
         return self.ser.readinto(b)
 
  
