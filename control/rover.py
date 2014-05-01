@@ -57,27 +57,43 @@ class Rover():
         # discovered. Scan and event data is mapped onto this cartesian space,
         # where the robot's initial location is at (0, 0) and it is initially
         # directed toward angle 0:
-        self.x_loc = 0.0
-        self.y_loc = 0.0
+        self.loc = (0.0, 0.0)
         self.direction = 0.0
 
         # Locations of various objects and events to be displayed on `env_view`:
         env = {
-                # A list of points at which the rover has stopped:
+            # A list of locations at which the rover has previously stopped:
+            'breadcrumbs': [],
 
-                # The dangers that the rover has found so far:
-                "bumps": [],
-                "cliffs": [],
-                "drops": [],
-                "tape": [],
+            # The dangers that the rover has found so far:
+            'bumps': [],
+            'cliffs': [],
+            'drops': [],
+            'tape': [],
 
-                # Point observations found in scans and mapped to `env` space:
-                "ir_obs": [],
-                "sonar_obs": [],
+            # Point observations found in scans and mapped to `env` space:
+            'ir_obs': [],
+            'sonar_obs': [],
 
-                # Object contours represented by regressions on the `obs` data:
-                "contours": []
-              }
+            # Object contours represented by regressions on the `obs` data:
+            'contours': []
+        }
+
+        env_plot = {
+            # The figure and axis onto which the environment is plotted:
+            'fig': None
+            'ax': None
+
+            # Contours that should be removed when scan data is appended:
+            'volatile_contours': None
+
+            # Contours that should remain permanently:
+            'contours': None
+
+            # A semi-circle that indicates the rover's current location and
+            # direction:
+            'scan_region': None
+        }
 
 
 
@@ -190,21 +206,53 @@ class Rover():
     def move(self, dist = 300, speed = 90):
         """ TODO
         """
-        clear_scan()  # Assumes that scan data has already been added to `env`.
-        stop_reason, rx_dist = oi.move(self.sen, dist, speed)
+        # Perform cleanup before the move. (We assume that scan data has already
+        # been added to `env`.)
+        clear_scan()
+        self.env["breadcrumbs"].append(self.loc)
 
-        # TODO: use move_conv to correct for sensor error.
+        # TODO: Add this breadcrumb to the plot.
+
+        # Move and interpret the rover's response:
+        stop_reason, dist = oi.move(self.sen, dist, speed)
+
+        # TODO: use move_conv to correct for rover sensor error.
 
         # Calculate the new location:
-        self.x_loc, self.y_loc = self.radial_to_env(90)
+        self.loc = self.radial_to_env(90, dist)
 
         # TODO: handle different stop reasons
 
 
 
+
     def rotate(self, angle):
-        """ TODO
+        """ Sends a command to the `rover` to rotate by the given angle
+        (measured in degrees), and updates the rover's current direction.
         """
+
+        oi.rotate(self.sen, angle)
+
+        # TODO: use `rotate_conv` to correct for rover sensor error.
+
+        self.direction += angle
+
+        raise NotImplementedError
+
+
+
+    def plot_scan_region():
+        """ A helper function to add a semi-circle to `env` to indicate its
+        location and the direction in which it is facing. """
+
+        # Remove the old scan region, if there is one:
+
+        raise NotImplementedError
+
+
+
+
+    def redraw_env():
 
 
 
@@ -233,8 +281,8 @@ class Rover():
         """
 
         theta_prime = (theta - 90.0 + self.direction) * (np.pi / 180.0)
-        return (r * np.cos(theta_prime) + self.x_loc,
-                r * np.sin(theta_prime) + self.y_loc)
+        return (r * np.cos(theta_prime) + self.loc[0],
+                r * np.sin(theta_prime) + self.loc[1])
 
 
 
@@ -265,8 +313,8 @@ class Rover():
         rv[:, 1] = rv[:, 0]
 
         # Find the `x` and `y` values w.r.t. the origin of `env`:
-        rv[:, 0] = rs * np.cos(rv[:, 0]) + self.x_loc
-        rv[:, 1] = rs * np.sin(rv[:, 1]) + self.y_loc
+        rv[:, 0] = rs * np.cos(rv[:, 0]) + self.loc[0]
+        rv[:, 1] = rs * np.sin(rv[:, 1]) + self.loc[1]
 
         return rv
 
