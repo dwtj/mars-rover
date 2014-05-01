@@ -17,6 +17,14 @@ import servo
 from codes import OIStopID
 
 
+zorders = {
+	'breadcrumbs': 0,
+	'scan_field': 1,
+	'scan_data': 2,
+	'contours': 3
+}
+
+
 
 class Environment():
     """ Rover presents a to the user the `env` map, which depicts those
@@ -136,9 +144,19 @@ class Environment():
         sonar_data = self.conv_radial_arr(sonar_data[:, 0], sonar_data[:, 0])
         self.ir_obs.append(ir_data)
         self.sonar_obs.append(sonar_data)
+        
+        point_size = 8
 
-        self.view.scatter(ir_data[:, 0], ir_data[:, 1])
-        self.view.scatter(sonar_data[:, 0], sonar_data[:, 1])
+        col = self.view.scatter(ir_data[:, 0], ir_data[:, 1], s = point_size)
+        col.set_edgecolor('none')
+        col.set_facecolor('blue')
+        col.set_zorder(zorders['scan_data'])
+        
+        col = self.view.scatter(sonar_data[:, 0], sonar_data[:, 1], s = point_size)
+        col.set_edgecolor('none')
+        col.set_facecolor('green')
+        col.set_zorder(zorders['scan_data'])
+        
         self.draw()
 
 
@@ -149,6 +167,7 @@ class Environment():
         c = Circle(self._loc, radius = 16.25)
         c.set_facecolor('0.65')  # grey
         c.set_edgecolor('black')
+        c.set_zorder(zorders['breadcrumbs'])
         c.set_fill(True)
         self.view.add_artist(c)
         self.breadcrumbs.append(c)
@@ -219,7 +238,8 @@ class Environment():
         # Make a semi-circle with radius 100 at the current rover location:
         w = Wedge(self._loc, 100, self._direction - 90, self._direction + 90)
         w.set_facecolor('0.90')  # grey
-        w.set_edgecolor('black')
+        w.set_edgecolor('none')
+        w.set_zorder(zorders['scan_field'])
         w.set_fill(True)
 
         self.view.add_artist(w)
@@ -310,12 +330,21 @@ class Scanner():
 
 
     def add_scan(self, scan_data):
+        
         ir_data, sonar_data = scan_data
+        
         angles = ir_data[:, 0] * (np.pi / 180.0)
-        self.cur_scan_view.scatter(angles, ir_data[:, 1], 'g')
+        rs = ir_data[:, 1]
+        rs = rs[~np.isnan(rs)]
+        self.view.scatter(angles, rs, 'g')
 
+		''' DEBUG: temporarily disabled
         angles = sonar_data[:, 0] * (np.pi / 180.0)
-        self.cur_scan_view.scatter(angles, sonar_data[:, 1], 'b')
+        rs = sonar_data[:, 1]
+        rs = rs[~np.isnan(rs)]
+        self.view.scatter(angles, rs, 'b')
+        '''
+        
         self.draw()
 
 
@@ -393,13 +422,13 @@ class Rover():
         # TODO: move_conv
 
         self.env = Environment()
-        self.scan = Scanner()
+        self.scanner = Scanner()
 
 
 
     def __del__(self):
         del(self.env)
-        del(self.scan)
+        del(self.scanner)
 
 
 
@@ -459,10 +488,14 @@ class Rover():
         # Perform the conversion from raw readings to distances.
         ir_data[:, 1] = self.ir_conv(ir_data[:, 1])
         sonar_data[:, 1] = self.sonar_conv(sonar_data[:, 1])
+        
+        # Return the servo to 90.0 degrees:
+        servo.pulse_width(self.sen, self.servo_conv(90.0))
 
         rv = (ir_data, sonar_data)
         if updt_scan == True:
-            self.scan.add_scan(rv)
+            #self.scanner.add_scan(rv)  # DEBUG
+            pass
         if updt_env == True:
             self.env.add_scan(rv)
         return rv
@@ -511,5 +544,5 @@ class Rover():
         contours.
         """
 
-        self.scan = Scanner()  # Start using a new scanner.
+        self.scanner = Scanner()  # Start using a new scanner.
         self.env.finalize_contours()
