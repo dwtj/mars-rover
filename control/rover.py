@@ -7,8 +7,10 @@ from scipy.interpolate import LSQUnivariateSpline
 import sentinel
 import sensors
 import ir
+import oi
 import sonar
 import servo
+from codes import OIStopID
 
 
 class Rover():
@@ -34,6 +36,7 @@ class Rover():
         self.ir_conv = sensors.gen_ir_converter(calib_dir + "/ir.csv")
         self.sonar_conv = sensors.gen_sonar_converter(calib_dir + "/sonar.csv")
         self.servo_conv = sensors.gen_servo_converter(calib_dir + "/servo.csv")
+        # TODO: move_conv
 
         # Creates the empty list to store scan data generated from a position.
         # This is expected to be a list 2-tuples, where each element is an
@@ -60,6 +63,8 @@ class Rover():
 
         # Locations of various objects and events to be displayed on `env_view`:
         env = {
+                # A list of points at which the rover has stopped:
+
                 # The dangers that the rover has found so far:
                 "bumps": [],
                 "cliffs": [],
@@ -68,7 +73,7 @@ class Rover():
 
                 # Point observations found in scans and mapped to `env` space:
                 "ir_obs": [],
-                "sonar_obs": []
+                "sonar_obs": [],
 
                 # Object contours represented by regressions on the `obs` data:
                 "contours": []
@@ -160,8 +165,8 @@ class Rover():
         self.scan_view.figure.canvas.draw()
 
         # (3):
-        ir_data = self.radial_to_env(ir_data[:, 0], ir_data[:, 1])
-        sonar_data = self.radial_to_env(sonar_data[:, 0], sonar_data[:, 0])
+        ir_data = self.radial_to_env_arr(ir_data[:, 0], ir_data[:, 1])
+        sonar_data = self.radial_to_env_arr(sonar_data[:, 0], sonar_data[:, 0])
         self.env["ir_obs"].append(ir_data)
         self.env["sonar_obs"].append(sonar_data)
 
@@ -182,6 +187,28 @@ class Rover():
 
 
 
+    def move(self, dist = 300, speed = 90):
+        """ TODO
+        """
+        clear_scan()  # Assumes that scan data has already been added to `env`.
+        stop_reason, rx_dist = oi.move(self.sen, dist, speed)
+
+        # TODO: use move_conv to correct for sensor error.
+
+        # Calculate the new location:
+        self.x_loc, self.y_loc = self.radial_to_env(90)
+
+        # TODO: handle different stop reasons
+
+
+
+    def rotate(self, angle):
+        """ TODO
+        """
+
+
+
+
     def plot_obj_contours(self):
         """ Generates a regression for each independent object discovered in the
         current scan, and draws it onto both the `scan_view` and the `env_view`.
@@ -196,7 +223,23 @@ class Rover():
 
 
 
-    def radial_to_env(self, thetas, rs):
+    def radial_to_env(self, theta, r):
+        """ Uses the rover's current orientation in the environment (i.e. its
+        current location and angle) to map a single radial point into the
+        cartesian environment presented by `env_view`. Returns a 2-tuple, whose
+        first entry is the x location and whose second entry is the y location.
+
+
+        """
+
+        theta_prime = (theta - 90.0 + self.direction) * (np.pi / 180.0)
+        return (r * np.cos(theta_prime) + self.x_loc,
+                r * np.sin(theta_prime) + self.y_loc)
+
+
+
+
+    def radial_to_env_arr(self, thetas, rs):
         """ Uses the rover's current orientation in the environment (i.e. its
         current location and angle) to map these radial points into the
         cartesian environment presented by `env_view`.
@@ -208,6 +251,8 @@ class Rover():
         (theta, r) pair in the inputs, a single (x, y) coordinate will be in
         this returned array.
         """
+
+        # TODO: reimplement this using `radial_to_env()` as a numpy `ufunc`.
 
         if len(thetas) != len(rs):
             raise ValueError("`thetas` and `rs` must be of the same length.")

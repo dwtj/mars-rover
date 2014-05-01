@@ -17,21 +17,20 @@ def init(sen):
 
 
 
-def move(sen, speed = 500, distance = 3000, stream = False):
+def move(sen, dist = 300, speed = 90, stream = False):
     """
     Moves the rover. `speed` is an integer in the range (0, 500]. `distance`, 
     if provided, is in millimeters and is an integer in range [-3000, 3000]. 
     Negative `distance` values command the robot to move backwards.
    
-    Returns a list where [0] is the encoding for the reason for stopping
-    and [1] is the actual distance traveled.
+    Returns a 2-tuple, where [0] is the reported distance traveled and [1] is
+    a code for why the rover stopped. See `codes.OIStopID` for the encodings.
 
     Data frame sent: 2 bytes for `speed`, 2 bytes for `distance`, and 1 byte
     for `stream`.
 
     Data frame received: 1 byte containing why `rover` stopped (as encoded 
     in `OIStopCommand`) and 2 bytes containing the actual distance traveled.
-
     """
 
     if not 0 < speed and speed <= 500:
@@ -47,7 +46,7 @@ def move(sen, speed = 500, distance = 3000, stream = False):
     b = pack("<Hh?", speed, distance, stream)
     sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.move, b)
     data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, True)
-    unpacked_data = struct.unpack("<bh", data)
+    unpacked_data = struct.unpack("<hB", data)
 
     return unpacked_data
 
