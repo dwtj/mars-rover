@@ -1,8 +1,10 @@
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
 import scipy
 from scipy.interpolate import LSQUnivariateSpline
+
+import matplotlib
+import matplotlib.pyplot as plt
+from matplotlib.patches import Wedge
 
 import sentinel
 import sensors
