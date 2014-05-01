@@ -339,6 +339,13 @@ class Scanner():
 
     def find_obj_clouds(self):
         """ Finds data from each distinct object generated across all scans.
+
+        Consolidates and trims `scan_points` to a list of 2-tuples, where 
+        each 2-tuple contains all data points relevant to a distinct object. 
+        Each of the 2-tuple's elements is a two column ndarray where the first
+        column lists angles and the second column lists corresponding radial 
+        distances. The first element of the 2-tuple is IR data and the second 
+        is sonar data. 
         """
 
         raise NotImplementedError

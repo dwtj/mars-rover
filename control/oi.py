@@ -62,7 +62,7 @@ def rotate(sen, angle):
 
     Data frame sent: 2 bytes for `angle`.
 
-    Data frame received: none.
+    Data frame received: 2 bytes for actual angle moved.
     """
 
     if not -360 < angle and angle <= 360:
@@ -70,7 +70,11 @@ def rotate(sen, angle):
 
     b = struct.pack("<h", angle)
     sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.rotate, b)
-    sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.rotate, False)
+    data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.rotate, True)
+    unpacked_data = struct.unpack("<h", data)
+
+    return unpacked_data
+
 
 
 
