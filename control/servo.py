@@ -34,6 +34,9 @@ def state(sen, s = None):
     state as a string, either "on" or "off". If the function is passed "on",
     then the servo will be turned on, and if it is passed "off", then the
     servo will be turned off.
+    
+    
+    #TODO: Debug. "object of type 'bool' has no len()."
     """
 
     if s == None:
@@ -44,12 +47,7 @@ def state(sen, s = None):
         init(sen)
         rv = "on"
     elif s == "off":
-        # TODO: How would I tell the servo to turn off?? Send a 0? Make 
-        # consistent on rover side
-        b = struct.pack("<I", 0)
-        sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.state, b)
-        sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.state, False)
-        rv = "off"
+        raise NotImplementedError("Turning the servo off has not been implemented.")
     else:
         raise ValueError('Argument `s` must be `None`, "on", or "off".');
 
@@ -80,6 +78,8 @@ def angle(sen, angle, wait = True):
     b = sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, True)
     # TODO: Check that the response data in `b` is well-formed.
 
+    raise NotImplementedError("Rotating the servo has not been implemented.")
+    
 
 
 
@@ -91,8 +91,11 @@ def pulse_width(sen, pw):
     Expects an appropriately sized integer number. The range of appropriate
     values is dependent upon the servo's calibration.
 
-    Sends a single 16-bit integer in the data segment of the sending message.
-    Expects nothing in the response message's data segment
+    Data frame sent: 2 bytes for `p` as a floating point number.
+
+    Data frame received: none.
+    
+    TODO: debug. not implemented on their end. "Did not receive the expected Start signal."
     """
 
     if not (0.0 < p and p < 1.0):

@@ -318,6 +318,9 @@ class Sentinel():
         more_frames = True
         while more_frames:
             frame_length = self.read_int()
+            if frame_length == None:
+                raise Exception("Did not receive any data bytes.")
+
             frame = bytearray(frame_length)
             if self.readinto(frame) != frame_length:
                 raise Exception("Did not receive enough data bytes.")
