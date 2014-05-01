@@ -17,14 +17,15 @@ def init(sen):
 
 
 
-def move(sen, speed = 100, distance = 300, stream = False):
+
+def move(sen, dist = 300, speed = 90, stream = False):
     """
-    Moves the rover. `speed` is an integer in the range (0, 500]. `distance`, 
+    Moves the rover. `speed` is an integer in the range (0, 500]. `dist`, 
     if provided, is in millimeters and is an integer in range [-3000, 3000]. 
-    Negative `distance` values command the robot to move backwards.
+    Negative `dist` values command the robot to move backwards.
    
-    Returns a tuple where [0] is the reason for stopping and [1] is the 
-    actual distance traveled.
+    Returns a 2-tuple, where [0] is the reported distance traveled and [1] is
+    a code for why the rover stopped. See `codes.OIStopID` for the encodings.
 
     Data frame sent: 2 bytes for `speed`, 2 bytes for `distance`, and 1 byte
     for `stream`.
@@ -36,17 +37,17 @@ def move(sen, speed = 100, distance = 300, stream = False):
     if not 0 < speed and speed <= 500:
         raise ValueError("Argument `speed` must be in the interval (0, 500].")
     
-    if not (-3000 <= distance and distance <= 3000) and distance != None:
-        raise ValueError("Argument `distance` must be in the closed interval"
-                                                              "[-3000, 3000].")
+    if not (-3000 <= dist and dist <= 3000) and distance != None:
+        raise ValueError("Argument `dist` must be in the closed interval"
+                                                         "[-3000, 3000].")
 
     if stream != False:
         raise NotImplementedError()
 
-    b = struct.pack("<Hh?", speed, distance, stream)
+    b = struct.pack("<Hh?", speed, dist, stream)
     sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.move, b)
     data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.move, True)
-    unpacked_data = struct.unpack("<hb", data)
+    unpacked_data = struct.unpack("<hB", data)
 
     return unpacked_data
 
