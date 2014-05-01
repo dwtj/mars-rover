@@ -111,6 +111,8 @@ def gen_servo_converter(csv_file):
     from desired angles to pulse width proportions that will move the servo
     to approximately that angle.
 
+    TODO: update comments
+
     In particular, the converter expects a single argument. This argument can
     be:
 
@@ -147,7 +149,7 @@ def gen_servo_converter(csv_file):
                 raise ValueError("Can't convert angles outside of [0, 180].")
 
         # Otherwise, use the polynomial fit to convert to pulse widths:
-        return conv(angles)
+        return int(round(conv(angles)))
 
     return guarded_conv
 
