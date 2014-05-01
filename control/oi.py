@@ -2,7 +2,7 @@
 
 import struct
 
-from codes import MesgID, SubsysID, OICommand
+from codes import MesgID, SubsysID, OICommand, OIStopID
 
 
 def init(sen):
@@ -34,6 +34,9 @@ def move(sen, dist = 300, speed = 90, stream = False):
     and 1 byte containing why `rover` stopped (as encoded in `OIStopID`).
     """
 
+    if sen == "DEBUG":
+        return (dist, OIStopID.full_distance)
+
     if not 0 < speed and speed <= 500:
         raise ValueError("Argument `speed` must be in the interval (0, 500].")
     
@@ -64,6 +67,9 @@ def rotate(sen, angle):
 
     Data frame received: 2 bytes for actual angle moved.
     """
+
+    if sen == "DEBUG":
+        return
 
     if not -360 < angle and angle <= 360:
         raise ValueError("Argument `angle` must be in the interval (-360, 360)")
