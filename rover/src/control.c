@@ -5,7 +5,8 @@
  *  Author: asr
  */
 
-
+//NOTE: If you want the debugging messages to appear, it is necessary to change debug's value in 
+//mars-rover.h file.
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -22,7 +23,7 @@
 #include "control.h"
 #include "r_error.h"
 #include "lcd.h"
-
+#include "mars-rover.h";
 
 
 control_t control;  // Lone instance of the `control` struct.
@@ -48,25 +49,31 @@ bool rx_frame()
 		r_error(error_bad_message, "Data frame length must not exceed DATA_FRAME_MAX_LEN");
 	}
 
-	// Copy bytes coming from serial into `control.data`.
-	lcd_putc('['); // DEBUG
-	int i = 0;
-	for (i = 0; i < control.data_len; i++) {
-		control.data[i] = usart_rx();
-		lcd_putc('.'); // DEBUG
-	}
-	lcd_putc(']'); // DEBUG
+	
+	
+		// Copy bytes coming from serial into `control.data`.
+		if (debug) lcd_putc('['); // DEBUG
+		int i = 0;
+		for (i = 0; i < control.data_len; i++) {
+			control.data[i] = usart_rx();
+			if (debug) lcd_putc('.'); // DEBUG
+		}
+		if (debug) lcd_putc(']'); // DEBUG
 
 	// Notice that `i` now holds the expected data frame length.
 	control.data_len = usart_rx();
-	lcd_putc(control.data_len + '0');  // DEBUG
+	if (debug){
+		lcd_putc(control.data_len + '0');  // DEBUG
+	}
 	if (control.data_len > i) {
 		r_error(error_bad_message, "The real data frame length cannot be larger than the expected data frame length.");
 	}
 
 	// The last byte in this frame indicates whether another frame is coming:
 	rv = usart_rx();
-	lcd_putc(rv ? 'y' : 'n');  // DEBUG
+	if (debug){
+		lcd_putc(rv ? 'y' : 'n');  // DEBUG
+	}
 	return rv;
 }
 
@@ -122,8 +129,8 @@ void dist_reading_handler(subsys_t subsys)
 	}
 	else
 	{
-		r_error(error_unknown, "`dist_reading_handler()` was called with a "
-										  "subsystem other than IR or sonar.");
+			r_error(error_unknown, "`dist_reading_handler()` was called with a "
+										  "subsystem other than IR or sonar.");	
 	}
 
 
@@ -246,8 +253,9 @@ static void command_handler()
 		txq_drain();
 		subsystem_handlers[subsys]();
 	} else {
-		lprintf("subsys received: %u", subsys); // TODO: remove
-		r_error(error_bad_message, "Invalid subsystem ID.");
+			lprintf("subsys received: %u", subsys); // TODO: remove
+			r_error(error_bad_message, "Invalid subsystem ID.");
+		
 	}
 }
 
@@ -290,7 +298,7 @@ static void mesg_handler()
 	}
 	else
 	{
-		r_error(error_bad_message, "Received an invalid Message ID byte.");
+			r_error(error_bad_message, "Received an invalid Message ID byte.");
 	}
 }
 
@@ -331,8 +339,9 @@ void control_mode()
 			sprintf(r_error_buf, "Received %u instead of expected start byte.", byte);
 			r_error(error_txq, r_error_buf);
 		}
-		lcd_putc('(');  // DEBUG: found start byte
-
+		if (debug){
+			lcd_putc('(');  // DEBUG: found start byte
+		}
 		mesg_handler();  // Calls the appropriate sequence of handlers.
 
 		// Check for stop byte indefinitely:
@@ -341,6 +350,8 @@ void control_mode()
 			sprintf(r_error_buf, "Received %u instead of expected stop byte.", byte);
 			r_error(error_txq, r_error_buf);
 		}
-		lcd_putc(')');  // DEBUG: found stop byte
+		if (debug){
+			lcd_putc(')');  // DEBUG: found stop byte
+		}
 	}
 }

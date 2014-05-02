@@ -132,6 +132,7 @@ void oi_set_wheels(int16_t right_wheel, int16_t left_wheel) {
 void oi_system()
 {
 	movement_data_t movement_data;
+	rotation_data_t rotation_data;
 	
 	enum {
 		oi_command_init = 0,
@@ -189,7 +190,14 @@ void oi_system()
 																	   "message.");
 			}
 
-			turn(&(control.oi_state), *angle);
+			struct {
+				uint16_t rotation;
+			} *response_rotation = (void *) &control.data;
+
+			rotation_data = turn(&(control.oi_state), *angle);
+			response_rotation->rotation = rotation_data.rotated;
+			control.data_len = 2;
+			tx_frame(false);
 			break;
 			
 			//Sing me a song.
@@ -219,13 +227,11 @@ void oi_system()
 			break;
 
 		case oi_command_dump:
-			lcd_putc('D');  // DEBUG
 			//copies all of the data from OI_UPDATE and transmits to Control.
 			oi_update(&(control.oi_state));
 			memcpy(control.data, &control.oi_state, sizeof(control.oi_state));
 			control.data_len = sizeof(control.oi_state);
 			tx_frame(false);
-			lcd_putc('E');  // DEBUG
 			break;
 
 		default:

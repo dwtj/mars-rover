@@ -338,7 +338,7 @@ class Scanner():
         rs = rs[~np.isnan(rs)]
         self.view.scatter(angles, rs, 'g')
 
-		''' DEBUG: temporarily disabled
+        ''' DEBUG: temporarily disabled
         angles = sonar_data[:, 0] * (np.pi / 180.0)
         rs = sonar_data[:, 1]
         rs = rs[~np.isnan(rs)]

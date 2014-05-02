@@ -26,6 +26,11 @@ typedef struct {
 	uint8_t flag;
 } movement_data_t;
 
+//rotated stores the actual amount rotated by the servo
+typedef struct{
+	uint16_t rotated;	
+} rotation_data_t;
+
 // If `dist` is a positive value, then the robot moves forward at full speed
 // until it has moved  forward `dist` millimeters. If `dist` is negative, then it
 // moves backwards at full speed until it has moved `dist` millimeters backwards.
@@ -37,7 +42,7 @@ movement_data_t move_dist(oi_t *sensor_data, int dist, int spd);
 // counter-clockwise until it has moved `angle` degrees. If `angle` is negative, then it
 // rotates in-place until it has moved `angle` degrees. If `angle` is zero, it does not
 // move. If
-int turn (oi_t *sensor_data, int angle);
+rotation_data_t turn (oi_t *sensor_data, int angle);
 
 
 // Attempts to travel the given `dist` (measured in mm) forward, and if bumps are discovered,
