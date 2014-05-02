@@ -41,6 +41,9 @@ def readings(sen, n, raw = True, rand = False, timestamps = False):
     before each, if requested). 
     """
 
+    if sen == "DEBUG":
+        return [i for i in range(n)]
+
     tx_d = struct.pack("<h???", n, raw, rand, timestamps)
     sen.tx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, tx_d)
     rx_d = sen.rx_mesg(MesgID.command, SubsysID.sonar, SonarCommand.readings, True)
