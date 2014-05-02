@@ -140,6 +140,7 @@ void oi_system()
 		oi_command_rotate = 2,
 		oi_command_play_song = 3,
 		oi_command_dump = 4,
+		oi_command_end_sequence = 5
 	} oi_command = usart_rx();
 
 	txq_enqueue(oi_command);
@@ -209,6 +210,9 @@ void oi_system()
 			
 			//Sing me a song.
 		case oi_command_play_song:
+			
+			#warning "oi_command_play_song is deprecated"
+			
 			;
 			//assuming that we get two data frames, the first containing the notes and the second containing the durations.
 			int j;
@@ -240,7 +244,44 @@ void oi_system()
 			control.data_len = sizeof(control.oi_state);
 			tx_frame(false);
 			break;
-
+		
+		case oi_command_end_sequence:
+			#warning "oi_command_end_sequence not implemented"
+			
+			// Switch power LED off
+			oi_set_leds(1, 1, 0, 0);
+			
+			wait_ms(50);
+			
+			// Switch power LED to orange
+			oi_set_leds(1, 1, 170, 255);
+			
+			wait_ms(50);
+			
+			// Switch power LED off
+			oi_set_leds(1, 1, 0, 0);
+			
+			wait_ms(50);
+			
+			// Switch power LED to yellow
+			oi_set_leds(1, 1, 70, 255);
+			
+			wait_ms(50);
+			
+			// Switch power LED off
+			oi_set_leds(1, 1, 0, 0);
+			
+			wait_ms(50);
+			
+			// Switch power LED back to default state (from oi_init())
+			oi_set_leds(1, 1, 7, 255);
+			
+			
+			// Play song (TODO)
+			
+			
+			break;
+		
 		default:
 			r_error(error_bad_message, "Bad OI Command");
 			break;
