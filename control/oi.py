@@ -193,3 +193,19 @@ def dump(sen):
     data = sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.dump, True)
 
     return struct.unpack(format, data)
+
+
+
+def end_sequence(sen):
+    """
+    Sends a command to `rover` that it should begin the end sequence, which is
+    to flash the power LED and play a song. This behavior is hardcoded on the
+    C-side. 
+    
+    Data frame sent: none.
+    
+    Data frame received: none.
+    """
+    
+    sen.tx_mesg(MesgID.command, SubsysID.oi, OICommand.end_sequence, None)
+    sen.rx_mesg(MesgID.command, SubsysID.oi, OICommand.end_sequence, False)
