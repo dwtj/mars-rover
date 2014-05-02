@@ -37,7 +37,9 @@ class Environment():
         # Distance scan and event data is mapped onto the cartesian space
         # defined w.r.t. the robot's initial orientation. So the robot's
         # initial orientation in the real world is always represented as being
-        # at the origin and as directed upward.
+        # at the origin and as directed upward. To be clear, `_loc` is meant
+        # to be the position of the centerpoint of the servo tower (not the
+        # iRobot create's centerpoint.
         self._loc = (0.0, 0.0)
         self._direction = 90.0
 
@@ -128,10 +130,19 @@ class Environment():
 
 
     def rotate(self, delta):
-        """ Updates rover's direction in the Environment by rotating by given
+        """ Updates rover's orientation in the Environment by rotating by given
         number of degrees. Rotation is CCW if `delta` is positive and CW if
-        `delta` is negative.
-        """
+        `delta` is negative. The location of the rover's servo tower is updated
+        as well.  """
+
+        r = 7.5  # Centimeters from rover's centerpoint to the servo centerpoint.
+        x, y = self._loc
+        theta = self._direction
+
+        xprime = x + r * (np.cos(theta + delta) - np.cos(theta))
+        yprime = y + r * (np.sin(theta + delta) - np.sin(theta))
+
+        self.loc((xprime, yprime))
         self.direction(self._direction + delta)
 
 
@@ -351,7 +362,6 @@ class Scanner():
         
         angles = ir_data[:, 0] * (np.pi / 180.0)
         rs = ir_data[:, 1]
-        rs = rs[~np.isnan(rs)]
         self.view.scatter(angles, rs, 'g')
 
         ''' DEBUG: temporarily disabled
@@ -421,7 +431,12 @@ class Scanner():
                 
         # Go through all IR data
         for i in range(0, len(comb_scans[0])):
-        
+            # If the reading is nan for IR, throw it out.
+            if math.isnan(comb_scans[0][i][1]):
+                comb_scans = np.delete(comb_scans[0],i,0), np.delete(comb_scans[1],i,0)
+                
+            
+
             # If the reading is not nan for IR, save it the angle it occurs at
             if (math.isnan(comb_scans[0][i][1]) == False) and (start_deg is 0):
                 # Save starting angle
@@ -432,16 +447,18 @@ class Scanner():
                 if (comb_scans[0][i][0] - start_deg > min_width):
                     end_deg = comb_scans[0][i][0]
                     end_deg_index = i
-                    
-                    # TODO: take care of when objects are next to each other
-                    # with no NaNs between
-                    # TODO: deal with when object is at very edge of scan
-                    # If an object is detected by IR, add both IR and sonar data
-                    obj = comb_scans[0][start_deg_index:end_deg_index], comb_scans[1][start_deg_index:end_deg_index]
-                    
-                    obj_list.append(obj)
-                
-                start_deg = 0
+
+            # TODO: take care of when objects are next to each other
+            # with no NaNs between
+            # TODO: deal with when object is at very edge of scan
+            # If an object is detected by IR, add both IR and sonar data
+            obj = comb_scans[0][start_deg_index:end_deg_index], comb_scans[1][start_deg_index:end_deg_index]
+
+obj_list.append(obj)
+
+    start_deg = 0
+
+       
         
         return obj_list
 
@@ -539,14 +556,24 @@ class Rover():
 
         pulse_widths = self.servo_conv(angles)
 
-        # Perform the scan:
+        # Perform the scan, then return the servo to 90 degrees.
         ir_data, sonar_data = sensors.scan(self.sen, pulse_widths)
+        servo.pulse_width(self.sen, self.servo_conv(90.0))
+
 
         # Perform the conversion from raw readings to distances.
-        ir_data[:, 1] = self.ir_conv(ir_data[:, 1])
-        sonar_data[:, 1] = self.sonar_conv(sonar_data[:, 1])
+        ir_data[:] = self.ir_conv(ir_data[:])
+        sonar_data[:] = self.sonar_conv(sonar_data[:])
+
+        # Construct the return value by adding the angle columns:
+        rv = (np.empty((len(ir_data), 2)), np.empty((len(sonar_data), 2)))
+        rv[0][:, 1] = ir_data
+        rv[1][:, 1] = sonar_data
+        for idx, a in enumerate(angles):
+            offset = idx * 5
+            rv[0][offset: offset + 5, 0] = a
+            rv[1][offset: offset + 5, 0] = a
         
-        rv = (ir_data, sonar_data)
         if updt_scan == False and updt_env == False:
             return rv
         if updt_scan == True:

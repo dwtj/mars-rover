@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 
 import ir
 import sonar
+import servo
 import oi
 import codes
 
@@ -67,13 +68,10 @@ def scan(sen, pulse_widths):
     # Unpack the recieved data into `ir_data` and `sonar_data`:
     for i in range(len(pulse_widths)):
         buf_offset = i*20  # For each pulse width, 20 bytes were delivered.
-        arr_offset = i*10  # For each pulse width, 10 readings were performed.
+        arr_offset = i*5   # For each pulse width, 5 readings were performed by each sensor.
         ir_data[arr_offset: arr_offset+5] = struct.unpack_from('<HHHHH', rx_data, buf_offset)
         sonar_data[arr_offset: arr_offset+5] = struct.unpack_from('<HHHHH', rx_data, buf_offset + 10)
     
-    # Return the servo to 90.0 degrees:
-    servo.pulse_width(self.sen, self.servo_conv(90.0))
-
     return (ir_data, sonar_data)
 
 
