@@ -18,10 +18,10 @@ from codes import OIStopID
 
 
 zorders = {
-	'breadcrumbs': 0,
-	'scan_field': 1,
-	'scan_data': 2,
-	'contours': 3
+    'breadcrumbs': 0,
+    'scan_field': 1,
+    'scan_data': 2,
+    'contours': 3
 }
 
 
@@ -330,6 +330,7 @@ class Scanner():
 
 
     def add_scan(self, scan_data):
+        self.scans.append(scan_data)
         
         ir_data, sonar_data = scan_data
         
@@ -338,7 +339,7 @@ class Scanner():
         rs = rs[~np.isnan(rs)]
         self.view.scatter(angles, rs, 'g')
 
-		''' DEBUG: temporarily disabled
+        ''' DEBUG: temporarily disabled
         angles = sonar_data[:, 0] * (np.pi / 180.0)
         rs = sonar_data[:, 1]
         rs = rs[~np.isnan(rs)]
@@ -369,10 +370,40 @@ class Scanner():
 
     def find_obj_clouds(self):
         """ Finds data from each distinct object generated across all scans.
+
+        Consolidates and trims `scan_points` to a list of 2-tuples, where 
+        each 2-tuple contains all data points relevant to a distinct object. 
+        Each of the 2-tuple's elements is a two column ndarray where the first
+        column lists angles and the second column lists corresponding radial 
+        distances. The first element of the 2-tuple is IR data and the second 
+        is sonar data. 
         """
 
         raise NotImplementedError
         # TODO: ignore objects that have very small angular width.
+
+        # This should be a 2-tuple containing all scans with data points
+        # sorted. The first element should be a two column ndarray
+        # containing angles and their corresponding distances for IR.
+        # The second is the same, but for sonar. 
+        consolidated_scans = ()
+        
+        if len(self.scans) < 1:
+        	# There aren't any scans
+        	raise NotImplementedError()
+        
+        consolidated_scans = self.scans[0][0][0], self.scans[0][1]
+        
+        # Iterate through all scans
+        for i in range(1, len(scans)):
+            consolidated_scans = np.append(consolidated_scans[0], self.scans[i][0]), np.append(consolidated_scans[1], self.scans[i][1])
+
+		# Sort each ndarray
+        consolidated_scans = np.sort(consolidated_scans[0]), np.sort(consolidated_scans[1])
+
+		# TODO: transform consolidated_scans to object clouds
+
+        return consolidated_scans
 
 
 

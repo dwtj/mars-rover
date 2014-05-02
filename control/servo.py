@@ -73,12 +73,12 @@ def angle(sen, angle, wait = True):
     if not (0 <= angle and angle  <= 180):
         raise ValueError("Argument `angle` must be an integer in [0..180].")
     
-    b = struct.pack("<I", angle)
-    tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, b)
+    b = struct.pack("<B?", angle, wait)
+    sen.tx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, b)
     b = sen.rx_mesg(MesgID.command, SubsysID.servo, ServoCommand.angle, True)
     # TODO: Check that the response data in `b` is well-formed.
 
-    raise NotImplementedError("Rotating the servo has not been implemented.")
+    #raise NotImplementedError("Rotating the servo has not been implemented.")
     
 
 
