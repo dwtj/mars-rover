@@ -395,8 +395,6 @@ class Scanner():
 
     def find_obj_clouds(self):
         """ Finds data from each distinct object generated across all scans.
-        
-        TODO: debug with multiple real objects
         """
 
         comb_scans = ()
@@ -424,42 +422,23 @@ class Scanner():
         # Iterate through consolidated scans to find clumps of objects
         min_width = 3 # minimum degrees for an object to be recognized
         
-        start_deg = 0
-        start_deg_index = 0
-        end_deg = 0
-        end_deg_index = 0
-                
+	prev_angle = comb_scans[0][0][0]
+	start = 0 # start index for the current object
+
         # Go through all IR data
         for i in range(0, len(comb_scans[0])):
             # If the reading is nan for IR, throw it out.
             if math.isnan(comb_scans[0][i][1]):
                 comb_scans = np.delete(comb_scans[0],i,0), np.delete(comb_scans[1],i,0)
-                
             
+            # Check for jumps in the non-NaN data, indicating a new object.
+            if comb_scans[0][i][0] - prev_angle > 1:
+                obj = comb_scans[0][start:i], comb_scans[1][start:i]
+                start = i
+                obj_list.append(obj)
 
-            # If the reading is not nan for IR, save it the angle it occurs at
-            if (math.isnan(comb_scans[0][i][1]) == False) and (start_deg is 0):
-                # Save starting angle
-                start_deg = comb_scans[0][i][0]
-                start_deg_index = i
-            elif ((math.isnan(comb_scans[0][i][1]) == True) or (i == len(comb_scans[0] - 1))) and (start_deg is not 0):
-                # Save ending angle if the object is wide enough
-                if (comb_scans[0][i][0] - start_deg > min_width):
-                    end_deg = comb_scans[0][i][0]
-                    end_deg_index = i
-
-            # TODO: take care of when objects are next to each other
-            # with no NaNs between
-            # TODO: deal with when object is at very edge of scan
-            # If an object is detected by IR, add both IR and sonar data
-            obj = comb_scans[0][start_deg_index:end_deg_index], comb_scans[1][start_deg_index:end_deg_index]
-
-obj_list.append(obj)
-
-    start_deg = 0
-
-       
-        
+            prev_angle = comb_scans[0][i][0]
+		
         return obj_list
 
 
