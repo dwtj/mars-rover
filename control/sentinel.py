@@ -13,6 +13,7 @@ from codes import Signal, MesgID, SubsysID
 
 DEFAULT_SERIAL_PORT = "/dev/tty.ElementSerial-ElementSe"
 DATA_FRAME_MAX_LEN = 100
+TIMEOUT = 5
 
 
 class Sentinel():
@@ -203,7 +204,7 @@ class Sentinel():
         if self.is_watching:
             raise Exception("You cannot read when the sentinel is watching.")
 
-        self.ser.timeout = 1
+        self.ser.timeout = TIMEOUT
         return self.ser.read(size)
 
 
@@ -221,7 +222,7 @@ class Sentinel():
         if self.is_watching:
             raise Exception("You cannot read when the sentinel is watching.")
 
-        self.ser.timeout = 1
+        self.ser.timeout = TIMEOUT
         return self.ser.readinto(b)
 
  

@@ -90,7 +90,7 @@ void servo_system()
 
 	case command_state:
 		#warning "Servo state not yet implemented."
-		r_error(error_unimplemented, "`command_state` is not yet implemented.")
+		r_error(error_unimplemented, "`command_state` is not yet implemented.");
 		break;
 
 	case command_angle:

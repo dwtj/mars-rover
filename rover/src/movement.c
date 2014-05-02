@@ -170,7 +170,10 @@ movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
 }
 
 
-int turn(oi_t *sensor_data, int angle) {
+rotation_data_t turn(oi_t *sensor_data, int angle) {
+	
+	rotation_data_t rt;
+	
 	oi_update(sensor_data);
 	int sum = 0;
 	int speed = 100;
@@ -195,6 +198,8 @@ int turn(oi_t *sensor_data, int angle) {
 	
 	oi_set_wheels(0,0);
 	
-	return sum;
+	rt.rotated = sum;
+	
+	return rt;
 }
 
