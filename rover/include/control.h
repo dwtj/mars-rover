@@ -48,6 +48,7 @@ typedef enum {
 	mesg_echo = 2,
 	mesg_command = 3,
 	mesg_rng_seed = 4,
+	mwsg_scan = 5,
 } mesg;
 #define NUM_MESG_CODES 5
 

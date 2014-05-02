@@ -184,6 +184,9 @@
     <Compile Include="include\labs.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="include\mars-rover.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="include\objects.h">
       <SubType>compile</SubType>
     </Compile>
