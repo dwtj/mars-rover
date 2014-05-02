@@ -75,13 +75,13 @@ int navigate_dist(oi_t *sensor_data, int dist) {
 }
 
 
-// distance accumulated will be zeroed before return.
+// Distance accumulated will be zeroed before return.
 // Only while attempting to move forward should it stop for the bumper sensors.
 movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
 {
 	oi_update(sensor_data);
 	int sum = 0;
-	int velocity = (dist < 0) ? -spd: spd;  // move at indicated speed
+	int velocity = (dist < 0) ? -spd: spd;  // Move at indicated speed
 	oi_set_wheels(velocity, velocity);
 	stop_flag = full_distance;
 
@@ -91,10 +91,10 @@ movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
 	if (dist > 0) {
 		while ((sum < dist) && !stop_flag) {
 			oi_update(sensor_data);
-			sum += sensor_data->distance; //adds a positive value
+			sum += sensor_data->distance; // Adds a positive value
 			
 				
-			//Bumper detection
+			// Bumper detection
 			if (sensor_data->bumper_left && sensor_data->bumper_right) {
 				stop_flag = left_and_right_bumper;
 				break;
@@ -106,7 +106,7 @@ movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
 				break;
 			}
 				
-				//cliff detection
+			// Cliff detection
 			else if (sensor_data->cliff_left) {
 					stop_flag = left_cliff;
 					break;
@@ -121,7 +121,7 @@ movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
 				break;
 			}
 								
-			//white strip detection
+			// White strip detection
 			else if (sensor_data->cliff_frontleft_signal > 600){
 				stop_flag = white_tape_front_left;
 				break;

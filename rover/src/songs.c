@@ -2,12 +2,6 @@
 #include "open_interface.h"
 #include "songs.h"
 
-#define RICK_ROLL			1
-#define IMPERIAL_MARCH 		2
-#define MARIO_UNDERWORLD	3
-#define MARIO_UNDERWATER	4
-#define VICTORY_FANFARE		5
-
 /// Load three songs onto the iRobot
 /**
  * Before calling this method, be sure to initialize the open interface by calling:
