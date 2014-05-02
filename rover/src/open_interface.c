@@ -5,6 +5,7 @@
 #include "r_error.h"
 #include "control.h"
 #include "movement.h"
+#include "songs.h"
 
 /// Allocate memory for a the sensor data
 oi_t* oi_alloc() {
@@ -276,9 +277,8 @@ void oi_system()
 			// Switch power LED back to default state (from oi_init())
 			oi_set_leds(1, 1, 7, 255);
 			
-			
-			// Play song (TODO)
-			
+			// Play song
+			songs_load(RICK_ROLL);
 			
 			break;
 		
