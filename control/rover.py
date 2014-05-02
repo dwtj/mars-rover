@@ -431,7 +431,12 @@ class Scanner():
                 
         # Go through all IR data
         for i in range(0, len(comb_scans[0])):
-        
+            # If the reading is nan for IR, throw it out.
+            if math.isnan(comb_scans[0][i][1]):
+                comb_scans = np.delete(comb_scans[0],i,0), np.delete(comb_scans[1],i,0)
+                
+            
+
             # If the reading is not nan for IR, save it the angle it occurs at
             if (math.isnan(comb_scans[0][i][1]) == False) and (start_deg is 0):
                 # Save starting angle
@@ -442,16 +447,18 @@ class Scanner():
                 if (comb_scans[0][i][0] - start_deg > min_width):
                     end_deg = comb_scans[0][i][0]
                     end_deg_index = i
-                    
-                    # TODO: take care of when objects are next to each other
-                    # with no NaNs between
-                    # TODO: deal with when object is at very edge of scan
-                    # If an object is detected by IR, add both IR and sonar data
-                    obj = comb_scans[0][start_deg_index:end_deg_index], comb_scans[1][start_deg_index:end_deg_index]
-                    
-                    obj_list.append(obj)
-                
-                start_deg = 0
+
+            # TODO: take care of when objects are next to each other
+            # with no NaNs between
+            # TODO: deal with when object is at very edge of scan
+            # If an object is detected by IR, add both IR and sonar data
+            obj = comb_scans[0][start_deg_index:end_deg_index], comb_scans[1][start_deg_index:end_deg_index]
+
+obj_list.append(obj)
+
+    start_deg = 0
+
+       
         
         return obj_list
 
