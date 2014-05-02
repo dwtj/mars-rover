@@ -4,6 +4,7 @@
 import sys
 import csv
 import time
+import struct
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,9 +12,71 @@ import matplotlib.pyplot as plt
 import ir
 import sonar
 import oi
+import codes
 
 
-DEFAULT_CALIBRATION_DATA_DIR = 'calibrate/data/default'
+def scan(sen, pulse_widths):
+    """ This communicates with the rover to efficiently generate raw
+    distance readings from both IR and sonar. The `pulse_widths` argument
+    is expected to be a list of integer values. For each pulse width in
+    this list, the rover's servo will move to that position and collect 
+    five raw readings from each of these sensors.
+
+    (Note that we say *efficiently*, because we found scanning to be too
+    slow if `control` had to send and recieve a message for each of the
+    commands individually (ie. it was too slow to send and recieve a
+    servo.pulse_width(), ir.readings(), and sonar.readings() for each angle).
+
+    The return value is a 2-tuple, where both elements are an
+    `np.ndarray` object. The first element of the pair is a column vector of
+    raw IR data readings, and the second element is a column vector of the raw
+    sonar readings.
+
+    At each angle, the rover will record 5 IR readings and 5 sonar
+    readings. So the method call will, in total, prompt
+
+        2 * 5 * (abs(end - start) + 1)
+
+    distance readings to be recorded and returned.
+    """
+
+    if len(pulse_widths) == 0 or len(pulse_widths) > 200:
+        raise Exception('The number of pulse widths in the given list must be '
+                                           'in the range [1..200], inclusive.')
+
+    # Allocate the results arrays:
+    num_rows = 5 * len(pulse_widths)
+    ir_data = np.empty(shape = (num_rows, 2))
+    sonar_data = np.empty(shape = (num_rows, 2))
+
+    # Generate the request's framed data:
+    fmt = '<' + 'H'
+    tx_data = bytearray(2 * len(pulse_widths))
+    for i, w in enumerate(pulse_widths):
+        struct.pack_into('<H', tx_data, i * 2, w)
+
+    # Send the message, and listen for the response:
+    sen.tx_mesg(codes.MesgID.scan, data = tx_data)
+    rx_data = sen.rx_mesg(codes.MesgID.scan, data = True)
+
+    # expected_len = sensors * angles * readings_per_angle * bytes_per_reading
+    expected_len = 2 * len(pulse_width) * 5 * 2
+    if len(rx_data) != expected_len:
+        raise Exception('The number of bytes received is not as expected.')
+
+    # Unpack the recieved data into `ir_data` and `sonar_data`:
+    for i in range(len(pulse_widths)):
+        buf_offset = i*20  # For each pulse width, 20 bytes were delivered.
+        arr_offset = i*10  # For each pulse width, 10 readings were performed.
+        ir_data[arr_offset: arr_offset+10] = struct.unpack_from('<HHHHH', rx_data, offset)
+        sonar_data[arr_offset: arr_offset+10] = struct.unpack_from('<HHHHH', rx_data, offset + 10)
+    
+    # Return the servo to 90.0 degrees:
+    servo.pulse_width(self.sen, self.servo_conv(90.0))
+
+    return (ir_data, sonar_data)
+
+
 
 
 def calibrate_cliff(sen, cliff_csv, n = 10):

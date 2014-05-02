@@ -19,6 +19,7 @@ class MesgID(IntEnum):
     echo = 2
     command = 3
     seed_rng = 4
+    scan = 5
 
 
 
