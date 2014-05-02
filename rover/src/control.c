@@ -244,20 +244,21 @@ void scan_handler()
 	uint16_t *tx_data = (void *) &control.data;
 	
 	// Copy the angles coming from `control` into the `angles` array:
-	bool more_rx_data;
+	bool another_rx_frame = true;
 	int num_angles = 0;
 	int num_rx_frames = 0;
-	while (more_rx_data = rx_frame() && num_rx_frames < 4) {
+	while (another_rx_frame && num_rx_frames < 4) {
+		another_rx_frame = rx_frame();
 		num_angles += control.data_len / sizeof(uint16_t);
 		memcpy(angles + (num_rx_frames * 50), &control.data, sizeof(control.data));
 		num_rx_frames++;
 	}
 	
-	if (num_rx_frames == 4 && more_rx_data) {
+	if (num_rx_frames == 4 && another_rx_frame) {
 		r_error(error_bad_message, "A scan request message had more than 4 data frames.");
 	}
 	
-	lprintf("%d", num_angles);
+	lprintf("%d", num_angles);  // DEBUG
 
 
 	// Generate a frame of data in each iteration. Every frame contains up to 100 bytes.
@@ -306,7 +307,6 @@ void scan_handler()
 		tx_frame(a < num_angles);
 		
 		txq_drain();
-		lcd_putc('.');  // DEBUG
 	}
 }
 

@@ -46,8 +46,8 @@ def scan(sen, pulse_widths):
 
     # Allocate the results arrays:
     num_rows = 5 * len(pulse_widths)
-    ir_data = np.empty(shape = (num_rows, 2))
-    sonar_data = np.empty(shape = (num_rows, 2))
+    ir_data = np.empty(shape = (num_rows,))
+    sonar_data = np.empty(shape = (num_rows,))
 
     # Generate the request's framed data:
     tx_data = bytearray(2 * len(pulse_widths))
@@ -68,8 +68,8 @@ def scan(sen, pulse_widths):
     for i in range(len(pulse_widths)):
         buf_offset = i*20  # For each pulse width, 20 bytes were delivered.
         arr_offset = i*10  # For each pulse width, 10 readings were performed.
-        ir_data[arr_offset: arr_offset+10] = struct.unpack_from('<HHHHH', rx_data, offset)
-        sonar_data[arr_offset: arr_offset+10] = struct.unpack_from('<HHHHH', rx_data, offset + 10)
+        ir_data[arr_offset: arr_offset+5] = struct.unpack_from('<HHHHH', rx_data, buf_offset)
+        sonar_data[arr_offset: arr_offset+5] = struct.unpack_from('<HHHHH', rx_data, buf_offset + 10)
     
     # Return the servo to 90.0 degrees:
     servo.pulse_width(self.sen, self.servo_conv(90.0))
