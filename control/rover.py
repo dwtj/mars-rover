@@ -36,7 +36,9 @@ class Environment():
         # Distance scan and event data is mapped onto the cartesian space
         # defined w.r.t. the robot's initial orientation. So the robot's
         # initial orientation in the real world is always represented as being
-        # at the origin and as directed upward.
+        # at the origin and as directed upward. To be clear, `_loc` is meant
+        # to be the position of the centerpoint of the servo tower (not the
+        # iRobot create's centerpoint.
         self._loc = (0.0, 0.0)
         self._direction = 90.0
 
@@ -127,10 +129,19 @@ class Environment():
 
 
     def rotate(self, delta):
-        """ Updates rover's direction in the Environment by rotating by given
+        """ Updates rover's orientation in the Environment by rotating by given
         number of degrees. Rotation is CCW if `delta` is positive and CW if
-        `delta` is negative.
-        """
+        `delta` is negative. The location of the rover's servo tower is updated
+        as well.  """
+
+        r = 7.5  # Centimeters from rover's centerpoint to the servo centerpoint.
+        x, y = self._loc
+        theta = self._direction
+
+        xprime = x + r * (np.cos(theta + delta) - np.cos(theta))
+        yprime = y + r * (np.sin(theta + delta) - np.sin(theta))
+
+        self.loc((xprime, yprime))
         self.direction(self._direction + delta)
 
 
@@ -526,9 +537,9 @@ class Rover():
         rv[0][:, 1] = ir_data
         rv[1][:, 1] = sonar_data
         for idx, a in enumerate(angles):
-            offset = idx * 10
-            rv[0][offset: offset + 10, 0] = a
-            rv[1][offset: offset + 10, 0] = a
+            offset = idx * 5
+            rv[0][offset: offset + 5, 0] = a
+            rv[1][offset: offset + 5, 0] = a
         
         if updt_scan == False and updt_env == False:
             return rv
