@@ -1,4 +1,5 @@
 import sys
+import math
 
 import numpy as np
 import scipy
@@ -359,7 +360,7 @@ class Scanner():
         rs = rs[~np.isnan(rs)]
         self.view.scatter(angles, rs, 'b')
         '''
-        
+
         #self.draw()
 
 
@@ -384,40 +385,65 @@ class Scanner():
 
     def find_obj_clouds(self):
         """ Finds data from each distinct object generated across all scans.
-
-        Consolidates and trims `scan_points` to a list of 2-tuples, where 
-        each 2-tuple contains all data points relevant to a distinct object. 
-        Each of the 2-tuple's elements is a two column ndarray where the first
-        column lists angles and the second column lists corresponding radial 
-        distances. The first element of the 2-tuple is IR data and the second 
-        is sonar data. 
+        
+        TODO: debug with multiple real objects
         """
 
-        raise NotImplementedError
-        # TODO: ignore objects that have very small angular width.
-
-        # This should be a 2-tuple containing all scans with data points
-        # sorted. The first element should be a two column ndarray
-        # containing angles and their corresponding distances for IR.
-        # The second is the same, but for sonar. 
-        consolidated_scans = ()
+        comb_scans = ()
         
         if len(self.scans) < 1:
             # There aren't any scans
             raise NotImplementedError()
         
-        consolidated_scans = self.scans[0][0][0], self.scans[0][1]
+        comb_scans = self.scans[0][0], self.scans[0][1]
         
         # Iterate through all scans
-        for i in range(1, len(scans)):
-            consolidated_scans = np.append(consolidated_scans[0], self.scans[i][0]), np.append(consolidated_scans[1], self.scans[i][1])
+        for i in range(1, len(self.scans)):
+            comb_scans = np.append(comb_scans[0], self.scans[i][0], axis=0), np.append(comb_scans[1], self.scans[i][1], axis=0)
 
         # Sort each ndarray
-        consolidated_scans = np.sort(consolidated_scans[0]), np.sort(consolidated_scans[1])
-
-        # TODO: transform consolidated_scans to object clouds
-
-        return consolidated_scans
+        comb_scans = np.sort(comb_scans[0], axis=0), np.sort(comb_scans[1], axis=0)
+        
+        # Create list of objects. 
+        # This should be a 2-tuple containing all scans with data points
+        # sorted. The first element should be a two column ndarray
+        # containing angles and their corresponding distances for IR.
+        # The second is the same, but for sonar. 
+        obj_list = []
+        
+        # Iterate through consolidated scans to find clumps of objects
+        min_width = 3 # minimum degrees for an object to be recognized
+        
+        start_deg = 0
+        start_deg_index = 0
+        end_deg = 0
+        end_deg_index = 0
+                
+        # Go through all IR data
+        for i in range(0, len(comb_scans[0])):
+        
+            # If the reading is not nan for IR, save it the angle it occurs at
+            if (math.isnan(comb_scans[0][i][1]) == False) and (start_deg is 0):
+                # Save starting angle
+                start_deg = comb_scans[0][i][0]
+                start_deg_index = i
+            elif ((math.isnan(comb_scans[0][i][1]) == True) or (i == len(comb_scans[0] - 1))) and (start_deg is not 0):
+                # Save ending angle if the object is wide enough
+                if (comb_scans[0][i][0] - start_deg > min_width):
+                    end_deg = comb_scans[0][i][0]
+                    end_deg_index = i
+                    
+                    # TODO: take care of when objects are next to each other
+                    # with no NaNs between
+                    # TODO: deal with when object is at very edge of scan
+                    # If an object is detected by IR, add both IR and sonar data
+                    obj = comb_scans[0][start_deg_index:end_deg_index], comb_scans[1][start_deg_index:end_deg_index]
+                    
+                    obj_list.append(obj)
+                
+                start_deg = 0
+        
+        return obj_list
 
 
 

@@ -44,9 +44,9 @@ class OICommand(IntEnum):
     init = 0
     move = 1
     rotate = 2
-    play_song = 3
+    play_song = 3 # TODO: refactor. This will not be called directly from control.
     dump = 4
-
+    end_sequence = 5
 
 
 class OIStopID(IntEnum):
