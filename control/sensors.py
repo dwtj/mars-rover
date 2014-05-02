@@ -54,12 +54,6 @@ def scan(sen, pulse_widths):
     for i, w in enumerate(pulse_widths):
         struct.pack_into('<H', tx_data, i * 2, w)
 
-	# START DEBUG
-    print(tx_data)
-    print()
-    input('')
-	# END DEBUG.
-
     # Send the message, and listen for the response:
     sen.tx_mesg(codes.MesgID.scan, data = tx_data)
     rx_data = sen.rx_mesg(codes.MesgID.scan, has_data = True)

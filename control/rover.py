@@ -451,7 +451,7 @@ class Rover():
         elif sen is None:
             sen = sentinel.Sentinel()
         elif type(sen) is str:
-            sen = sentinel.Sentinel(str)
+            sen = sentinel.Sentinel(sen)
         elif type(sen) != sentinel.Sentinel:
             raise TypeError("The argument `sen` must be `None`, of type `str` "
                                                        "or of type `Sentinel`")
@@ -478,7 +478,7 @@ class Rover():
 
 
 
-    def scan(self, start=0, end=180, updt_scan=True, updt_env=True):
+    def scan(self, start=20, end=160, updt_scan=True, updt_env=True):
         """ This calls `sensors.scan()` to receive raw data from the robot and
         converts the resulting distances using the current `ir_conv` and
         `sonar_conv`.

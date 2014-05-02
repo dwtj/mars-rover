@@ -256,31 +256,35 @@ void scan_handler()
 	if (num_rx_frames == 4 && more_rx_data) {
 		r_error(error_bad_message, "A scan request message had more than 4 data frames.");
 	}
+	
+	lprintf("%d", num_angles);
+
 
 	// Generate a frame of data in each iteration. Every frame contains up to 100 bytes.
 	// There are up to 50 readings total in a frame. At every angle 5 IR reading and 5
 	// Sonar readings are stored into control.data.
-	
-	int a = 0;  // Counts the total number of angles sent.
-	int i = 0;	// Counts the number of angles included in a frame.
 	
 	// Note: Very little time is given for the servo to move between iterations. So
 	// the angles indicated by `angles` should be close to one another, i.e., the servo
 	// should not have to jump very far in this short amount of time.
 	
 	// Move to the first angle, and give it plenty of time to get there:
-	servo_pulse_width(angles[a]);
+	servo_pulse_width(angles[0]);
 	wait_ms(1000);
+	
+	int a = 0;  // Counts the total number of angles sent.
 	
 	// Each iteration collects readings to fill up a data frame (i.e. readings from up
 	// to five angles).
 	while (a < num_angles)
 	{
+		int i = 0;	// Counts the number of angles included in a frame.
+	
 		// Each iteration collects 10 readings at a particular angle:
 		while (i < 5 && a < num_angles)
 		{
 			servo_pulse_width(angles[a]);
-			wait_ms(2);
+			wait_ms(1);
 			
 			int j = 0;  // Counts the number of readings sent for this angle.
 			while (j < 5) {
@@ -293,6 +297,7 @@ void scan_handler()
 			}
 			
 			a++;
+			i++;
 		}
 		
 		// The number of bytes packed into this frame is: i (the number of angles put
@@ -301,6 +306,7 @@ void scan_handler()
 		tx_frame(a < num_angles);
 		
 		txq_drain();
+		lcd_putc('.');  // DEBUG
 	}
 }
 
