@@ -48,9 +48,9 @@ typedef enum {
 	mesg_echo = 2,
 	mesg_command = 3,
 	mesg_rng_seed = 4,
-	mwsg_scan = 5,
+	mesg_scan = 5,
 } mesg;
-#define NUM_MESG_CODES 5
+#define NUM_MESG_CODES 6
 
 
 /**
@@ -64,6 +64,27 @@ typedef enum {
 	subsys_ir = 4,
 } subsys_t;
 #define NUM_SUBSYS_CODES 5
+
+
+
+
+enum {
+	full_distance = 0,
+	left_bumper = 1,
+	right_bumper = 2,
+	left_and_right_bumper = 3,
+	front_left_cliff = 4,
+	front_right_cliff = 5,
+	left_cliff = 6,
+	right_cliff = 7,
+	white_tape_front_left = 8,
+	white_tape_front_right = 9,
+	white_tape_left = 10,
+	white_tape_right = 11,
+	left_wheel = 12,
+	right_wheel = 13,
+	middle_wheel = 14
+} stop_flag;
 
 
 

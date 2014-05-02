@@ -10,27 +10,13 @@
 
 
 #include "open_interface.h"
+#include "control.h"
 #include "movement.h"
 #include "lcd.h"
 #include "util.h"
 #include <stdbool.h>
 #include <math.h>
 
-enum {
-	full_distance = 0,
-	left_bumper = 1,
-	right_bumper = 2,
-	left_and_right_bumper = 3,
-	front_left_cliff = 4,
-	front_right_cliff = 5,
-	left_cliff = 6,
-	right_cliff = 7,
-	// TODO: the rest of these have not been implemented
-	white_tape = 8,
-	left_wheel = 9,
-	right_wheel = 10,
-	middle_wheel = 11
-} stop_flag;
 
 
 // Returns 0 if a bump is detected while making a course correction.
@@ -88,10 +74,6 @@ int navigate_dist(oi_t *sensor_data, int dist) {
 	return count_moves - 1; // the number of bumps detected
 }
 
-///Function that detects the white strips on the floor, returns true if the white tape was detected, false otherwise
-bool detectWhite (){
-	;
-}
 
 // distance accumulated will be zeroed before return.
 // Only while attempting to move forward should it stop for the bumper sensors.
@@ -140,11 +122,19 @@ movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
 			}
 								
 			//white strip detection
-			else if (detectWhite()) {
-				stop_flag = white_tape;
+			else if (sensor_data->cliff_frontleft_signal > 600){
+				stop_flag = white_tape_front_left;
 				break;
-			}	
-			
+			} else if (sensor_data->cliff_frontright_signal > 600){
+				stop_flag = white_tape_front_right;
+				break;
+			}else if (sensor_data->cliff_frontright > 600){
+				stop_flag= white_tape_right;
+				break;
+			} else if (sensor_data ->cliff_frontleft > 600){
+				stop_flag = white_tape_left;
+				break;
+			}
 		}//while
 	
 	//If attempting to go backwards
@@ -152,7 +142,6 @@ movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
 		while (sum > dist) {
 			oi_update(sensor_data);
 			sum += sensor_data->distance;  // adds a negative value
-			#warning "moving backwards in move_dist is not implemented"
 		}
 	} else {
 		// dist == 0, so do nothing
@@ -162,7 +151,7 @@ movement_data_t move_dist(oi_t *sensor_data, int dist, int spd)
 	// TODO: maybe add a delay here before reading the last distance update 
 	oi_update(sensor_data);
 	sum += sensor_data->distance;
-	
+		
 	rv.travelled = sum;
 	rv.flag = stop_flag;
 	

@@ -59,13 +59,13 @@ void servo_manual_calib()
 /**
  * Expects a floating point value (strictly) between 0.0 and 1.0.
  */
-static void set_pulse_proportion(float p){
+void set_pulse_proportion(float p){
 	// The actual waveform generated is outputted on PE4 of channel B
 	OCR3B = (uint16_t) roundf(TOP * p);
 }
 
 
-static void set_pulse_width(uint16_t pulse_width) {
+void servo_pulse_width(uint16_t pulse_width) {
 	OCR3B = pulse_width;
 }
 
@@ -126,7 +126,7 @@ void servo_system()
 			r_error (error_frame, "The expected data length is different from the action.");  
 		}
 		
-		set_pulse_width(*pulse_width);
+		servo_pulse_width(*pulse_width);
 		break;
 		
 	default:

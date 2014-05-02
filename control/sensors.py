@@ -50,19 +50,25 @@ def scan(sen, pulse_widths):
     sonar_data = np.empty(shape = (num_rows, 2))
 
     # Generate the request's framed data:
-    fmt = '<' + 'H'
     tx_data = bytearray(2 * len(pulse_widths))
     for i, w in enumerate(pulse_widths):
         struct.pack_into('<H', tx_data, i * 2, w)
 
+	# START DEBUG
+    print(tx_data)
+    print()
+    input('')
+	# END DEBUG.
+
     # Send the message, and listen for the response:
     sen.tx_mesg(codes.MesgID.scan, data = tx_data)
-    rx_data = sen.rx_mesg(codes.MesgID.scan, data = True)
+    rx_data = sen.rx_mesg(codes.MesgID.scan, has_data = True)
 
     # expected_len = sensors * angles * readings_per_angle * bytes_per_reading
-    expected_len = 2 * len(pulse_width) * 5 * 2
+    expected_len = 2 * len(pulse_widths) * 5 * 2
     if len(rx_data) != expected_len:
-        raise Exception('The number of bytes received is not as expected.')
+        raise Exception('Expected ' + str(expected_len) + ' bytes of data, but '
+        								       'received ' + str(len(rx_data)))
 
     # Unpack the recieved data into `ir_data` and `sonar_data`:
     for i in range(len(pulse_widths)):
@@ -212,7 +218,7 @@ def gen_servo_converter(csv_file):
                 raise ValueError("Can't convert angles outside of [0, 180].")
 
         # Otherwise, use the polynomial fit to convert to pulse widths:
-        return int(round(conv(angles)))
+        return np.rint(conv(angles)).astype(int)
 
     return guarded_conv
 

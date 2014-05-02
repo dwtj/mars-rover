@@ -13,6 +13,7 @@
 #include <stdint.h>
 
 void servo_pulse_proportion(float p);
+void servo_pulse_width(uint16_t pw);
 void servo_init();
 void servo_angle(uint8_t deg, bool wait);
 void servo_enable();

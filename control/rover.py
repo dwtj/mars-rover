@@ -142,7 +142,7 @@ class Environment():
 
         ir_data, sonar_data = scan_data
         ir_data = self.conv_radial_arr(ir_data[:, 0], ir_data[:, 1])
-        sonar_data = self.conv_radial_arr(sonar_data[:, 0], sonar_data[:, 0])
+        sonar_data = self.conv_radial_arr(sonar_data[:, 0], sonar_data[:, 1])
         self.ir_obs.append(ir_data)
         self.sonar_obs.append(sonar_data)
         
@@ -507,9 +507,9 @@ class Rover():
 
         # Generate a pulse width for each angle:
         if start <= end:
-            angles = [i for i in range(start, end)]
+            angles = np.array([i for i in range(start, end + 1)], dtype=np.float64)
         else:
-            angles = [i for i in range(end, start, -1)]
+            angles = nd.array([i for i in range(start, end - 1, -1)], dtype=np.float64)
 
         pulse_widths = self.servo_conv(angles)
 
