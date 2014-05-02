@@ -646,5 +646,6 @@ def _frame_data(d):
         frame[-1] = False
 
         frames.append(frame)
-
-    return b''.join(frames)
+	
+    rv = b''.join(frames)
+    return rv

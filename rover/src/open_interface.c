@@ -171,8 +171,15 @@ void oi_system()
 			//Stream returns the distance traveled
 			//lcd_puts  ("In OI subsystem"); //debug
 			movement_data = move_dist(&(control.oi_state), move_data->dist, move_data->speed);
+			
 			response_move->dist = movement_data.travelled;
 			response_move->flag = movement_data.flag;
+			
+			if (movement_data.flag != 0) {
+				movement_data = move_dist(&(control.oi_state), -20, move_data->speed);
+				response_move->dist += movement_data.travelled;
+			}
+
 			control.data_len = 3;
 			tx_frame(false);
 			break;

@@ -226,45 +226,87 @@ static void echo_handler()
 	}
 }
 
-#warning "todo: make this a new message, not a subsystem"
-/* This function controls servo movement, sonar collection and IR collection combined into one. 
-Should replace dist_reading_handler*/
+
+/**
+ * This function controls servo movement, sonar collection and IR collection combined into one. 
+ * Should replace dist_reading_handler().
+ */
 void scan_handler()
 {
-	rx_frame();
-	uint16_t angles_arr [181]; //The maximum number of angles that can be transmitted is 180, add one to include the final angle
+	// Warning: The constants used in this function are tuned specifically to the
+	// protocol, and are brittle to changes.
 	
-	struct {
-			uint8_t start_angle;		// The number of readings to be performed.
-			uint8_t end_angle;		  // Whether the data should be raw or converted.
-	} *angles = (void *) &control.data;
-		
-	struct {
-		uint16_t IR_data[5];		// The number of readings to be performed.
-		uint16_t sonar_data[5];		  // Whether the data should be raw or converted.
-	} *rv = (void *) &control.data;	
-		
-	if(angles->start_angle > angles->end_angle)
+	// Note that the angles are actually transmitted as pulse widths, not angles.
+	// Note that the maximum number of angles that can be transmitted is 200.
+	uint16_t angles[200];
+	
+	// The interface by which we write the readings into `control.data` for transmission:
+	uint16_t *tx_data = (void *) &control.data;
+	
+	// Copy the angles coming from `control` into the `angles` array:
+	bool another_rx_frame = true;
+	int num_angles = 0;
+	int num_rx_frames = 0;
+	while (another_rx_frame && num_rx_frames < 4) {
+		another_rx_frame = rx_frame();
+		num_angles += control.data_len / sizeof(uint16_t);
+		memcpy(angles + (num_rx_frames * 50), &control.data, sizeof(control.data));
+		num_rx_frames++;
+	}
+	
+	if (num_rx_frames == 4 && another_rx_frame) {
+		r_error(error_bad_message, "A scan request message had more than 4 data frames.");
+	}
+	
+	lprintf("%d", num_angles);  // DEBUG
+
+
+	// Generate a frame of data in each iteration. Every frame contains up to 100 bytes.
+	// There are up to 50 readings total in a frame. At every angle 5 IR reading and 5
+	// Sonar readings are stored into control.data.
+	
+	// Note: Very little time is given for the servo to move between iterations. So
+	// the angles indicated by `angles` should be close to one another, i.e., the servo
+	// should not have to jump very far in this short amount of time.
+	
+	// Move to the first angle, and give it plenty of time to get there:
+	servo_pulse_width(angles[0]);
+	wait_ms(1000);
+	
+	int a = 0;  // Counts the total number of angles sent.
+	
+	// Each iteration collects readings to fill up a data frame (i.e. readings from up
+	// to five angles).
+	while (a < num_angles)
 	{
-		r_error(error_from_control, "Start angle cannot be larger than end angle");
-	}
+		int i = 0;	// Counts the number of angles included in a frame.
 	
-	int total = angles->end_angle - angles->start_angle + 1;
-	int i = 0, j =0; 
-	while (rx_frame()){
-		//copy all angles received into the angle array
-		for(i =0; i<5 && j < total; i++, j++){
-			angles_arr[j] = control.data[i]; 
+		// Each iteration collects 10 readings at a particular angle:
+		while (i < 5 && a < num_angles)
+		{
+			servo_pulse_width(angles[a]);
+			wait_ms(1);
+			
+			int j = 0;  // Counts the number of readings sent for this angle.
+			while (j < 5) {
+				tx_data[10 * i + j] = ir_raw_reading();
+				j++;
+			}
+			while (j < 10) {
+				tx_data[10 * i + j] = sonar_raw_reading();
+				j++;
+			}
+			
+			a++;
+			i++;
 		}
-	}
-	//For every angle, store 5 IR reading and 5 Sonar readings into control data to be transmitted.
-	for (i = 0; i < total; i++){
-		set_pulse_width(angles_arr[i]);
-		for (j = 0; j < 5; j++){
-			rv->IR_data[j] = ir_raw_reading();
-			rv->sonar_data[j] = sonar_raw_reading();
-		}
-		tx_frame(false);
+		
+		// The number of bytes packed into this frame is: i (the number of angles put
+		// into this frame), times 10 readings per angle, times 2 bytes per readings:
+		control.data_len = i * 10 * 2;
+		tx_frame(a < num_angles);
+		
+		txq_drain();
 	}
 }
 
@@ -323,6 +365,7 @@ static void mesg_handler()
 		echo_handler,	  // 2
 		command_handler,   // 3
 		seed_rng_handler,  // 4
+		scan_handler,      //5
 	};
 
 	uint8_t mesg_id = usart_rx();

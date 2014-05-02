@@ -62,10 +62,14 @@ class OIStopID(IntEnum):
     left_cliff = 6
     right_cliff = 7
 
-    white_tape = 8
-    left_wheel = 9
-    right_wheel = 10
-    middle_wheel = 11
+    white_tape_front_left = 8
+    white_tape_front_right = 9
+    white_tape_left = 10
+    white_tape_right = 11
+
+    left_wheel = 12
+    right_wheel = 13
+    middle_wheel = 14
 
 
 
