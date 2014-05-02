@@ -464,7 +464,7 @@ class Rover():
 
 
 
-    def scan(self, n, start = 0, end = 180, updt_scan = True, updt_env = True):
+    def scan(self, start=0, end=180, n=10 updt_scan=True, updt_env=True):
         """ This communicates with the rover to generate distance data while
         making a single pass from angle `start` to angle `end`.
 
