@@ -350,7 +350,6 @@ class Scanner():
         
         angles = ir_data[:, 0] * (np.pi / 180.0)
         rs = ir_data[:, 1]
-        rs = rs[~np.isnan(rs)]
         self.view.scatter(angles, rs, 'g')
 
         ''' DEBUG: temporarily disabled
@@ -513,14 +512,24 @@ class Rover():
 
         pulse_widths = self.servo_conv(angles)
 
-        # Perform the scan:
+        # Perform the scan, then return the servo to 90 degrees.
         ir_data, sonar_data = sensors.scan(self.sen, pulse_widths)
+        servo.pulse_width(self.sen, self.servo_conv(90.0))
+
 
         # Perform the conversion from raw readings to distances.
-        ir_data[:, 1] = self.ir_conv(ir_data[:, 1])
-        sonar_data[:, 1] = self.sonar_conv(sonar_data[:, 1])
+        ir_data[:] = self.ir_conv(ir_data[:])
+        sonar_data[:] = self.sonar_conv(sonar_data[:])
+
+        # Construct the return value by adding the angle columns:
+        rv = (np.empty((len(ir_data), 2)), np.empty((len(sonar_data), 2)))
+        rv[0][:, 1] = ir_data
+        rv[1][:, 1] = sonar_data
+        for idx, a in enumerate(angles):
+            offset = idx * 10
+            rv[0][offset: offset + 10, 0] = a
+            rv[1][offset: offset + 10, 0] = a
         
-        rv = (ir_data, sonar_data)
         if updt_scan == False and updt_env == False:
             return rv
         if updt_scan == True:
