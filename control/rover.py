@@ -507,7 +507,7 @@ class Rover():
 
         for (idx, angle) in enumerate(angles):
 
-            servo.pulse_width(self.sen, self.servo_conv(angle))
+            self.servo_angle(angle)
             rows = [r for r in range(idx * n, (idx+1) * n)]
 
             ir_data[rows, 0] = angle
@@ -563,6 +563,13 @@ class Rover():
         # TODO: use `rotate_conv` to correct for rover sensor error.
 
         self.env.rotate(delta)
+        
+        
+        
+    def servo_angle(self, angles):
+        """ Sends a command to the rover to turn the servo to the given angle. The pulse
+        width which is sent is determined via the calibrated `servo_conv`. """
+        servo.pulse_width(self.sen, self.servo_conv(angles))
 
 
 
