@@ -226,6 +226,49 @@ static void echo_handler()
 	}
 }
 
+#warning "todo: make this a new message, not a subsystem"
+/* This function controls servo movement, sonar collection and IR collection combined into one. 
+Should replace dist_reading_handler*/
+void scan_handler()
+{
+	rx_frame();
+	uint16_t angles_arr [181]; //The maximum number of angles that can be transmitted is 180, add one to include the final angle
+	
+	struct {
+			uint8_t start_angle;		// The number of readings to be performed.
+			uint8_t end_angle;		  // Whether the data should be raw or converted.
+	} *angles = (void *) &control.data;
+		
+	struct {
+		uint16_t IR_data[5];		// The number of readings to be performed.
+		uint16_t sonar_data[5];		  // Whether the data should be raw or converted.
+	} *rv = (void *) &control.data;	
+		
+	if(angles->start_angle > angles->end_angle)
+	{
+		r_error(error_from_control, "Start angle cannot be larger than end angle");
+	}
+	
+	int total = angles->end_angle - angles->start_angle + 1;
+	int i = 0, j =0; 
+	while (rx_frame()){
+		//copy all angles received into the angle array
+		for(i =0; i<5 && j < total; i++, j++){
+			angles_arr[j] = control.data[i]; 
+		}
+	}
+	//For every angle, store 5 IR reading and 5 Sonar readings into control data to be transmitted.
+	for (i = 0; i < total; i++){
+		set_pulse_width(angles_arr[i]);
+		for (j = 0; j < 5; j++){
+			rv->IR_data[j] = ir_raw_reading();
+			rv->sonar_data[j] = sonar_raw_reading();
+		}
+		tx_frame(false);
+	}
+}
+
+
 
 
 /**
